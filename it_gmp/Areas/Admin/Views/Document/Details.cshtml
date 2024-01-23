@@ -1,0 +1,698 @@
+﻿@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+    var file_esign = Model.files[Model.files.Count - 1];
+    var file = file_esign.url;
+    var file_name = file_esign.name;
+    var current_user_id = ViewBag.current_user_id;
+}
+
+<div class="row clearfix">
+    <div class="col-12">
+        <section class="">
+            <div class="pt-2">
+                <div class="row">
+                    <div class="col-12 offset-md-9 col-md-3">
+                        @if (ViewBag.is_sign == true)
+                        {
+                            <div class="d-grid mx-auto pb-3 text-center">
+                                <a href="#" class="btn btn-danger mr-2 khong_ky" data-toggle="modal" data-animation="bounce" data-target=".modal-reason" style="width:100px">Không ký</a>
+                                <a href="/admin/document/sign/@Model.id" class="btn btn-success ky_ten" style="width:100px">Ký tên</a>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header" style="position:relative">
+                                @if (Model.status_id == 3)
+                                {
+                                    <div class="" style="
+                                    color: red;
+                                    text-align: center;
+                                    font-size: 21px;
+                                    position: absolute;
+                                    height: 100%;
+                                    z-index: 1000;
+                                    background: #00000059;
+                                    width: 100%;
+                                    top: 0;
+                                    left: 0;
+                                                ">
+                                        Đã hủy
+                                    </div>
+                                }
+                                <div class="h3">
+                                    <span class="badge badge-md badge-boxed  badge-soft-success mr-2 " style="vertical-align: middle;">@Model.code</span>@Model.name_vi
+                                    <div class="dropdown d-inline-block float-right" style="font-size:15px">
+                                        <a class="nav-link dropdown-toggle mr-n2 mt-n2" id="drop2" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v text-muted"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="drop2">
+                                            <a class="dropdown-item" href="@file" download="@file_name">Download</a>
+                                            @if (ViewBag.no_edit == 0)
+                                            {
+                                                <a class="dropdown-item" href="/admin/document/edit/@Model.id">Chỉnh sửa</a>
+                                            }
+                                            @if (ViewBag.no_suggestsign == 0)
+                                            {
+                                                <a class="dropdown-item" href="/admin/document/suggestsign/@Model.id">Gợi ý vị trí ký</a>
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="subtitle" style="padding-bottom: 0px;font-size: 12px;color: #888;">
+                                    Tạo bởi <a href="#">@Model.user.FullName</a>
+                                    lúc @Model.created_at.ToString("HH:mm dd/MM/yyyy")
+                                    <span class="badge px-3 ml-2 text-white" style="background: @Model.type.color">@Model.type.name</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        @Model.description_vi
+                                        <div class="d-none attachment">
+                                            <div class="mb-3">
+                                                <span class="h6">File đính kèm</span>
+                                            </div>
+                                            <div class="list_attachment file-box-content mt-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 section mt-3">
+                                        <div class="mb-3">
+                                            <span class="h6">File trình ký</span>
+                                        </div>
+										<div id='pdf-viewer' class="">
+											@if (Model.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Obsoleted)
+											{
+												<embed src="/admin/document/viewObsoletedEsign/@file_esign.id" style="width:100%;height:70vh;"
+													   type="application/pdf">
+											}
+											else if (Model.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Superseded)
+											{
+												<embed src="/admin/document/viewSupersededEsign/@file_esign.id" style="width:100%;height:70vh;"
+													   type="application/pdf">
+											}
+											else
+											{
+                                                <embed src="@file" style="width:100%;height:70vh;"
+													   type="application/pdf">
+											}
+
+										</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <b>Thảo luận</b>
+                            </div>
+                            <div class="card-body">
+                                <form id="binhluan" action="/admin/document/addcomment" method="POST" enctype="multipart/form-data">
+                                    <input name="user_id" value="@current_user_id" type="hidden" />
+                                    <input name="document_id" value="@Model.id" type="hidden" />
+                                    <textarea required name="comment" style="padding:10px 20px;border: 1px solid #d5d5d5; width:100%;border-radius: 5px;" rows="2" placeholder="Bình luận?"></textarea>
+                                    <div>
+                                        <div class="float-right">
+                                            <button class="btn btn-sm btn-gradient-primary text-light px-4 mb-0 add_comment">Bình luận</button>
+                                        </div>
+                                        <div class="d-inline-block">
+                                            <input name="file[]" multiple type="file" class="dropify" data-height="75" data-max-file-size="10M" />
+                                        </div>
+                                    </div>
+                                </form>
+                                <hr />
+                                <ul class="list-unstyled" id="comment_box">
+                                </ul>
+                                <div class="text-center load_more"><a href="#" class="btn btn-primary btn-sm px-5">Xem thêm bình luận</a></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group row">
+                            <div class="col-12 pt-2 pt-md-0">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Xét duyệt hồ sơ</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12 pb-2">
+                                                <div id="signature" class="activity">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 pt-2 pt-md-0">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Hồ sơ liên kết</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12 pb-2">
+                                                @foreach (var item in ViewBag.document_related)
+                                                {
+                                                    <div><a class='document_related' href="/admin/document/details/@item.id">@item.code-@item.name_vi</a></div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-12 pt-2">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Thời hạn văn bản</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <b class="col-md-6">
+                                                Ngày hiệu lực
+                                            </b>
+                                            <div class="col-md-6 text-right">
+                                                @if (Model.date_effect != null)
+                                                {
+                                                    @Model.date_effect.ToString("dd/MM/yyyy")
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        Chưa xác định
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                        @*<div class="row pt-2">
+                                        <b class="col-md-6">
+                                        Ngày rà soát
+                                        </b>
+                                        <div class="col-md-6 text-right">
+                                        @if (Model.date_review != null)
+                                        {
+                                        @Model.date_review.ToString("dd/MM/yyyy")
+                                        }
+                                        else
+                                        {
+                                        <span>
+                                        Chưa xác định
+                                        </span>
+                                        }
+                                        </div>
+                                        </div>*@
+                                        <div class="row pt-2">
+                                            <b class="col-md-6">
+                                                Ngày hết hạn
+                                            </b>
+                                            <div class="col-md-6 text-right">
+                                                @if (Model.date_expire != null)
+                                                {
+                                                    @Model.date_expire.ToString("dd/MM/yyyy")
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        Chưa xác định
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 pt-2">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Thông tin thêm</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <b class="col-md-6">
+                                                Loại hồ sơ
+                                            </b>
+                                            <div class="col-md-6 text-right">
+                                                @if (Model.type != null)
+                                                {
+                                                    @Model.type.name
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="row pt-2">
+                                            <b class="col-md-6">
+                                                Từ khóa tìm kiếm
+                                            </b>
+                                            <div class="col-md-6 text-right">
+                                                @Model.keyword
+                                            </div>
+                                        </div>
+                                        <div class="row pt-2">
+                                            <b class="col-md-12">
+                                                Người nhận
+                                                <a href="#" class="text-success float-right font-16 toggle_recieve"><i class="fas fa-plus-circle"></i></a>
+                                            </b>
+                                            <div class="col-md-12 my-1" id="span">
+                                                @foreach (var item in ViewBag.users_receive)
+                                                {
+                                                    <div class="user_receive" title="@item.FullName - @item.Email">@item.FullName</div>
+                                                }
+                                            </div>
+                                            <div class="col-md-12 my-1 d-none" id="select">
+                                                @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                    {
+                                                        multiple = "true",
+                                                        data_placeholder = "Người nhận",
+                                                        @class = "form-control form-control-sm"
+                                                    })
+                                                <div class="text-center mt-1">
+                                                    <div class='btn btn-sm btn-success save_recieve' style="cursor:pointer;">Lưu lại</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row pt-2">
+                                            <b class="col-md-12">
+                                                Tags
+                                                <a href="#" class="text-success float-right font-16 toggle_keyword"><i class="fas fa-plus-circle"></i></a>
+                                            </b>
+                                            <div class="col-12" id="span_users_keyword">
+                                            </div>
+                                            <div class="col-12 d-none" id="tag_keyword">
+                                                <input id="keyword" />
+                                                <div class="text-center mt-1">
+                                                    <div class='btn btn-sm btn-success save_keyword' style="cursor:pointer;">Lưu lại</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="col-12 pt-2">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Sự kiện</b>
+                                    </div>
+                                    <div class="card-body" style="max-height: 500px;overflow: auto;">
+                                        <div class="activity" id="event">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+</div>
+@if (ViewBag.is_sign == true)
+{
+    <div class="modal fade modal-reason" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title mt-0" id="myLargeModalLabel">Lý do không ký tên</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="cancle_reason" action="/admin/document/cancle" method="POST">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <input type="hidden" name="id" value="@ViewBag.user_signature.id" />
+                                <textarea required name="reason" class="form-control" rows="5" placeholder="Lý do"></textarea>
+                            </div>
+                            <div class="col-md-12 mt-2 text-center">
+                                <button type="submit" class="btn btn-sm btn-danger">Chấp nhận không ký</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<template class="file_template">
+    <div class="file-box" style="cursor:pointer" onclick="click_file('{{url}}','{{ext}}')">
+        <a href="{{url}}" download="{{name}}" class="download-icon-link">
+            <i class="dripicons-download file-download-icon"></i>
+        </a>
+        <div class="text-center">
+            <i class="far fa-file text-danger"></i>
+            <h6 class="text-truncate" title='{{name}}'>{{name}}</h6>
+            <small class="text-muted">{{ext}}</small>
+        </div>
+    </div>
+</template>
+<template class="user_signature_template">
+    {{#isPendding}}
+    <i class="icon-warning">
+        <span class="fas fa-spinner fa-spin" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/isPendding}}
+
+    {{#success}}
+    <i class="icon-success">
+        <span class="fas fa-check-circle" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/success}}
+
+    {{#cancle}}
+    <i class="text-white bg-danger">
+        <span class="fas fa-ban" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/cancle}}
+    <div class="user_signature time-item" data-id="{{id}}">
+        <div class="item-info" style="min-height:50px">
+            <h5 class="mt-0">
+                {{name}}
+                {{#isrepresentative}}
+                <br>
+                <span>Ủy quyền cho {{representative.fullName}}{{representative.position}}</span>
+                {{/isrepresentative}}
+            </h5>
+
+            {{#has_reason}}
+            <div>
+                <span class=""><b>Ý kiến:</b> {{reason}}</span>
+            </div>
+            {{/has_reason}}
+        </div>
+    </div>
+</template>
+<template class="comment_item">
+    <li class="media comment_box my-2" data-id="{{id}}" data-read="{{is_read}}">
+        <img class="mr-3 rounded-circle" src="{{user.image_url}}" width="50" alt="">
+        <div class="media-body border-bottom" style="display:grid;">
+            <h5 class="mt-0 mb-1">{{user.fullName}} <small class="text-muted"> - {{created_at}}</small></h5>
+
+            <div class="mb-2" style="white-space:pre-wrap">{{comment}}</div>
+            <div class="mb-2 attach_file file-box-content"></div>
+        </div>
+    </li>
+</template>
+<template class="event_item">
+    <i class="mdi mdi-checkbox-marked-circle-outline icon-success"></i>
+    <div class="time-item">
+        <div class="item-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="">{{created_at}}</span>
+            </div>
+            <h5>{{{event_content}}}</h5>
+        </div>
+    </div>
+</template>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src="~/lib/pdfview/pdf.js"></script>
+    <script type='text/javascript'>
+        var page = 'details';
+        var data = @Html.Raw(Json.Serialize(Model));
+        var keyword = @Html.Raw(Json.Serialize(ViewBag.keyword));
+        let isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+
+        if (isMobile) {
+            if (!data.files) {
+                alert("Không có hồ sơ!");
+                location.href = "/";
+            }
+
+            var file = data.files[data.files.length - 1];
+            var url = file.url;
+
+            // If absolute URL from the remote server is provided, configure the CORS
+            // header on that server.
+
+            // Loaded via <script> tag, create shortcut to access PDF.js exports.
+            var pdfjsLib = window['pdfjs-dist/build/pdf'];
+            var scale = 1;
+            var thePdf = null;
+            // The workerSrc property shall be specified.
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfview/pdf.worker.js';
+
+            // Asynchronous download of PDF
+            var loadingTask = pdfjsLib.getDocument(url);
+            loadingTask.promise.then(async function (pdf) {
+                console.log('PDF loaded');
+                thePdf = pdf;
+                $("#pdf-viewer").empty();
+                viewer = document.getElementById('pdf-viewer');
+                for (page = 1; page <= pdf.numPages; page++) {
+                    canvas = document.createElement("canvas");
+                    canvas.className = 'pdf-page-canvas';
+                    div = document.createElement("div");
+                    div.className = "box-canvas";
+                    div.appendChild(canvas);
+                    viewer.appendChild(div);
+                    await renderPage(page, canvas);
+                }
+                // Fetch the first page
+
+            }, function (reason) {
+                // PDF loading error
+                console.error(reason);
+            });
+        }
+
+        async function renderPage(pageNumber, canvas) {
+            return thePdf.getPage(pageNumber).then(function (page) {
+                viewport = page.getViewport({
+                    scale: scale
+                });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                });
+            });
+        }
+    </script>
+    <script>
+        var is_read_prev = true;
+        //console.log(data);
+        if (data.events) {
+            for (let item of data.events) {
+                add_event(item)
+            }
+        }
+        if (data.users_receive) {
+            var users_receive = [];
+            for (let item of data.users_receive) {
+                users_receive.push(item.user_id)
+            }
+            $("[name='users_receive[]']").val(users_receive);
+        }
+        if (data.users_signature) {
+            for (let item of data.users_signature) {
+                var position = item.user.position ? "(" + item.user.position + ")" : "";
+                var name = item.user.fullName + position;
+                add_signature({ name: name, id: item.user_id, status: item.status, reason: item.reason, representative: item.representative })
+            }
+        }
+        if (data.comments) {
+            if (data.comments.length == 11) {
+                data.comments.pop();
+            } else {
+                $(".load_more").remove();
+            }
+            for (let item of data.comments) {
+                add_comment(item, "append")
+            }
+        }
+        if (data.attachments) {
+            for (let item of data.attachments) {
+                add_attachment(item)
+            }
+        }
+        function add_signature(item) {
+            var template = $(".user_signature_template").html();
+            if (item.status == 1)
+                item.isPendding = true;
+            else if (item.status == 2)
+                item.success = true;
+            else if (item.status == 3)
+                item.cancle = true;
+
+            if (item.reason) {
+                item.has_reason = true;
+            }
+            if (item.representative) {
+                item.isrepresentative = true;
+                item.representative.position = item.representative.position ? "(" + item.representative.position + ")" : "";
+            }
+            var rendered = Mustache.render(template, item);
+            //console.log(item);
+            $("#signature").append(rendered);
+        }
+
+        function add_event(item) {
+
+            item.created_at = moment(item.created_at).format("HH:mm DD/MM/YYYY");
+            var template = $(".event_item").html();
+            var rendered = Mustache.render(template, item);
+            $("#event").append(rendered);
+        }
+        function add_comment(item, type = "prepend") {
+            if (type == "append") {
+                if (item.is_read == false && is_read_prev == true) { // Tin nhắn mới
+                    is_read_prev = false;
+                    $("#comment_box").append("<li><div class='grand-line'><span>Tin nhắn mới</span></div>");
+                }
+                if (item.is_read == true && is_read_prev == false) { // Tin nhắn cũ
+                    is_read_prev = true;
+                    $("#comment_box").append("<li><div class='grand-line'><span>Tin nhắn cũ</span></div>");
+                }
+            }
+            item.created_at = moment(item.created_at).format("HH:mm DD/MM/YYYY");
+            var template = $(".comment_item").html();
+            var rendered = Mustache.render(template, item);
+            if (type == "prepend")
+                $("#comment_box").prepend(rendered);
+            else
+                $("#comment_box").append(rendered);
+
+            if (item.files) {
+                for (var file of item.files) {
+                    var template = $(".file_template").html();
+                    file.url = path + file.url;
+                    var rendered = Mustache.render(template, file);
+                    $(".comment_box[data-id='" + item.id + "'] .attach_file").prepend(rendered);
+                }
+            }
+        }
+        function add_attachment(item) {
+            var template = $(".file_template").html();
+            item.url = path + item.url;
+            var rendered = Mustache.render(template, item);
+            $(".list_attachment").prepend(rendered);
+            $(".attachment").removeClass("d-none");
+        }
+        function click_file(url, ext) {
+            //doc, xls, ppt, pdf,
+            if (ext == '.docx' || ext == '.xlsx' || ext == '.pptx' || ext == '.doc' || ext == '.xls' || ext == '.ppt')
+                window.open('https://docs.google.com/viewer?embedded=true&url=' + url + '?token=sdfxvbdfgertewrkvcbgyrewbnfgsdfwetyrtrgdgweqfvqqazqhjkuiyort', '_blank', 'location=no');
+            else
+                window.open(url);
+        }
+        $(document).ready(function () {
+            $("#keyword").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#span_users_keyword").append('<div class="user_keyword" title="' + value + '">' + value + '</div>');
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".user_keyword[title='" + value + "']").remove();
+                },
+            });
+            if (keyword) {
+                for (let item of keyword) {
+                    $("#keyword").tagit("createTag", item);
+                }
+            }
+            $("[name='users_receive[]']").chosen({
+                "width": "100%",
+                search_contains: true
+            });
+            $(".add_comment").click(function (e) {
+                e.preventDefault();
+                var comment = $("[name=comment]").val();
+                var files = $("[name='file[]']")[0].files;
+                //console.log(files);
+                //return false;
+                if (comment == "" && !files.length) {
+                    alert("Mời nhập bình luận!");
+                    return false;
+                }
+                var form = $('#binhluan')[0];
+                var formData = new FormData(form);
+
+                $('#binhluan').trigger("reset");
+                $.ajax({
+                    url: "/admin/document/addcomment",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    type: "POST",
+                    success: function (result) {
+                        if (result.success) {
+                            add_comment(result.comment);
+                        }
+                    }
+                })
+            })
+            $(".load_more").click(function (e) {
+                e.preventDefault();
+                var from_id = $(".comment_box").last().data("id");
+                $.ajax({
+                    url: "/admin/document/morecomment",
+                    data: {
+                        document_id: data.id,
+                        from_id: from_id,
+                        limit: 11
+                    },
+                    dataType: "JSON",
+                    type: "GET",
+                    success: function (result) {
+                        if (result.comments.length == 11) {
+                            result.comments.pop();
+                        } else {
+                            $(".load_more").remove();
+                        }
+                        for (let item of result.comments) {
+                            add_comment(item, "append");
+                        }
+                    }
+                })
+            })
+            $(".toggle_recieve").click(function (e) {
+                e.preventDefault();
+                $("#span").toggleClass("d-none");
+                $("#select").toggleClass("d-none");
+            });
+            $(".save_recieve").click(function () {
+                var id = data.id;
+                var users_receive = $("[name='users_receive[]']").val();
+                $.ajax({
+                    url: "/admin/document/saverecieve",
+                    type: "POST",
+                    data: { id: id, users_receive: users_receive },
+                    dataType: "JSON",
+                    success: function () {
+                        location.reload();
+                    }
+                })
+            })
+            $(".toggle_keyword").click(function (e) {
+                e.preventDefault();
+                $("#span_users_keyword").toggleClass("d-none");
+                $("#tag_keyword").toggleClass("d-none");
+            });
+            $(".save_keyword").click(function () {
+                var id = data.id;
+                var keyword = $("#keyword").tagit("assignedTags");
+                $.ajax({
+                    url: "/admin/document/savekeyword",
+                    type: "POST",
+                    data: { document_id: id, keyword: keyword },
+                    dataType: "JSON",
+                    success: function () {
+                        location.reload();
+                    }
+                })
+            });
+        });
+    </script>
+}

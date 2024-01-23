@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Chữ ký điện tử</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- App favicon -->
+	<link rel="shortcut icon" href="/images/favicon.png">
+	<!--- FONTS -->
+	<link rel="stylesheet" id="font-css" href="https://fonts.googleapis.com/css?family=Arimo%3A400%2C500%2C600%2C400i%2C700&amp;display=swap&amp;ver=5.7.6" type="text/css" media="all">
+	<!-- App css -->
+
+
+</head>
+
+<body>
+	<!-- Top Bar End -->
+
+	<div class="page-wrapper">
+		<!-- end left-sidenav-->
+		<!-- Page Content-->
+		<div class="page-content">
+
+			<div class="container-fluid">
+				@RenderBody()
+			</div><!-- container -->
+
+		</div>
+		<!-- end page content -->
+	</div>
+	<!-- end page-wrapper -->
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,139 @@
+﻿@{
+	ViewData["Title"] = "Index";
+	Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row clearfix">
+	<div class="col-12">
+		<section class="card card-fluid">
+			<h5 class="card-header drag-handle">
+				Chứng thực hồ sơ
+			</h5>
+			<div class="card-body">
+				<input type="file" id="input-file-now" class="dropify" accept="application/pdf" data-allowed-file-extensions="pdf" data-max-file-size="10M" data-show-errors="true" />
+			</div>
+		</section>
+		<div class="row" id="cert">
+		</div>
+	</div>
+</div>
+
+<template class="cert">
+	<div class="col-md-4">
+		<div class="ribbon-1" data-id="{{stt}}">
+			<div class="ribbon-box">
+				{{#trustedRoot}}
+				<div class="ribbon ribbon-mark ribbon-icon bg-secondary"><i class="fas fa-check"></i></div>
+				{{/trustedRoot}}
+				{{^trustedRoot}}
+				<div class="ribbon ribbon-mark ribbon-icon bg-danger"><i class="fas fa-ban"></i></div>
+				{{/trustedRoot}}
+				<div class="row">
+					<b class="col-md-3">
+						Issuer
+					</b>
+					<div class="col-md-9 text-right">
+						{{issuerCN}}
+					</div>
+				</div>
+				<div class="row mt-2">
+					<b class="col-md-3">
+						Subject
+					</b>
+					<div class="col-md-9 text-right">
+						{{subjectCN}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<template id="document-group">
+	<div class="col-12 document-group" data-id="{{id}}">
+		<div style="background:white;padding:10px;margin:10px 0px;">
+			<div class="media">
+				<i class="far fa-file-pdf mr-2 text-danger" style="font-size:30px;"></i>
+				<div class="media-body">
+					<div><a class="text-dark tieu_de" href="/admin/Document/details/{{id}}">[{{code}}] {{name_vi}}</a></div>
+					<div>
+						<span class="small">Tạo bởi <i>{{created_by}}</i> lúc <i>{{created_at}}</i></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row list-cert">
+
+		</div>
+	</div>
+</template>
+@section Scripts{
+	<script type='text/javascript'>
+		$(document).ready(function () {
+			$("#input-file-now").change(function () {
+				var files = $(this)[0].files;
+				//console.log(files);
+				if (files.length > 0) {
+					var fd = new FormData();
+					fd.append('file', files[0]);
+					$(".preloader").fadeIn();
+					// AJAX request
+					$.ajax({
+						url: "/admin/documentcheck/check",
+						method: 'post',
+						data: fd,
+						contentType: false,
+						processData: false,
+						dataType: 'json',
+						success: function (response) {
+							if (response.message != 1) {
+								alert(response.message);
+								$(".preloader").fadeOut();
+								return;
+							}
+
+							$(".preloader").fadeOut();
+							$("#cert").empty();
+							for (let i in response.groups) {
+								var group = response.groups[i];
+								if (group.document) {
+									var document = group.document;
+									document.created_by = document.user.fullName;
+									document.created_at = moment(document.created_at).format("HH:mm DD/MM/YYYY");
+
+									var template1 = $("#document-group").html();
+									var rendered1 = Mustache.render(template1, document);
+									$("#cert").append(rendered1);
+
+									for (let y in group.list) {
+										var item = group.list[y];
+										item.stt = y;
+										var template = $(".cert").html();
+										var rendered = Mustache.render(template, item);
+										$("#cert .document-group[data-id='" + document.id + "'] .list-cert").append(rendered);
+									}
+								} else {
+									for (let y in group.list) {
+										var item = group.list[y];
+										item.stt = y;
+										var template = $(".cert").html();
+										var rendered = Mustache.render(template, item);
+										$("#cert").append(rendered);
+									}
+								}
+							}
+							if (!$("#cert .ribbon-box").length) {
+								$("#cert").append("<div class='col-12'><div class='card'><div class='card-body text-center'>Không tìm thấy chữ ký trong file</div></div></div>")
+							}
+						},
+						error: function (response) {
+							console.log("error : " + JSON.stringify(response));
+						}
+					});
+				} else {
+					//alert("Please select a file.");
+				}
+			});
+		});
+	</script>
+}

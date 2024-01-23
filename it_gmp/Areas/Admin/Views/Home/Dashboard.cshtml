@@ -1,0 +1,343 @@
+﻿@*
+	For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+	Layout = "_Admin";
+}
+
+
+<div class="row justify-content-center">
+	<div class="col-md-6 col-lg-3">
+		<div class="card report-card bg-purple-gradient shadow-purple">
+			<div class="card-body">
+				<div class="float-right">
+					<i class="dripicons-wallet report-main-icon bg-icon-purple"></i>
+				</div>
+				<span class="badge badge-light text-purple">Hồ sơ đã nhận</span>
+				<h3 class="my-3">@ViewBag.document_count</h3>
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div> <!--end col-->
+	<div class="col-md-6 col-lg-3">
+		<div class="card report-card bg-warning-gradient shadow-warning">
+			<div class="card-body">
+				<div class="float-right">
+					<i class="fas fa-spinner report-main-icon bg-icon-warning"></i>
+				</div>
+				<span class="badge badge-light text-warning">Chưa xử lý</span>
+				<h3 class="my-3">@ViewBag.document_notyet_count</h3>
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div> <!--end col-->
+	<div class="col-md-6 col-lg-3">
+		<div class="card report-card bg-success-gradient shadow-success">
+			<div class="card-body">
+				<div class="float-right">
+					<i class="dripicons-checkmark report-main-icon bg-icon-success"></i>
+				</div>
+				<span class="badge badge-light text-success">Đã xử lý</span>
+				<h3 class="my-3">@ViewBag.document_done_count</h3>
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div> <!--end col-->
+
+
+	<div class="col-lg-6">
+		<div class="card">
+			<div class="card-body">
+				<h4 class="header-title mt-0 mb-3 d-flex">
+					Tờ trình dự trù - trang thiết bị
+					@*<input style='margin-left:auto;max-width: 400px;' class='form-control form-control-sm search_date search_ttb' />*@
+				</h4>
+				<div class="">
+					<table class="table mb-0" id="table_ttb">
+						<thead class="thead-light">
+							<tr>
+								<th class="border-top-0">Hồ sơ</th>
+								<th class="border-top-0 text-center">Ngày hoàn thành</th>
+								<th class="border-top-0 text-center">Hành động</th>
+							</tr><!--end tr-->
+						</thead>
+						<tbody>
+						</tbody>
+					</table> <!--end table-->
+				</div><!--end /div-->
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div>
+
+	<div class="col-lg-6">
+		<div class="card">
+			<div class="card-body">
+				<h4 class="header-title mt-0 mb-3 d-flex">
+					Tờ trình dự trù - nguyên vật liệu
+					@*<input style='margin-left: auto;max-width: 400px;' class='form-control form-control-sm search_date search_nvl' />*@
+				</h4>
+				<div class="">
+					<table class="table mb-0" id="table_nvl">
+						<thead class="thead-light">
+							<tr>
+								<th class="border-top-0">Hồ sơ</th>
+								<th class="border-top-0 text-center">Ngày hoàn thành</th>
+								<th class="border-top-0 text-center">Hành động</th>
+							</tr><!--end tr-->
+						</thead>
+						<tbody>
+						</tbody>
+					</table> <!--end table-->
+				</div><!--end /div-->
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div>
+	<div class="col-lg-6">
+		<div class="card">
+			<div class="card-body">
+				<h4 class="header-title mt-0 mb-3 d-flex">
+					Hồ sơ khác
+					@*<input style='margin-left: auto;max-width: 400px;' class='form-control form-control-sm search_date search_other' />*@
+				</h4>
+				<div class="">
+					<table class="table mb-0" id="table_other">
+						<thead class="thead-light">
+							<tr>
+								<th class="border-top-0">Hồ sơ</th>
+								<th class="border-top-0 text-center">Ngày hoàn thành</th>
+								<th class="border-top-0 text-center">Hành động</th>
+							</tr><!--end tr-->
+						</thead>
+						<tbody>
+						</tbody>
+					</table> <!--end table-->
+				</div><!--end /div-->
+			</div><!--end card-body-->
+		</div><!--end card-->
+	</div>
+
+</div>
+
+<!-- Chart JS -->
+<script src="~/lib/chartjs/chart.min.js"></script>
+@section Scripts {
+	<script>
+		!function ($) {
+			"use strict";
+
+			var ChartJs = function () { };
+
+			ChartJs.prototype.respChart = function (selector, type, data, options) {
+				// get selector by context
+				var ctx = selector.get(0).getContext("2d");
+				// pointing parent container to make chart js inherit its width
+				var container = $(selector).parent();
+
+				// enable resizing matter
+				$(window).resize(generateChart);
+
+				// this function produce the responsive Chart JS
+				function generateChart() {
+					// make chart width fit with its container
+					var ww = selector.attr('width', $(container).width());
+					switch (type) {
+						case 'Line':
+							new Chart(ctx, { type: 'line', data: data, options: options });
+							break;
+						case 'Doughnut':
+							new Chart(ctx, { type: 'doughnut', data: data, options: options });
+							break;
+						case 'Pie':
+							new Chart(ctx, { type: 'pie', data: data, options: options });
+							break;
+						case 'Bar':
+							new Chart(ctx, { type: 'bar', data: data, options: options });
+							break;
+						case 'Radar':
+							new Chart(ctx, { type: 'radar', data: data, options: options });
+							break;
+						case 'PolarArea':
+							new Chart(ctx, { data: data, type: 'polarArea', options: options });
+							break;
+					}
+					// Initiate new chart or Redraw
+
+				};
+				// run function - render chart at first load
+				generateChart();
+			},
+
+				//init
+				ChartJs.prototype.initBar = function (barChart) {
+
+					var barOpts = {
+						responsive: true,
+						legend: {
+							labels: {
+								fontColor: '#50649c'
+							}
+						},
+						scales: {
+							xAxes: [{
+								display: true,
+								gridLines: {
+									color: "#eaf0f7"
+								},
+								ticks: {
+									fontColor: '#a4abc5'
+								}
+							}],
+							yAxes: [{
+								ticks: {
+									beginAtZero: true,
+									callback: function (value) { if (value % 1 === 0) { return value; } },
+									fontColor: '#a4abc5'
+								},
+								gridLines: {
+									color: "#eaf0f7",
+								}
+							}]
+						}
+
+					};
+					this.respChart($("#bar"), 'Bar', barChart, barOpts);
+
+
+				},
+				ChartJs.prototype.initPie = function (pieChart) {
+					var pieChartOpts = {
+						legend: {
+							labels: {
+								fontColor: '#50649c'
+							}
+						}
+					};
+					this.respChart($("#pie"), 'Pie', pieChart, pieChartOpts);
+				},
+				$.ChartJs = new ChartJs, $.ChartJs.Constructor = ChartJs
+
+		}(window.jQuery),
+
+			$(document).ready(function () {
+
+				$(".search_date").daterangepicker({
+					autoApply: true,
+					maxDate: new Date(),
+					locale: {
+						format: 'DD/MM/YYYY'
+					}
+				});
+
+				$(document).on("change", ".search_ttb", function () {
+					table_ttb.ajax.reload();
+				});
+				$(document).on("change", ".search_nvl", function () {
+					table_nvl.ajax.reload();
+				}); $(document).on("change", ".search_other", function () {
+					table_other.ajax.reload();
+				});
+
+				$(document).on("click", ".processed", function (e) {
+					e.preventDefault();
+					let text = "Đã xử lý hồ sơ này?";
+					if (confirm(text) == true) {
+						var href = $(this).attr("href");
+						$.ajax({
+							url: href,
+							success: function (data) {
+								if (data.success) {
+									alert("Đã chuyển trạng thái!");
+									table_ttb.ajax.reload();
+									table_nvl.ajax.reload();
+									table_other.ajax.reload();
+
+								}
+							}
+						})
+					}
+				});
+				let table_ttb = $('#table_ttb').DataTable({
+					//"stateSave": true,
+					"processing": true,
+					"serverSide": true,
+					// "ordering": false,
+					"ajax": {
+						"url": "/admin/home/tableTTB",
+						"dataType": "json",
+						"type": "POST",
+						'data': function (data) {
+							//let search_date = $(".search_ttb").val();
+							//data['search_date'] = search_date;
+						}
+					},
+					"columns": [{
+						"data": "name",
+						"orderable": false
+					}, {
+						"data": "date_finish",
+						"className": "text-center",
+						"orderable": false
+					}, {
+						"data": "action",
+						"className": "text-center",
+						"orderable": false
+					}
+					]
+				});
+				let table_nvl = $('#table_nvl').DataTable({
+					//"stateSave": true,
+					"processing": true,
+					"serverSide": true,
+					// "ordering": false,
+					"ajax": {
+						"url": "/admin/home/tableNVL",
+						"dataType": "json",
+						"type": "POST",
+						'data': function (data) {
+							//let search_date = $(".search_nvl").val();
+							//data['search_date'] = search_date;
+						}
+					},
+					"columns": [{
+						"data": "name",
+						"orderable": false
+					}, {
+						"data": "date_finish",
+						"className": "text-center",
+						"orderable": false
+					}, {
+						"data": "action",
+						"className": "text-center",
+						"orderable": false
+					}
+					]
+				});
+				let table_other = $('#table_other').DataTable({
+					//"stateSave": true,
+					"processing": true,
+					"serverSide": true,
+					// "ordering": false,
+					"ajax": {
+						"url": "/admin/home/tableOther",
+						"dataType": "json",
+						"type": "POST",
+						'data': function (data) {
+							//let search_date = $(".search_nvl").val();
+							//data['search_date'] = search_date;
+						}
+					},
+					"columns": [{
+						"data": "name",
+						"orderable": false
+					}, {
+						"data": "date_finish",
+						"className": "text-center",
+						"orderable": false
+					}, {
+						"data": "action",
+						"className": "text-center",
+						"orderable": false
+					}
+					]
+				});
+			});
+	</script>
+}
+

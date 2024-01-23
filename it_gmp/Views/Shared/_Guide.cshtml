@@ -1,0 +1,358 @@
+﻿<div id="guide" style=" position: fixed; bottom: 20px; left: 20px;" class="dropdown d-none d-sm-block">
+
+    <div class="d-none close_guide" title="Đóng hướng dẫn">
+        <a class="avatar-box thumb-md align-self-center" href="#">
+            <span class="avatar-title bg-warning rounded-circle"><i class="fas fa-times-circle"></i></span>
+        </a>
+    </div>
+    <div id="dropdownMenuLink" data-toggle="dropdown">
+        <a class="avatar-box thumb-md align-self-center" href="#">
+            <span class="avatar-title bg-success rounded-circle"><i class="fas fa-book"></i></span>
+        </a>
+        Hướng dẫn sử dụng
+    </div>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        <a class="dropdown-item" href="#" id="guide_1">Tạo hồ sơ</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#" id="guide_2">Ký hồ sơ</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#" id="guide_3">Chỉnh sửa hồ sơ hoặc thứ tự ký</a>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        check();
+        var guide_type = localStorage.getItem("guide_type") || 0;
+
+        if (guide_type == 1 && page == 'create_document') {
+            //console.log("create")
+
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('.title'),
+                    intro: 'Nhập tiêu đề',
+                    position: 'bottom',
+                }, {
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('.pdf'),
+                    intro: 'Upload file trình ký (PDF)',
+                    position: 'bottom',
+                }, {
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('.xet_duyet'),
+                    intro: 'Chọn người ký trong file PDF đã upload lên. Lưu ý thứ tự ký tên. ',
+                    position: 'left',
+                }, {
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('#signature_chosen'),
+                    intro: 'Nhấn vào đây để thêm người ký ',
+                    position: 'left',
+                }, {
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('.receive'),
+                    intro: 'Sau khi hoàn thành sẽ gửi mail đên người nhận',
+                    position: 'top',
+                }, {
+                    title: "Tạo hồ sơ",
+                    element: document.querySelector('.create-btn'),
+                    intro: 'Nhấn nút tạo mới để qua bước tiếp theo.',
+                    position: 'bottom',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            }).oncomplete(function () {
+                $(".create-btn").trigger("click");
+                //localStorage.removeItem("guide_create")
+            });
+            intro.start();
+        }
+        else if (guide_type == 1 && page == 'suggest') {
+
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Gợi ý vị trí ký",
+                    intro: 'Kéo tất cả chữ ký vào đúng vị trí file PDF',
+                }, {
+                    title: "Gợi ý vị trí ký",
+                    element: document.querySelector('#sign'),
+                    intro: 'Kéo tất cả chữ ký vào đúng vị trí file PDF',
+                    position: 'bottom',
+                }, {
+                    title: "Gợi ý vị trí ký",
+                    element: document.querySelector('#pdf-viewer'),
+                    intro: 'Kéo tất cả chữ ký vào đúng vị trí file PDF',
+                    position: 'bottom',
+                }, {
+                    title: "Gợi ý vị trí ký",
+                    element: document.querySelector('.savefile'),
+                    intro: 'Nhấn lưu lại để hoàn thành',
+                    position: 'top',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false
+            }).onchange(function () {
+                if (this._currentStep == 3) {
+                    localStorage.removeItem("guide_type")
+                }
+            }).oncomplete(function () {
+                //$(".create-btn").trigger("click");
+                localStorage.removeItem("guide_type")
+            });
+            intro.start();
+        }
+
+        if (guide_type == 2 && page == 'wait_sign') {
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Ký tên",
+                    intro: 'Nhấn vào tiêu đề của hồ sơ cần ký để tiếp tục',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            })
+            $("body").on("table_load", function () {
+                console.log("table_load");
+                intro.addStep({
+                    title: "Ký tên",
+                    element: document.querySelector('.tieu_de'),
+                    intro: 'Nhấn vào đây để tiếp tục',
+                    position: 'bottom',
+                });
+                intro.oncomplete(function () {
+                    var tieu_de = $(".tieu_de").first();
+                    var href = tieu_de.attr("href");
+                    //console.log(path + href);
+                    location.href = path + href;
+                });
+                intro.start();
+            });
+        }
+        else if (guide_type == 2 && page == 'details') {
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Ký tên",
+                    element: document.querySelector('.ky_ten'),
+                    intro: 'Nếu đồng ý với đề nghị, nhấn nút này để ký tên',
+                    position: 'bottom',
+                }, {
+                    title: "Ký tên",
+                    element: document.querySelector('.khong_ky'),
+                    intro: 'Nếu không đồng ý với đề nghị, nhấn nút này và nhập lý do không ký',
+                    position: 'bottom',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false
+            })
+            intro.start();
+        }
+        else if (guide_type == 2 && page == 'sign') {
+            localStorage.removeItem("guide_sign")
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Ký tên",
+                    intro: 'Xem đề nghị và kiểm chữ ký đã đúng vị trí cần ký.',
+                }, {
+                    title: "Ký tên",
+                    element: document.querySelector('.savefile'),
+                    intro: 'Nhấn vào đây để hoàn thành',
+                    position: 'top',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false,
+            }).onchange(function () {
+                if (this._currentStep == 1) {
+                    localStorage.removeItem("guide_type")
+                }
+            })
+            intro.oncomplete(function () {
+                localStorage.removeItem("guide_type")
+            });
+            intro.start();
+        }
+
+        if (guide_type == 3 && page == 'send_sign') {
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Chỉnh sửa",
+                    intro: 'Tìm kiếm hồ sơ cần chỉnh sửa và nhấn vào icon chỉnh sửa của hồ sơ để tiếp tục',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            })
+            $("body").on("table_load", function () {
+                console.log("table_load");
+                intro.addStep({
+                    title: "Chỉnh sửa",
+                    element: document.querySelector('.edit_document'),
+                    intro: 'Nhấn vào đây để tiếp tục',
+                    position: 'bottom',
+                });
+                intro.oncomplete(function () {
+                    var edit_document = $(".edit_document").first();
+                    var href = edit_document.attr("href");
+                    location.href = path + href;
+                });
+                intro.start();
+            });
+        }
+        else if (guide_type == 3 && page == 'edit_document') {
+            var intro = introJs();
+            intro.setOptions({
+                steps: [{
+                    title: "Chỉnh sửa",
+                    intro: 'Kiểm tra tất các thông tin.',
+                }, {
+                    title: "Chỉnh sửa",
+                    element: document.querySelector('.xet_duyet'),
+                    intro: 'Kiểm tra những người ký trong đề nghị. Lưu ý thứ tự ký tên. ',
+                    position: 'left',
+                }, {
+                    title: "Chỉnh sửa",
+                    element: document.querySelector('.close_signature'),
+                    intro: 'Nhấn vào đây để xóa người ký ',
+                    position: 'left',
+                }, {
+                    title: "Chỉnh sửa",
+                    element: document.querySelector('#signature_chosen'),
+                    intro: 'Nhấn vào đây để thêm người ký ',
+                    position: 'left',
+                }, {
+                    title: "Chỉnh sửa",
+                    element: document.querySelector('.cap_nhat'),
+                    intro: 'Nhấn vào lưu lại ',
+                    position: 'bottom',
+                }],
+                showProgress: true,
+                showButtons: true,
+                //disableInteraction: true,
+                showBullets: false
+            }).onchange(function () {
+                if (this._currentStep == 4) {
+                    localStorage.removeItem("guide_type")
+                }
+            })
+            intro.oncomplete(function () {
+                localStorage.removeItem("guide_type")
+            });
+            intro.start();
+        }
+        $("#guide_3").click(function () {
+            localStorage.setItem('guide_type', 3);
+            check();
+            var intro = introJs();
+            intro.setOptions({
+                steps: [
+                    {
+                        element: document.querySelector('.send'),
+                        intro: 'Nhấn vào đây để bắt đầu',
+                        position: 'right',
+                    }],
+                showProgress: true,
+                showButtons: false,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            })
+            intro.start();
+        })
+        $("#guide_2").click(function () {
+            if (!$(".wait_sign .badge-danger").length) {
+                alert("Không có hồ sơ nào để ký!");
+                return false;
+            }
+            localStorage.setItem('guide_type', 2);
+            check();
+            var intro = introJs();
+            intro.setOptions({
+                steps: [
+                    {
+                        element: document.querySelector('.wait_sign'),
+                        intro: 'Nhấn vào đây để bắt đầu',
+                        position: 'right',
+                    }],
+                showProgress: true,
+                showButtons: false,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            })
+            intro.start();
+        })
+        $("#guide_1").click(function () {
+            localStorage.setItem('guide_type', 1);
+            check();
+            var intro = introJs();
+            intro.setOptions({
+                steps: [
+                    {
+                        title: "Tạo hồ sơ",
+                        element: document.querySelector('#create_document'),
+                        intro: 'Nhấn vào đây để bắt đầu',
+                        position: 'right',
+                    }],
+                showProgress: true,
+                showButtons: false,
+                //disableInteraction: true,
+                showBullets: false,
+                doneLabel: "Tiếp Tục"
+            }).onchange(function (targetElement) {
+                //console.log(targetElement);
+                console.log(this._currentStep);
+                $("#create_document").off("click.guide");
+                switch (this._currentStep) {
+                    case 0:
+                        $("#create_document").on("click.guide", function () {
+                            intro.nextStep();
+                        });
+                        //$(".process").on("click.guide", function () {
+
+                        //});
+                        break;
+                    case 1:
+                        break;
+                }
+            }).onexit(function () {
+                $("#create_document").off("click.guide");
+            });
+            intro.start();
+        })
+        $(".close_guide").click(function () {
+            localStorage.removeItem("guide_type")
+            check();
+        })
+    });
+    function check() {
+        var guide_type = localStorage.getItem("guide_type") || 0;
+        if (guide_type != 0) {
+            $("#dropdownMenuLink").addClass("d-none");
+            $(".close_guide").removeClass("d-none");
+        } else {
+            $("#dropdownMenuLink").removeClass("d-none");
+            $(".close_guide").addClass("d-none");
+        }
+    }
+</script>

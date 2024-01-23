@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = null;
+}
+<center>
+    <table>
+        <tbody>
+            <tr>
+                <td width="600">
+                    <div>
+
+                        <p style="text-align:center;margin-bottom:30px">
+                            <img style="border:0;height:auto;line-height:100%;outline:none;text-decoration:none;width:400px;" src="@Model.link_logo" />
+                        </p>
+                        <div style="box-sizing:border-box;margin:0;padding:0 40px">
+                            <h2 style="text-align:left">Xin chào,</h2>
+                            <p style="text-align:left">Hệ thống chữ ký điện tử ASTA có một tin nhắn mới. </p>
+                            <p><b>@Model.name </b>đã gửi 1 tin nhắn.</p>
+                            <p style="background: #e3e3e3;
+    padding: 10px;">@Model.text</p>
+                            <p>Đường dẫn đến hồ sơ:</p>
+                            <p style="text-align:center;">
+                                <a href="@Model.link" style="padding: 10px 30px;
+    background: #ffb009;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 5px;">Xem hồ sơ</a>
+                            </p>
+                            <p style="text-align:left">Vui lòng đăng nhập trước khi xem hồ sơ</p>
+                            <p style="text-align:left">Trân trọng.</p>
+                            <p style="text-align:left">ASTA</p>
+                            <br>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</center>

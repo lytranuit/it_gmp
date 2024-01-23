@@ -1,0 +1,704 @@
+﻿@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+@using it.Areas.Admin.Models
+@if (TempData["StatusMessage"] != null)
+{
+    <div class="alert alert-success icon-custom-alert">
+        <i class="mdi mdi-check alert-icon"></i>
+        <div class="alert-text">
+            @TempData["StatusMessage"]
+        </div>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true"><i class="mdi mdi-close"></i></span>
+        </button>
+    </div>
+}
+<div class="row clearfix">
+    <div class="col-12">
+        <form method="POST" action="" id="form" enctype="multipart/form-data" autocomplete="on">
+            <section class="">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="d-inline-block w-100">
+                            <span class="page-title">Chỉnh sửa hồ sơ</span>
+                            <button type="submit" class="btn btn-sm btn-success float-right cap_nhat" style="width:140px">Cập nhật</button>
+
+                            @if ((bool)ViewData["is_manager_document"] == true && (Model.status_id == (int)DocumentStatus.Success || Model.status_id == (int)DocumentStatus.Current || Model.status_id == (int)DocumentStatus.Obsoleted || Model.status_id == (int)DocumentStatus.Superseded))
+                            {
+                                <a class="btn btn-sm btn-secondary float-right mr-3" style="width:140px" href="/admin/document/signcustom/@Model.id">Ký thêm</a>
+                            }
+                            @if ((bool)ViewData["is_manager_document"] == true && Model.status_id == (int)DocumentStatus.Success)
+                            {
+                                <button type="submit" class="btn btn-sm btn-secondary float-right mr-3 hien_hanh" style="width:140px">Hiện hành</button>
+                            }
+                            @if ((bool)ViewData["is_manager_document"] == true && Model.status_id == (int)DocumentStatus.Current)
+                            {
+                                <button type="submit" class="btn btn-sm btn-danger float-right mr-3 obsoleted" style="width:140px">Obsoleted</button>
+                            }
+                            @if (Model.status_id == (int)DocumentStatus.Draft)
+                            {
+                                <button class="btn btn-sm btn-primary float-right mr-2 trinh_ky" style="width:140px">Trình ký</button>
+                            }
+                            @if (Model.status_id == (int)DocumentStatus.Draft || Model.status_id == (int)DocumentStatus.Release)
+                            {
+                                <a href="#" class="btn btn-sm btn-danger float-right mr-2" data-toggle="modal" data-animation="bounce" data-target=".modal-reason" style="width:140px">Hủy</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="card  border">
+                                <div class="card-body">
+
+                                    <div class="form-group row">
+                                        <div class="col-md-3 mt-2 d-none">
+                                            <b class="col-form-label">Mã tài liệu:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <input class="form-control form-control-sm" type='text' name="code" required="" placeholder="Mã tài liệu" autocomplete="off" disabled />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mt-2">
+                                            <b class="col-form-label">Tiêu đề:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <input class="form-control form-control-sm" type='text' name="name_vi" required="" placeholder="Tiếng việt" autocomplete="off" maxlength="250" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Độ ưu tiên:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <select name="priority" class="form-control form-control-sm">
+                                                    <option value="1">Thấp</option>
+                                                    <option value="2" selected>Bình thường</option>
+                                                    <option value="3">Cao</option>
+                                                    <option value="4">Khẩn cấp</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Loại hồ sơ:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                @Html.DropDownList("type_id", (IEnumerable<SelectListItem>)ViewData["types"], new { required = true, @class = "form-control form-control-sm chosen" })
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Trạng thái:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <div class="">
+                                                    @if (Model.status_id == (int)DocumentStatus.Draft)
+                                                    {
+                                                        <select name="status_id" class="form-control form-control-sm" required>
+                                                            <option value="1" selected>Tạo mới</option>
+                                                            <option value="2">Trình ký</option>
+                                                        </select>
+                                                    }
+                                                    @if (Model.status_id == (int)DocumentStatus.Release)
+                                                    {
+                                                        <select name="status_id" class="form-control form-control-sm" disabled>
+                                                            <option value="2">Trình ký</option>
+                                                        </select>
+                                                    }
+                                                    @if (Model.status_id == (int)DocumentStatus.Cancle
+                                                    || Model.status_id == (int)DocumentStatus.Success
+                                                    || Model.status_id == (int)DocumentStatus.Processed
+                                                    || Model.status_id == (int)DocumentStatus.Current
+                                                    || Model.status_id == (int)DocumentStatus.Superseded
+                                                    || Model.status_id == (int)DocumentStatus.Obsoleted)
+                                                    {
+                                                        <select name="status_id" disabled class="form-control form-control-sm">
+                                                            <option value="3">Đã hủy</option>
+                                                            <option value="4">Đã ký xong</option>
+                                                            <option value="5">Đã xử lý</option>
+                                                            <option value="6">Hiện hành</option>
+                                                            <option value="7">Superseded</option>
+                                                            <option value="8">Obsoleted</option>
+                                                        </select>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9 mt-2">
+                                            <b class="col-form-label">Người nhận:</b>
+                                            <div class="pt-1">
+                                                <div class="">
+                                                    @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                        {
+                                                            multiple = "true",
+                                                            data_placeholder = "Người nhận",
+                                                            @class = "chosen form-control form-control-sm"
+                                                        })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <b class="col-12 col-form-label">Ghi chú:</b>
+                                        <div class="col-12 pt-1">
+                                            <textarea class="form-control" name="description_vi" rows="10" maxlength="2000"></textarea>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="card border">
+                                <div class="card-header">
+                                    <b>File trình ký</b>
+                                    <div class="float-right">
+                                        <a href="/admin/document/suggestsign/@Model.id" class="btn btn-sm btn-success text-white">Gợi ý vị trí ký</a>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 pt-2 list_file file-box-content">
+                                            <div class="text-center no_item">
+                                                Không có đính kèm
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border">
+                                <div class="card-header">
+                                    <b>Đính kèm</b>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 p-0">
+                                            <input name="attachments" type="file" id="input-file-now" class="dropify" data-max-file-size="20M" data-show-errors="true" multiple>
+                                        </div>
+                                        <div class="col-12 pt-2 list_attachment file-box-content">
+                                            <div class="text-center no_item_attachment p-2">
+                                                Không có đính kèm
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group row">
+                                <div class="col-12 pt-2 pt-md-0">
+                                    <div class="card border xet_duyet">
+                                        <div class="card-header">
+                                            <b>Xét duyệt hồ sơ</b>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12 pb-2">
+                                                    <div id="signature" class="activity">
+                                                    </div>
+                                                </div>
+                                                @if (Model.status_id == (int)DocumentStatus.Draft
+                                                || Model.status_id == (int)DocumentStatus.Release
+                                                || Model.status_id == (int)DocumentStatus.Success)
+                                                {
+                                                    <div class="col-12">
+                                                        @Html.DropDownList("signature", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                            {
+                                                                data_placeholder = "Người Xét duyệt",
+                                                                @class = "chosen form-control form-control-sm"
+                                                            })
+                                                    </div>
+                                                }
+                                                <div class="col-12">
+                                                    <div class="custom-control custom-switch switch-success mt-2">
+                                                        <input type="checkbox" id="is_sign_parellel" class="custom-control-input" name="is_sign_parellel" value="true">
+                                                        <label for="is_sign_parellel" class="custom-control-label">Ký song song</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-12 pt-2">
+                                    <div class="card border">
+                                        <div class="card-header">
+                                            <b>Thời hạn văn bản</b>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mt-2">
+                                                <b class="col-form-label">Ngày hiệu lực:</b>
+                                                <div class="pt-1">
+                                                    <input class="form-control form-control-sm" type='date' name="date_effect" autocomplete="off" />
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <b class="col-form-label">Ngày hết hiệu lực:</b>
+                                                <div class="pt-1">
+                                                    <input class="form-control form-control-sm" type='date' name="date_expire" autocomplete="off" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 pt-2">
+                                    <div class="card border">
+                                        <div class="card-header">
+                                            <b>Tùy chỉnh</b>
+                                        </div>
+                                        <div class="card-body">
+
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Vị trí lưu trữ:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="location" type="text" id="location" class="form-control form-control-sm" placeholder="\\data\Share\Asta Doc\...">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <b class="col-12 col-form-label">Hồ sơ liên kêt:</b>
+                                                <div class="col-12 pt-1">
+                                                    @Html.DropDownList("documents_related[]", (IEnumerable<SelectListItem>)ViewData["documents"], new
+                                                        {
+                                                            multiple = "true",
+                                                            data_placeholder = "Hồ sơ liên kết",
+                                                            @class = "chosen form-control form-control-sm"
+                                                        })
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <b class="col-12 col-form-label">Từ khóa:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input class="form-control form-control-sm" type='text' name="keyword" placeholder="Giúp tìm kiếm nhanh" autocomplete="off" />
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Tags:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input id="keyword" class="tagit" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </div>
+</div>
+<div class="modal fade modal-reason" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title mt-0" id="myLargeModalLabel">Lý do hủy</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="cancle_reason" action="/admin/document/cancledocument/@Model.id" method="POST">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <textarea required name="reason" class="form-control" rows="5" placeholder="Lý do"></textarea>
+                        </div>
+                        <div class="col-md-12 mt-2 text-center">
+                            <button type="submit" class="btn btn-sm btn-danger">Chấp nhận hủy</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<template class="file_template">
+    <div class="file-box" data-id="{{id}}">
+        <a href="{{url}}" download="{{name}}" class="download-icon-link">
+            <i class="dripicons-download file-download-icon"></i>
+        </a>
+        <div class="text-center">
+            <i class="far fa-file-pdf text-danger"></i>
+            <h6 class="text-truncate" title='{{name}}'>{{name}}</h6>
+            <small class="text-muted">{{created_at}}</small>
+            {{#isDelete}}
+            <div style="cursor: pointer;" class="delete_attach">
+                <i class="fas fa-times-circle text-danger font-16"></i>
+            </div>
+            {{/isDelete}}
+        </div>
+    </div>
+</template>
+<template class="user_signature_template">
+    {{#isPendding}}
+    <i class="icon-warning">
+        <span class="fas fa-spinner fa-spin" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/isPendding}}
+
+    {{#success}}
+    <i class="icon-success">
+        <span class="fas fa-check-circle" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/success}}
+
+    {{#cancle}}
+    <i class="text-white bg-danger">
+        <span class="fas fa-ban" style="transform: rotate(-45deg);"></span>
+    </i>
+    {{/cancle}}
+    <div class="user_signature time-item" data-id="{{id}}" data-sign_id="{{sign_id}}">
+        <div class="item-info" style="min-height:50px">
+            <h5 class="mt-0">
+                {{fullName}}{{position}}
+                {{#isrepresentative}}
+                <br>
+                <span>Ủy quyền cho {{representative.fullName}}{{representative.position}}</span>
+                {{/isrepresentative}}
+                {{#isPendding}}
+                <span class="close_signature" style="cursor:pointer">
+                    <span class="far fa-times-circle text-danger"></span>
+                </span>
+                {{/isPendding}}
+
+                {{#cancle}}
+                <div>
+                    <span class=""><b>Lý do:</b> {{reason}}</span>
+                </div>
+                {{/cancle}}
+            </h5>
+        </div>
+
+
+        <input type="hidden" name="dic_users_signature[{{random}}][id]" value="{{sign_id}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][user_id]" value="{{id}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][representative_id]" value="{{representative_id}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][user_sign]" value="{{user_sign}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][position_x]" value="{{position_x}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][position_y]" value="{{position_y}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][page]" value="{{page}}" />
+        <input type="hidden" name="dic_users_signature[{{random}}][stt]" value="{{stt}}" class="stt" />
+
+    </div>
+</template>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        var page = 'edit_document'
+        var data = @Html.Raw(Json.Serialize(Model));
+        var keyword = @Html.Raw(Json.Serialize(@ViewData["keyword"]));
+        var is_admin = @ViewData["is_admin"];
+        if (!is_admin) {
+            if (data.status_id == 6) {
+                $("[name='date_effect']").prop("disabled", true);
+            }
+            if (data.status_id == 7) {
+                $("[name='date_effect']").prop("disabled", true);
+                $("[name='date_expire']").prop("disabled", true);
+            }
+            if (data.status_id == 8) {
+                $("[name='date_effect']").prop("disabled", true);
+                $("[name='date_expire']").prop("disabled", true);
+            }
+        }
+        if (data.users_receive) {
+            data.users_receive = data.users_receive.map(function (item) {
+                // item chính là phần tử đang lặp
+                return item['user_id']; // giá trị trả về sẽ thay thế cho giá trị ban đầu của phần tử
+            });
+        }
+        if (data.related) {
+            data.documents_related = data.related.map(function (item) {
+                // item chính là phần tử đang lặp
+                return item['document_related_id']; // giá trị trả về sẽ thay thế cho giá trị ban đầu của phần tử
+            });
+        }
+        if (data.files) {
+            for (let item of data.files) {
+                add_file(item);
+            }
+        }
+        if (data.attachments) {
+            for (let item of data.attachments) {
+                add_attachment(item);
+            }
+        }
+        if (data.users_signature) {
+            for (let item of data.users_signature) {
+                let value = item.user_id;
+                let user = item.user;
+                // $("[name='signature'] option[value='" + value + "']").prop("disabled", true);
+                //console.log(item);
+                if (item.status == 1)
+                    user.isPendding = true;
+                else if (item.status == 2)
+                    user.success = true;
+                else if (item.status == 3) {
+                    user.reason = item.reason;
+                    user.cancle = true;
+                }
+                user.representative = item.representative;
+                user.representative_id = item.representative_id
+                user.sign_id = item.id;
+                user.random = rand(10);
+                add_signature(user);
+            }
+            // $("[name='signature']").trigger('chosen:updated');
+        }
+
+        function add_file(item) {
+            var template = $(".file_template").html();
+            var rendered = Mustache.render(template, item);
+            $(".no_item").remove();
+            $(".list_file").append(rendered);
+        }
+
+        function add_attachment(item) {
+            item.isDelete = true;
+            var template = $(".file_template").html();
+            var rendered = Mustache.render(template, item);
+            $(".no_item_attachment").remove();
+            $(".list_attachment").append(rendered);
+        }
+        function add_signature(item) {
+            if (item.representative) {
+                item.isrepresentative = true;
+                item.representative.position = item.representative.position ? "(" + item.representative.position + ")" : "";
+            }
+            item.position = item.position ? "(" + item.position + ")" : "";
+            var template = $(".user_signature_template").html();
+            var rendered = Mustache.render(template, item);
+            //console.log(item);
+            $("#signature").append(rendered);
+        }
+        async function change_signature() {
+            let $this = $("[name='signature']");
+            let value = $this.val();
+            if (value == null || value == "") {
+                return;
+            }
+            // AJAX request
+            let user = await $.ajax({
+                url: "/admin/document/getuser/" + value,
+                dataType: 'json'
+            });
+            if (!user.is_sign) {
+                alert("Người này chưa có chữ ký! Vui lòng liên hệ Admin.");
+                return false;
+            }
+            user.isPendding = true;
+            user.sign_id = 0;
+            user.random = rand(10);
+            add_signature(user);
+            //update stt
+            $(".stt").each(function (k, v) {
+                $(this).val(k);
+            })
+            $this.val('').trigger('chosen:updated');
+            // $("option[value='" + value + "']", $this).prop("disabled", true);
+            // $this.trigger('chosen:updated');
+        }
+        function rand(length) {
+            // https://stackoverflow.com/a/47496558/810360
+            //[...Array(length)].map(() => Math.random().toString(36)[2])
+
+            // https://stackoverflow.com/a/46536578/810360
+            var char;
+            var arr = [];
+            var length = length || 32;
+            var alphaNumeric = [
+                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+                74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 97, 98,
+                99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
+                114, 115, 116, 117, 118, 119, 120, 121, 122,
+            ];
+            do {
+                char = ~~(Math.random() * 128);
+                if (alphaNumeric.indexOf(char) !== -1) {
+                    arr.push(String.fromCharCode(char));
+                }
+            } while (arr.length < length);
+
+            return arr.join("");
+        }
+        $(document).ready(async function () {
+            $("#keyword").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='keyword[]' value='" + value + "' class='keyword' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".keyword[value='" + value + "']").remove();
+                },
+            });
+            if (keyword) {
+                for (let item of keyword) {
+                    $("#keyword").tagit("createTag", item);
+                }
+            }
+            fillForm($("#form"), data);
+            $(".button_file").click(function () {
+                $(".file_document").trigger("click");
+            })
+            $(".file_document").change(function () {
+                // Get the selected file
+                var files = $('.file_document')[0].files;
+                if (files.length > 0) {
+                    var fd = new FormData();
+                    for (var count = 0; count < files.length; count++) {
+                        // Append data
+                        fd.append('files[]', files[count]);
+                    }
+                    $(".preloader").fadeIn();
+                    // AJAX request
+                    $.ajax({
+                        url: "/admin/document/fileupload",
+                        method: 'post',
+                        data: fd,
+                        contentType: false,
+                        processData: false,
+                        dataType: 'json',
+                        success: function (response) {
+                            $(".preloader").fadeOut();
+                            if (response.success == 1) { // Uploaded successfully
+                                let items = response.items;
+                                for (let item of items) {
+                                    add_file(item);
+                                }
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function (response) {
+                            console.log("error : " + JSON.stringify(response));
+                        }
+                    });
+                } else {
+                    alert("Please select a file.");
+                }
+            })
+            $(document).on("click", ".remove_file", function () {
+                $(this).parents(".file_box").remove();
+            });
+            $("[name='signature']").change(function () {
+                change_signature();
+            }).val('').trigger('chosen:updated');
+            $(document).on("click", ".close_signature", function () {
+                let parent = $(this).parents(".user_signature");
+                let value = parent.data("id");
+                let prev_signature = parent.prev();
+                parent.remove();
+                prev_signature.remove();
+                // $("[name='signature'] option[value='" + value + "']").prop("disabled", false);
+                // $("[name='signature']").val('').trigger('chosen:updated');
+            });
+            $(document).on("click", ".delete_attach", function (e) {
+                var parent = $(this).parents(".file-box");
+                var id = parent.data("id");
+                parent.remove();
+                $("#form").append("<input type='hidden' name='delete_attach[]' value='" + id + "'/>")
+            });
+            $("[name='type_id']").change(function () {
+                var val = $(this).val();
+                if (val > 0) {
+                    $.ajax({
+                        url: "/admin/document/gettype",
+                        data: {
+                            id: val
+                        },
+                        type: "POST",
+                        success: function (res) {
+                            if (res.success) {
+                                //var is_self_check = res.item.is_self_check;
+                                //if (is_self_check) {
+                                //	var users_follow = [user_id];
+                                //	$("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
+                                //} else {
+
+                                //	var users_follow = res.item.users_follow.map(function (item) {
+                                //		return item.user_id;
+                                //	});
+                                //	$("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
+                                //}
+                                var users_receive = res.item.users_receive.map(function (item) {
+                                    return item.user_id;
+                                });
+                                $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
+                            }
+                        }
+                    });
+                }
+            })
+            $("#is_sign_parellel").change(function () {
+                var val = $(this).is(":checked");
+                // console.log(val);
+                if (val) {
+
+                } else {
+
+                }
+            })
+            $(".cap_nhat").click(function (e) {
+                e.preventDefault();
+                if (!$("#form").valid()) {
+                    return false;
+                }
+                if (!$("#signature .user_signature").length) {
+                    alert("Chưa chọn người xét duyệt")
+                    return false;
+                }
+                $("#form").submit();
+            })
+            $(".trinh_ky").click(function (e) {
+                e.preventDefault();
+                let text = "Trình ký hồ sơ này?";
+                if (confirm(text) == true) {
+                    $("[name='status_id']").val(2);
+                    $(".cap_nhat").trigger("click");
+                }
+            });
+
+            $(".processed").click(function (e) {
+                e.preventDefault();
+                let text = "Đã xử lý hồ sơ này?";
+                if (confirm(text) == true) {
+                    $("#form").append("<input name='status_id' value='5' />");
+                    $(".cap_nhat").trigger("click");
+                }
+            });
+            $(".hien_hanh").click(function (e) {
+                e.preventDefault();
+                let text = "Hiện hành hồ sơ này?";
+                if (confirm(text) == true) {
+                    $("[name='date_effect']").prop("required", true);
+                    $("#form").append("<input name='status_id' value='6' />");
+                    $(".cap_nhat").trigger("click");
+
+                }
+            });
+            $(".superseded").click(function (e) {
+                e.preventDefault();
+                let text = "Thay thế hồ sơ này?";
+                if (confirm(text) == true) {
+                    $("[name='date_effect']").prop("required", true);
+                    $("[name='date_expire']").prop("required", true);
+                    $("#form").append("<input name='status_id' value='7' />");
+                    $(".cap_nhat").trigger("click");
+
+                }
+            });
+            $(".obsoleted").click(function (e) {
+                e.preventDefault();
+                let text = "Hết hiệu lực hồ sơ này?";
+                if (confirm(text) == true) {
+                    $("[name='date_effect']").prop("required", true);
+                    $("[name='date_expire']").prop("required", true);
+                    $("#form").append("<input name='status_id' value='8' />");
+                    $(".cap_nhat").trigger("click");
+
+                }
+            });
+        })
+    </script>
+}

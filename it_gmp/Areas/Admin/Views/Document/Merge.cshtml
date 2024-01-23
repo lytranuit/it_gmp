@@ -1,0 +1,258 @@
+﻿@{
+    ViewData["Title"] = "Suggest Sign";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container">
+    <div class="card no-shadow border">
+        <div class="card-body">
+            <div class="row g-0">
+                <div class="col-12">
+                    <strong>Cắt hoặc Nối file Pdf</strong><br />
+                    <small class="text-muted">Kết hợp PDF theo thứ tự bạn muốn.</small>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-9" style="border: 5px solid #d7d7d7;border-left: 0;">
+                    <div id='pdf-viewer' class=""></div>
+                </div>
+                <div class="col-3 order-first" style="border: 5px solid #d7d7d7;height: 77vh;display: inline-block;padding:10px">
+                    <div id="list_file">
+                    </div>
+                    <div class="text-center" id="form-merge">
+                        <button class="btn btn-success addfile"><i class="fas fa-plus-circle"></i> Thêm file</button>
+                        <input type="file" id="fileinput" class="d-none" accept="application/pdf" />
+                    </div>
+                </div>
+                <div class="col-md-12 text-center mt-3">
+                    <button class="btn-primary btn savefile">Thực hiện</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<template class="template_file">
+    <div class="media p-2">
+        <i class="far fa-file-pdf mr-2 text-danger" style="font-size:30px;"></i>
+        <div class="media-body">
+            <div>
+                <a class="text-dark tieu_de" href="#">
+                    {{name}} ({{size}})
+                </a>
+                <a class="delete float-right text-danger ml-1" href="#">
+                    <i class="fas fa-minus-circle"></i>
+                </a>
+                <a class="up float-right text-success" href="#">
+                    <i class="fas fa-arrow-alt-circle-up"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</template>
+<style>
+    .div_delete {
+        position: absolute;
+        z-index: 10;
+        right: 0;
+        top: 0;
+        font-size: 20px;
+        color: red;
+        cursor: pointer
+    }
+</style>
+@section Scripts {
+
+    <script src="~/lib/pdfview/pdf.js"></script>
+    <script type='text/javascript'>
+        var page = "merge";
+
+        // If absolute URL from the remote server is provided, configure the CORS
+        // header on that server.
+
+        // Loaded via <script> tag, create shortcut to access PDF.js exports.
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        var scale = 1;
+        var thePdf = null;
+        // The workerSrc property shall be specified.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfview/pdf.worker.js';
+        //return;
+        // Asynchronous download of PDF
+
+        async function renderPage(pageNumber, canvas) {
+            return thePdf.getPage(pageNumber).then(function (page) {
+                viewport = page.getViewport({
+                    scale: scale
+                });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                });
+            });
+        }
+
+    </script>
+    <script>
+        var list_files = [];
+        var list_page = { list_page: [] };
+        $(document).ready(function () {
+            $(".addfile").click(function () {
+                $("#fileinput").click();
+            });
+            $("#fileinput").change(function (event) {
+                list_files.push(event.target.files[0]);
+                read_list();
+                upload_list();
+                $("#fileinput").val('');
+            });
+            $(document).on("click", ".up", function () {
+                var parent = $(this).closest(".media");
+                var index = parent.index();
+                if (index > 0) {
+                    var b = list_files[index];
+                    list_files[index] = list_files[index - 1];
+                    list_files[index - 1] = b;
+                    read_list();
+                    upload_list();
+                }
+            });
+            $(document).on("click", ".delete", function () {
+                var parent = $(this).closest(".media");
+                var index = parent.index();
+                list_files.splice(index, 1);
+                read_list();
+                upload_list();
+            });
+            $(document).on("click", ".div_delete", function () {
+                if (confirm("Xác nhận xóa page này!") == false) {
+                    return;
+                }
+                var parent = $(this).closest(".box-canvas");
+                parent.addClass("d-none");
+                get_list_page();
+            });
+            $(".savefile").click(function () {
+                if (!list_files.length) {
+                    alert("Chưa chọn file PDF");
+                    return;
+                }
+                if (confirm("Xác nhận hoàn thành!") == false) {
+                    return;
+                }
+                var formData = new FormData();
+                for (var file of list_files) {
+                    formData.append("file", file);
+                }
+                buildFormData(formData, list_page);
+                $.ajax({
+                    url: "/admin/document/mergePdf",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.success) {
+                            window.open(res.link, "_blank");
+                        }
+                    },
+                    error: function (res) {
+
+                    }
+                });
+
+            })
+        });
+        async function read_list() {
+            $("#pdf-viewer").empty();
+            viewer = document.getElementById('pdf-viewer');
+            for (var file of list_files) {
+                var tmp = URL.createObjectURL(file);
+                var loadingTask = pdfjsLib.getDocument(tmp);
+                await loadingTask.promise.then(async function (pdf) {
+                    console.log('PDF loaded');
+                    thePdf = pdf;
+                    var wrap = document.createElement("div");
+                    wrap.className = "wrap-box-canvas";
+                    for (page = 1; page <= pdf.numPages; page++) {
+                        var canvas = document.createElement("canvas");
+                        canvas.className = 'pdf-page-canvas';
+
+                        var div_delete = document.createElement("div");
+                        div_delete.className = "div_delete";
+                        var icon_delete = document.createElement("i");
+                        icon_delete.className = "fas fa-minus-circle";
+                        div_delete.appendChild(icon_delete);
+
+
+                        var div = document.createElement("div");
+                        div.className = "box-canvas";
+                        div.appendChild(canvas);
+                        div.appendChild(div_delete);
+
+                        wrap.appendChild(div);
+                        await renderPage(page, canvas);
+                    }
+                    viewer.appendChild(wrap);
+                }, function (reason) {
+                    // PDF loading error
+                    console.error(reason);
+                });
+            }
+        }
+        async function upload_list() {
+            $("#list_file").empty();
+            for (var file of list_files) {
+                var template = $(".template_file").html();
+                var data = { name: file.name, size: formatSize(file.size) };
+                var rendered = Mustache.render(template, data);
+                $("#list_file").append(rendered);
+            }
+
+        }
+        function get_list_page() {
+            list_page.list_page = [];
+            $(".wrap-box-canvas").each(function () {
+                var index = $(this).index();
+                list_page.list_page[index] = [];
+                $(".box-canvas", $(this)).not(".d-none").each(function () {
+                    var index_page = $(this).index() + 1;
+                    list_page.list_page[index].push(index_page);
+                });
+                if (!list_page.list_page[index].length) {
+                    $(this).remove();
+                    list_files.splice(index, 1);
+                    upload_list();
+                    get_list_page();
+                }
+            })
+        }
+        function formatSize(bytes) {
+            if (bytes === 0) {
+                return "0 B";
+            }
+
+            let k = 1000,
+                dm = 3,
+                sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+                i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+        };
+        function buildFormData(formData, data, parentKey) {
+            if (data && typeof data === 'object' && !(data instanceof Date) && !(data instanceof File)) {
+                Object.keys(data).forEach(key => {
+                    buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+                });
+            } else {
+                const value = data == null ? '' : data;
+
+                formData.append(parentKey, value);
+            }
+        }
+
+    </script>
+}

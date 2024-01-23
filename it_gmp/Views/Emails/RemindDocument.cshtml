@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = null;
+}
+<center>
+    <table>
+        <tbody>
+            <tr>
+                <td width="600">
+                    <div>
+
+                        <p style="text-align:center;margin-bottom:30px">
+                            <img style="border:0;height:auto;line-height:100%;outline:none;text-decoration:none;width:400px;" src="@Model.link_logo" />
+                        </p>
+                        <div style="box-sizing:border-box;margin:0;padding:0 40px">
+                            <h2 style="text-align:left">Xin chào,</h2>
+                            <p style="text-align:left">Hệ thống chữ ký điện tử ASTA có @Model.count hồ sơ cần chữ ký của bạn </p>
+                            <table style="width:100%">
+                                <thead style="background:#f1f5fa;">
+                                    <tr>
+                                        <td style="padding:10px;">Mã</td>
+                                        <td style="padding:10px;">Tên</td>
+                                        <td style="padding:10px;">Loại</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.data)
+                                    {
+                                        <tr>
+                                            <td style="padding:10px;">@item.code</td>
+                                            <td style="padding:10px;">@item.name_vi</td>
+                                            <td style="padding:10px;">@item.type.name</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <p>Đường dẫn đến danh sách hồ sơ:</p>
+                            <p style="text-align:center;">
+                                <a href="@Model.link" style="padding: 10px 30px;
+    background: #ffb009;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 5px;">Xem ngay</a>
+                            </p>
+                            <p style="text-align:left">Vui lòng đăng nhập trước khi xem hồ sơ</p>
+                            <p style="text-align:left">Trân trọng.</p>
+                            <p style="text-align:left">ASTA</p>
+                            <br>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</center>

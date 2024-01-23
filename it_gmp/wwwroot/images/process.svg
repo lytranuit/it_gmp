@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.549" y1="-0.261" x2="0.8" y2="0.8" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#53d7fe"/>
+      <stop offset="1" stop-color="#02a3ec"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="0.636" y1="1.198" x2="0.389" y2="0.113" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#00bafd"/>
+      <stop offset="0.09" stop-color="#00bbfb" stop-opacity="0.839"/>
+      <stop offset="0.76" stop-color="#00c0f2" stop-opacity="0.071"/>
+      <stop offset="0.88" stop-color="#00c0f1" stop-opacity="0.02"/>
+      <stop offset="1" stop-color="#00c0f1" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g id="Group_47715" data-name="Group 47715" transform="translate(11992 9273)">
+    <rect id="Rectangle_20909" data-name="Rectangle 20909" width="32" height="32" rx="7" transform="translate(-11992 -9273)" fill="url(#linear-gradient)"/>
+    <g id="Group_47714" data-name="Group 47714" transform="translate(48.395 -0.521)">
+      <circle id="Ellipse_4450" data-name="Ellipse 4450" cx="10" cy="10" r="10" transform="translate(-12034.395 -9266.479)" fill="#fff"/>
+      <path id="Path_82199" data-name="Path 82199" d="M160.79,148.88H174.1v13.305H160.79Z" transform="translate(-12191.499 -9412.435)" fill="none"/>
+      <path id="Path_82200" data-name="Path 82200" d="M303.827,258.768a9.739,9.739,0,0,1-3.6,7.348l-3.661-2.769c.057-.07,3.648-4.516,3.609-4.662Z" transform="translate(-12318.228 -9514.914)" opacity="0.7" fill="url(#linear-gradient-2)"/>
+      <path id="Path_82201" data-name="Path 82201" d="M253.946,330.931a.791.791,0,0,1-.792.791H245.62s.092-3.067.092-4.072a8,8,0,0,0,3.22-.98h0l.124-.079h0a.888.888,0,0,1,.938.067l.193.193,3.559,3.559A.786.786,0,0,1,253.946,330.931Z" transform="translate(-12270.674 -9578.201)" fill="#fff"/>
+      <circle id="Ellipse_4451" data-name="Ellipse 4451" cx="5.622" cy="5.622" r="5.622" transform="translate(-12030.018 -9262.103)" fill="#21b6eb"/>
+    </g>
+  </g>
+</svg>

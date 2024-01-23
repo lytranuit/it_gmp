@@ -1,0 +1,284 @@
+﻿@{
+    ViewData["Title"] = "Suggest Sign";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container">
+    <div class="card no-shadow border">
+        <div class="card-body">
+            <div class="row g-0">
+                <div class="col-12">
+                    <strong>Gợi ý vị trí ký</strong><br />
+                    <small class="text-muted">(Kéo thả người ký từ khung bên trái sang văn bản ở khung bên phải để gợi ý vị trý ký)</small>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-9" style="border: 5px solid #d7d7d7;border-left: 0;">
+                    <div id='pdf-viewer' class=""></div>
+                </div>
+                <div class="col-3 order-first" style="border: 5px solid #d7d7d7;height: 80vh;display: inline-block;padding:10px">
+                    <div class="base-title">Chữ ký</div>
+                    <span class="base-subtitle">Kéo chữ ký vào văn bản để ký</span>
+                    <div id="sign">
+                    </div>
+                </div>
+                <div class="col-md-12 text-center mt-3">
+                    <button class="btn-primary btn savefile">Lưu gợi ý vị trí chữ ký</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<template class="template_user_signature">
+    <div class="signature" data-id="{{id}}" data-sign_id="{{sign_id}}">
+        <div class="d-inline-block">
+            <img class="sign_image" src="{{image_sign}}" style="width:120px;height:auto;" class="" alt="...">
+            <div class="sign_info" style="align-self:center">
+                <div>{{fullName}}{{{position}}}</div>
+                <div>Current Time</div>
+            </div>
+        </div>
+    </div>
+</template>
+<style>
+    .signature.disabled .d-inline-block {
+        position: relative;
+    }
+
+        .signature.disabled .d-inline-block:before {
+            content: "";
+            background: #d9cfcf4f;
+            display: inline-block;
+            width: 100%;
+            position: absolute;
+            background-image: url(/images/ban.png);
+            height: 100%;
+            background-origin: border-box;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.5;
+        }
+</style>
+@section Scripts {
+
+    <script src="~/lib/pdfview/pdf.js"></script>
+    <script type='text/javascript'>
+        var page = "suggest";
+        var data = @Html.Raw(Json.Serialize(Model));
+        var users_signature = @Html.Raw(Json.Serialize(ViewBag.users_signature));
+        if (!data.files) {
+            alert("Không có hồ sơ!");
+            location.href = "/";
+        }
+        var file = data.files[data.files.length - 1];
+        var url = file.url;
+
+        // If absolute URL from the remote server is provided, configure the CORS
+        // header on that server.
+
+        // Loaded via <script> tag, create shortcut to access PDF.js exports.
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        var scale = 1;
+        var thePdf = null;
+        // The workerSrc property shall be specified.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfview/pdf.worker.js';
+
+        // Asynchronous download of PDF
+        var loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(async function (pdf) {
+            console.log('PDF loaded');
+            thePdf = pdf;
+
+            viewer = document.getElementById('pdf-viewer');
+            for (page = 1; page <= pdf.numPages; page++) {
+                canvas = document.createElement("canvas");
+                canvas.className = 'pdf-page-canvas';
+                div = document.createElement("div");
+                div.className = "box-canvas";
+                div.appendChild(canvas);
+                viewer.appendChild(div);
+                await renderPage(page, canvas);
+            }
+            for (let user_signature of users_signature) {
+                //console.log(user_signature);
+                var template = $(".template_user_signature").html();
+                user_signature.user.sign_id = user_signature.id;
+                var user = user_signature.user;
+                user.position = user.position ? "(" + user.position + ")" : "";
+                var rendered = Mustache.render(template, user);
+                if (user_signature.page > 0) {
+                    let parent = $(".box-canvas:eq(" + (user_signature.page - 1) + ")");
+                    parent.append(rendered);
+
+                    var height_page = $(".pdf-page-canvas", parent).height();
+                    $("#pdf-viewer .signature[data-sign_id='" + user_signature.id + "']").css({
+                        'left': user_signature.position_x + "px",
+                        'top': (height_page - (user_signature.position_y + user_signature.image_size_height + 40)) + "px"
+                    }).draggable({
+                        stop: dragger_outside
+                    });
+                    $("#pdf-viewer .signature[data-sign_id='" + user_signature.id + "'] .sign_image").css({
+                        width: user_signature.image_size_width + "px",
+                        height: user_signature.image_size_height + "px",
+                    }).resizable();
+
+                    $("#sign").append(rendered);
+                    $("#sign .signature[data-sign_id='" + user_signature.id + "']").addClass("disabled");
+                } else {
+                    $("#sign").append(rendered);
+                    $("#sign .signature[data-sign_id='" + user_signature.id + "']").draggable({
+                        stop: dragger_outside
+                    });
+                    $("#sign .signature[data-sign_id='" + user_signature.id + "'] .sign_image").one("load", function () {
+                        if ($(this).height() > 0) {
+                            $(this).resizable();
+                        }
+                    })
+                }
+            }
+            $('.box-canvas').droppable({
+                // only accept elements matching this CSS selector
+                accept: '.signature',
+                // Require a 100% element overlap for a drop to be possible
+                drop: function (event, ui) {
+                    var user_id = $(ui.draggable).data("id");
+                    var sign_id = $(ui.draggable).data("sign_id");
+                    $(ui.draggable).appendTo($(this));
+                    var newPosX = ui.offset.left - $(this).offset().left;
+                    var newPosY = ui.offset.top - $(this).offset().top + this.scrollTop;
+                    $(ui.draggable).css({
+                        "top": newPosY + "px",
+                        "left": newPosX + "px"
+                    });
+                    if (newPosX < 0) {
+                        $(ui.draggable).css({
+                            "top": 0 + "px",
+                            "left": 0 + "px"
+                        }).appendTo($("#sign"));
+                    } else {
+                        var sign_in_init = $("#sign .signature[data-sign_id='" + sign_id + "']")
+                        if (sign_in_init.length) { // có
+                            sign_in_init.addClass("disabled");
+                        } else {
+                            sign_in_init = $(ui.draggable).clone();
+                            sign_in_init.addClass("disabled").css({
+                                "top": 0 + "px",
+                                "left": 0 + "px"
+                            });
+                            sign_in_init.appendTo($("#sign"));
+                        }
+                    }
+
+                }
+            });
+            // Fetch the first page
+
+        }, function (reason) {
+            // PDF loading error
+            console.error(reason);
+        });
+        function dragger_outside(event, ui) {
+            if (ui.position.left < 0) {
+                var user_id = $(ui.helper).data("id");
+                var sign_id = $(ui.helper).data("sign_id");
+                $("#sign .disabled.signature[data-sign_id='" + sign_id + "']").remove();
+                $(ui.helper).css({
+                    "top": 0 + "px",
+                    "left": 0 + "px"
+                }).appendTo($("#sign"));
+            }
+        }
+        async function renderPage(pageNumber, canvas) {
+            return thePdf.getPage(pageNumber).then(function (page) {
+                viewport = page.getViewport({
+                    scale: scale
+                });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                });
+            });
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            $(".savefile").click(function (e) {
+                e.preventDefault();
+                var list = [];
+                if ($("#sign .signature").length != $("#sign .signature.disabled").length) {
+                    alert("Kéo tất cả chữ ký vào đúng vị trí file PDF");
+                    return false;
+                }
+                $("#pdf-viewer .signature").each(function () {
+                    let sign = $(this);
+                    var sign_x = sign[0].offsetLeft;
+                    var sign_y = sign[0].offsetTop;
+                    var parent = sign.closest(".box-canvas");
+                    var page = parent.index() + 1;
+                    var height_page = $(".pdf-page-canvas", parent).height();
+                    var sign_image = $(".sign_image", sign);
+                    var sign_info = $(".sign_info", sign);
+                    //var sign_info_x = sign_info[0].offsetLeft;
+                    //var sign_info_y = sign_info[0].offsetTop;
+                    var sign_image_x = sign_image[0].offsetLeft;
+                    var sign_image_y = sign_image[0].offsetTop;
+                    var image_size_width = sign_image.width();
+                    var image_size_height = sign_image.height();
+                    var position_image_x = sign_image_x + sign_x;
+                    var position_image_y = height_page - (image_size_height + sign_y);
+                    var position_x = sign_x;
+                    var position_y = height_page - (image_size_height + sign_y + 40);
+                    if (!sign_info.length) {
+                        position_y = position_image_y;
+                    }
+                    //console.log(height);
+                    var user_id = sign.data("id");
+                    var sign_id = sign.data("sign_id");
+                    var item = {
+                        page: page,
+                        position_x: position_x,
+                        position_y: position_y,
+                        position_image_x: position_image_x,
+                        position_image_y: position_image_y,
+                        image_size_width: image_size_width,
+                        image_size_height: image_size_height,
+                        url: url,
+                        user_id: user_id,
+                        id: sign_id,
+                    }
+                    list.push(item);
+                });
+
+                $(".preloader").fadeIn();
+                $.ajax({
+                    url: "/admin/document/savesuggest",
+                    type: "POST",
+                    data: {
+                        list_sign: list
+                    }, success: function (response) {
+                        $(".preloader").fadeOut();
+                        alert(response.message);
+                        if (response.failed != 1) {
+                            location.href = "/admin/document/details/" + data.id;
+                        }
+
+                    }
+                })
+            });
+            $(document).on("click", "#sign .signature.disabled", function (e) {
+                var user_id = $(this).data("id");
+                var sign_id = $(this).data("sign_id");
+                var sign = $("#pdf-viewer .signature[data-sign_id='" + sign_id + "']");
+                //console.log(sign.parent().offset().top);
+                //console.log(sign.offset().top);
+                $('#pdf-viewer').animate({
+                    scrollTop: sign.parent()[0].offsetTop + sign[0].offsetTop - 20
+                }, 'slow');
+            })
+        })
+    </script>
+}

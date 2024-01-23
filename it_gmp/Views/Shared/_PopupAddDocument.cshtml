@@ -1,0 +1,102 @@
+﻿<script src="~/lib/vue/vue.js"></script>
+<div id="popup-add">
+    <div id="myModal2" class="modal" tabindex="-1" role="dialog" data-backdrop="static">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <h5 class="modal-title">
+                                Chọn loại hồ sơ
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </h5>
+                        </div>
+                        <div class="col-9">
+                            <div class="input-group">
+                                <span class="input-group-prepend">
+                                    <button type="button" class="btn btn-gradient-secondary"><i class="fas fa-search"></i></button>
+                                </span>
+                                <input type="text" id="example-input1-group2" name="example-input1-group2" class="form-control" placeholder="Tìm kiếm" v-model="search" v-on:keydown="change">
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <select class="form-control form-control-sm" v-model="selected" v-on:change="change">
+                                <option value="-1">Tất cả các nhóm</option>
+                                <option v-for="option in groups" :key="option.id" :value="option.id">{{option.name}}</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="accordion" id="accordionselect" style="height: 80vh; overflow: auto;">
+                                <div class="process-group" v-for="group in groups" :key="group.id" v-if="group.types.length > 0 && !group.hidden">
+                                    <div class="h-acc" data-toggle="collapse" :data-target="'#group_' + group.id" aria-expanded="true">
+                                        {{group.name}}
+                                    </div>
+                                    <div :id="'group_'+group.id" class="collapse show" style="">
+                                        <div v-for="type in group.types" :key="type.id" class="process d-flex" v-if="!type.hidden">
+                                            <a :href="'/admin/document/create?type_id=' + type.id" style="min-width:90%;">{{type.name}}</a>
+                                            <a :href="type.template.file_url" class="ml-auto" download title="Biểu mẫu" v-if="type.template"><i class="fas fa-download"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var popup = new Vue({
+        el: '#popup-add',
+        //store:store,
+        data: {
+            groups: [],
+            selected: "-1",
+            search: "",
+        },
+        computed: {
+            //scene() {
+            //    return store.state.scene;
+            //}
+        },
+        mounted() {
+            var that = this;
+            $.ajax({
+                url: "/admin/home/gettypegroups",
+                success: function (data) {
+                    that.groups = data;
+                }
+            })
+
+        },
+        methods: {
+            change() {
+                var val = this.selected;
+                var search = this.search.toLowerCase();
+                this.groups = this.groups.map(function (item) {
+
+                    item.types = item.types.map(function (item1) {
+                        if (search == "" || item1.name.toLowerCase().indexOf(search) != -1) {
+                            item1.hidden = false
+                        } else {
+                            item1.hidden = true;
+                        }
+
+                        return item1;
+                    });
+                    if (val == -1 || val == item.id) {
+                        item.hidden = false
+                    } else {
+                        item.hidden = true;
+                    }
+                    if (!item.types.length)
+                        item.hidden = true;
+                    return item;
+                })
+            }
+        },
+    });
+</script>

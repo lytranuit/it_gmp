@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row clearfix">
+    <div class="col-12">
+        <form method="POST" id="form-dang-tin" autocomplete="on">
+            <section class="card card-fluid">
+                <div class="card-header">
+                    <div class="d-inline-block w-100">
+                        <button type="submit" name="dangtin" class="btn btn-sm btn-primary float-right">Lưu lại</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <div class="col-lg-3 mt-2">
+                            <b class="col-form-label">Người đại diện:</b>
+                            <div class="pt-1">
+                                @Html.DropDownList("representative_id", (IEnumerable<SelectListItem>)ViewData["users"], new {data_placeholder = "Người đại diện",@class="chosen form-control form-control-sm" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mt-2">
+                            <b class="col-form-label">Thời gian:</b>
+                            <input type="hidden" name="date_from" value="" />
+                            <input type="hidden" name="date_to" value="" />
+                            <div class="pt-1">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="daterange">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="dripicons-calendar"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-inline-block w-100">
+                        <button type="submit" name="dangtin" class="btn btn-sm btn-primary float-right">Lưu lại</button>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+<script>
+    var list = @Html.Raw(Json.Serialize(ViewData["list"]));
+    $(document).ready(function(){
+
+          $('input[name="date_from"]').val(moment().format('YYYY-MM-DD'));
+          $('input[name="date_to"]').val(moment().format('YYYY-MM-DD'));
+          $('input[name="daterange"]').daterangepicker({
+            minDate:new Date(),
+            isInvalidDate: function(ele) {
+                var currDate = moment(ele._d).format('YYYY-MM-DD');
+                var re = false;
+                for(var item of list){
+                    var date_from = moment(item.date_from);
+                    var date_to = moment(item.date_to);
+                    var date = date_from;
+                    while(date <= date_to){
+                        if(currDate == date.format('YYYY-MM-DD')){
+                            re = true;
+                            break;
+                        }
+                        date = date.add('days',1);
+                    }
+                    if(re){
+                        break;
+                    }
+                }
+                return re;
+            }
+          }, function(start, end, label) {
+              $('input[name="date_from"]').val(start.format('YYYY-MM-DD'));
+              $('input[name="date_to"]').val(end.format('YYYY-MM-DD'));
+          });
+    })
+</script>
+}

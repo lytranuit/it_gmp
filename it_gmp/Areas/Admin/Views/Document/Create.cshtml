@@ -1,0 +1,379 @@
+﻿@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row clearfix">
+    <div class="col-12">
+        <form method="POST" action="" id="form" enctype="multipart/form-data" autocomplete="on">
+            <section class="">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="d-inline-block w-100">
+                            <span class="page-title">Hồ sơ mới</span>
+                            <button type="submit" class="btn btn-sm btn-primary float-right create-btn">Tạo mới</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <!-- <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Mã tài liệu:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <input class="form-control form-control-sm" type='text' name="code" required="" placeholder="Mã tài liệu" autocomplete="off" />
+                                            </div>
+                                        </div>
+                                        -->
+                                        <div class="col-md-6 mt-2 title">
+                                            <b class="col-form-label">Tiêu đề:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <input class="form-control form-control-sm" type='text' name="name_vi" required="" placeholder="Tiếng việt" autocomplete="off" maxlength="250" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Độ ưu tiên:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                <select name="priority" class="form-control form-control-sm" required>
+                                                    <option value="1">Thấp</option>
+                                                    <option value="2" selected>Bình thường</option>
+                                                    <option value="3">Cao</option>
+                                                    <option value="4">Khẩn cấp</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Loại hồ sơ:<span class="text-danger">*</span></b>
+                                            <div class="pt-1">
+                                                @Html.DropDownList("type_id", (IEnumerable<SelectListItem>)ViewData["types"], new { required = true, @class = "form-control form-control-sm chosen" })
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12 mt-2 receive">
+                                            <b class="col-form-label">Người nhận:</b>
+                                            <div class="pt-1">
+                                                @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                    {
+                                                        multiple = "true",
+                                                        data_placeholder = "Người nhận",
+                                                        @class = "chosen form-control form-control-sm"
+                                                    })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <b class="col-12 col-form-label">Ghi chú:</b>
+                                        <div class="col-12 pt-1">
+                                            <textarea class="form-control" name="description_vi" rows="10" maxlength="2000"></textarea>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="card border pdf">
+                                <div class="card-header">
+                                    <strong>File trình ký (PDF)</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 p-0">
+                                            <input required name="file" type="file" id="input-file-now" class="dropify" accept="application/pdf" data-allowed-file-extensions="pdf" data-max-file-size="20M" data-show-errors="true">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border">
+                                <div class="card-header">
+                                    <strong>Đính kèm</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 p-0">
+                                            <input name="attachments" type="file" id="input-file-now" class="dropify" data-max-file-size="20M" data-show-errors="true" multiple>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group row">
+                                <div class="col-12 pt-2 pt-md-0 xet_duyet">
+                                    <div class="card border">
+                                        <div class="card-header">
+                                            <strong>Xét duyệt hồ sơ</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12 pb-2">
+                                                    <div id="signature" class="activity">
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    @Html.DropDownList("signature", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                        {
+                                                            data_rel = "1",
+                                                            data_placeholder = "Người Xét duyệt",
+                                                            @class = "chosen form-control form-control-sm"
+                                                        })
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="custom-control custom-switch switch-success mt-2">
+                                                        <input type="checkbox" id="is_sign_parellel" class="custom-control-input" name="is_sign_parellel" value="true">
+                                                        <label for="is_sign_parellel" class="custom-control-label">Ký song song</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-12 pt-2">
+                                    <div class="card  border">
+                                        <div class="card-header">
+                                            <strong>Thời hạn văn bản</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mt-2">
+                                                <b class="col-form-label">Ngày hiệu lực:</b>
+                                                <div class="pt-1">
+                                                    <input id="date_effect" class="form-control form-control-sm" type='date' name="date_effect" autocomplete="off" />
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <b class="col-form-label">Ngày hết hiệu lực:</b>
+                                                <div class="pt-1">
+                                                    <input id='date_expire' class="form-control form-control-sm " type='date' name="date_expire" autocomplete="off" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 pt-2">
+                                    <div class="card  border">
+                                        <div class="card-header">
+                                            <strong>Tùy chỉnh</strong>
+                                        </div>
+                                        <div class="card-body">
+
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Vị trí lưu trữ:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="location" type="text" id="location" class="form-control form-control-sm" placeholder="\\data\Share\Asta Doc\...">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Hồ sơ liên kết(Ấn bản cũ):</b>
+                                                <div class="col-12 pt-1">
+                                                    @Html.DropDownList("documents_related[]", (IEnumerable<SelectListItem>)ViewData["documents"], new
+                                                        {
+                                                            multiple = "true",
+                                                            data_placeholder = "Hồ sơ liên kết",
+                                                            @class = "chosen form-control form-control-sm"
+                                                        })
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Từ khóa:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input class="form-control form-control-sm" type='text' name="keyword" placeholder="Giúp tìm kiếm nhanh" autocomplete="off" />
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Tags:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input id="keyword" class="tagit" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </div>
+</div>
+
+
+
+<template class="user_signature_template">
+    <i class="icon-warning">
+        <span class="fas fa-spinner fa-spin" style="transform: rotate(-45deg);"></span>
+    </i>
+    <div class="user_signature time-item" data-id="{{id}}">
+        <div class="item-info" style="min-height:50px">
+            <h5 class="mt-0">
+                {{fullName}}{{position}}
+                {{#isrepresentative}}
+                <br>
+                <span>Ủy quyền cho {{representative.fullName}}{{representative.position}}</span>
+                {{/isrepresentative}}
+                <span class="close_signature" style="cursor:pointer">
+                    <span class="far fa-times-circle text-danger"></span>
+                </span>
+            </h5>
+        </div>
+
+        <input type="hidden" name="users_signature[]" value="{{id}}" />
+    </div>
+</template>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script type="text/javascript">
+        var page = 'create_document';
+        var user_id = '@ViewData["user_id"]';
+        var related = @Html.Raw(Json.Serialize(@ViewData["related"]));
+        var type_id = '@ViewData["type_id"]';
+        var related_doc = @Html.Raw(Json.Serialize(@ViewData["related_doc"]));
+        function add_signature(item) {
+            if (item.representative) {
+                item.isrepresentative = true;
+                item.representative.position = item.representative.position ? "(" + item.representative.position + ")" : "";
+            }
+            item.position = item.position ? "(" + item.position + ")" : "";
+            var template = $(".user_signature_template").html();
+            var rendered = Mustache.render(template, item);
+            $("#signature").append(rendered);
+        }
+        var default_receive = [];
+        $(document).ready(function () {
+            $("#keyword").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    //console.log(event);
+                    //console.log(ui);
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='keyword[]' value='" + value + "' class='keyword' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".keyword[value='" + value + "']").remove();
+                },
+            });
+            $(".create-btn").click(function (e) {
+                e.preventDefault();
+
+                if (!$("[name='name_vi']").val()) {
+                    alert("Chưa nhập tiêu đề!")
+                    return false;
+                }
+
+                if (!$("[name='name_vi']").val()) {
+                    alert("Chưa nhập tiêu đề!")
+                    return false;
+                }
+                if (!$("#signature .user_signature").length) {
+                    alert("Chưa chọn người xét duyệt")
+                    return false;
+                }
+                if (!$("#form").valid()) {
+                    return false;
+                }
+                $("#form").submit();
+            })
+            $("[name='date_effect']").val(moment().format("YYYY-MM-DD"));
+            document.getElementById("date_expire").min = moment().format("YYYY-MM-DD");
+            $("[name='signature']").change(async function () {
+                let $this = $(this);
+                let value = $(this).val();
+                if (value == null || value == "") {
+                    return;
+                }
+                // AJAX request
+                let user = await $.ajax({
+                    url: "/admin/document/getuser/" + value,
+                    dataType: 'json'
+                });
+                if (!user.is_sign) {
+                    if (user_id == user.id) {
+                        alert("Bạn chưa có chữ ký! Vui lòng liên hệ Admin.");
+                        return false;
+                    } else {
+                        alert("Người này chưa có chữ ký! Vui lòng liên hệ Admin.");
+                        return false;
+                    }
+                }
+                add_signature(user);
+                $(".signature").draggable();
+                $(this).val('');
+                // $("option[value='" + value + "']", $this).prop("disabled", true);
+                $this.trigger('chosen:updated');
+            }).val(user_id).trigger("change").val('').trigger('chosen:updated');
+            $("[name='type_id']").change(function () {
+                var val = $(this).val();
+                if (val > 0) {
+                    $.ajax({
+                        url: "/admin/document/gettype",
+                        data: {
+                            id: val
+                        },
+                        type: "POST",
+                        success: function (res) {
+                            if (res.success) {
+                                //var is_self_check = res.item.is_self_check;
+                                //if (is_self_check) {
+                                //    var users_follow = [user_id];
+                                //    $("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
+                                //} else {
+                                //    var users_follow = res.item.users_follow.map(function (item) {
+                                //        return item.user_id;
+                                //    });
+                                //    $("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
+                                //}
+                                var users_receive = res.item.users_receive.map(function (item) {
+                                    return item.user_id;
+                                });
+                                if (users_receive)
+                                    users_receive = [...users_receive, ...default_receive];
+                                else
+                                    users_receive = default_receive;
+                                $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
+                            }
+                        }
+                    });
+                }
+            })
+
+            $(document).on("click", ".close_signature", function () {
+                let parent = $(this).parents(".user_signature");
+                let value = parent.data("id");
+                let next_signature = parent.prev();
+                parent.remove();
+                next_signature.remove();
+                // $("[name='signature'] option[value='" + value + "']").prop("disabled", false);
+                // $("[name='signature']").val('').trigger('chosen:updated');
+                $(".signature[data-id='" + value + "']").remove();
+            });
+            if (related.length) {
+                $("[name='documents_related[]']").val(related).trigger('chosen:updated');
+                $("[name='type_id']").val(related_doc.type_id).trigger('chosen:updated');
+                $("[name='name_vi']").val(related_doc.name_vi);
+                $("[name='priority']").val(related_doc.priority);
+                $("[name='description_vi']").val(related_doc.description_vi);
+                var users_receive = [];
+                for (var item of related_doc.users_receive) {
+                    users_receive.push(item.user_id);
+                }
+                $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
+                default_receive = users_receive;
+            }
+            if (type_id > 0) {
+                $("[name='type_id']").val(type_id).trigger("change").trigger("chosen:updated");
+                $("[name='type_id']").closest(".col-md-3").addClass("d-none");
+            } else {
+                $("[name='type_id']").closest(".col-md-3").removeClass("d-none");
+            }
+        });
+    </script>
+}

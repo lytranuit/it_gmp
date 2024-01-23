@@ -1,0 +1,123 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using it
+@using it.Areas.Admin.Models
+@inject it.Data.ItContext _context
+@inject UserManager<UserModel> userManager;
+@addTagHelper *, it
+@{
+    var user = await userManager.GetUserAsync(User);
+    var is_admin = await userManager.IsInRoleAsync(user, "Administrator");
+    var is_manager = await userManager.IsInRoleAsync(user, "Manager Esign");
+}
+<div class="left-sidenav">
+    <ul class="metismenu left-sidenav-menu">
+
+        @if (is_admin || is_manager)
+        {
+            <li>
+                <a href="/Admin">
+                    <i class="ti-bar-chart"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+        }
+        <li>
+            <a href="/admin/template">
+                <i class="far fa-file-alt"></i>
+                <span>Biểu mẫu</span>
+            </a>
+        </li>
+        <!---<li>
+            <a class="nav-link" href="/admin/process">
+                <i class="fas fa-cart-plus"></i>
+                <span>Dự trù - Mua hàng</span>
+            </a>
+        </li> -->
+        <li>
+            <a class="nav-link" id="create_document" href="/admin/document/create" data-toggle='modal' data-animation='bounce' data-target='#myModal2'>
+                <i class="fas fa-book-medical"></i>
+                <span>Tạo hồ sơ</span>
+            </a>
+        </li>
+        <li class="expand mm-active">
+            <a href="javascript: void(0);">
+                <i class="ti-server"></i>
+                <span>Hồ sơ</span><span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
+                <count></count>
+            </a>
+            <ul class="nav-second-level mm-collapse in mm-show" aria-expanded="true">
+                <li class="nav-item wait_sign">
+                    <a class="nav-link" href="/admin/document/wait">
+                        <i class="ti-control-record"></i>Đang chờ ký
+                        <count></count>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/document/signdoc">
+                        <i class="ti-control-record"></i>Đã ký tên
+                        <count-unread-signdoc></count-unread-signdoc>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/document/receive">
+                        <i class="ti-control-record"></i>Danh sách nhận
+                        <count-unread-receive></count-unread-receive>
+                    </a>
+                </li>
+                <!---<li class="nav-item">
+                    <a class="nav-link" href="/admin/document/follow">
+                        <i class="ti-control-record"></i>Danh sách kiểm tra
+                        <count-unread-review></count-unread-review>
+                    </a>
+                </li>-->
+                <li class="nav-item send">
+                    <a class="nav-link" href="/admin/document">
+                        <i class="ti-control-record"></i>Danh sách đã gửi
+                        <count-unread-send></count-unread-send>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        @if (is_admin)
+        {
+            <li>
+                <a href="/admin/history">
+                    <i class="fas fa-history"></i>
+                    <span>Audit Trails</span>
+                </a>
+            </li>
+        }
+        <li>
+            <a href="/admin/documentcheck">
+                <i class="fas fa-tasks"></i>
+                <span>Chứng thực hồ sơ</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="/admin/document/merge">
+                <i class="fas fa-file-pdf"></i>
+                <span>Cắt nối file PDF</span>
+            </a>
+        </li>
+
+        @if (is_admin)
+        {
+            <li>
+                <a href="javascript: void(0);">
+                    <i class="ti-briefcase"></i>
+                    <span>Hệ thống</span>
+                    <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
+                </a>
+
+                <ul class="nav-second-level" aria-expanded="false">
+                    <li class="nav-item"><a class="nav-link" href="/admin/user"><i class="ti-control-record"></i>Tài khoản</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/role"><i class="ti-control-record"></i>Nhóm</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/documenttypegroup"><i class="ti-control-record"></i>Nhóm loại hồ sơ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/documenttype"><i class="ti-control-record"></i>Loại hồ sơ</a></li>
+                </ul>
+            </li>
+        }
+
+    </ul>
+</div>

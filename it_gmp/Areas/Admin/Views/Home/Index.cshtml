@@ -1,0 +1,810 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using it
+@using it.Areas.Admin.Models
+@inject UserManager<UserModel> userManager;
+@{
+    Layout = "_Admin";
+    var user = await userManager.GetUserAsync(User);
+    var is_admin = await userManager.IsInRoleAsync(user, "Administrator");
+    var is_manager = await userManager.IsInRoleAsync(user, "Manager Esign");
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card bg-purple-gradient shadow-purple">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="dripicons-wallet report-main-icon bg-icon-purple"></i>
+                </div>
+                <span class="badge badge-light text-purple">Hồ sơ</span>
+                <h3 class="my-3">@ViewBag.document_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card bg-warning-gradient shadow-warning">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="fas fa-spinner report-main-icon bg-icon-warning"></i>
+                </div>
+                <span class="badge badge-light text-warning">Chưa hoàn thành</span>
+                <h3 class="my-3">@ViewBag.document_wait_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card bg-success-gradient shadow-success">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="dripicons-checkmark report-main-icon bg-icon-success"></i>
+                </div>
+                <span class="badge badge-light text-success">Hoàn thành</span>
+                <h3 class="my-3">@ViewBag.document_done_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card bg-danger-gradient shadow-danger">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="fas fa-ban report-main-icon bg-icon-danger"></i>
+                </div>
+                <span class="badge badge-light text-danger">Hủy</span>
+                <h3 class="my-3">@ViewBag.document_cancle_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-9">
+                        <div class="crypto-report-history d-flex justify-content-end">
+                            <ul class="nav" id="time">
+                                <li class="nav-item">
+                                    <a class="nav-link" title="Day" href="#">Day</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" title="Week" href="#">Week</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link active" title="Month" href="#">Month</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" title="Year" href="#">Year</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div id="chart">
+                            <canvas id="bar" class="drop-shadow" height="300"></canvas>
+                        </div>
+                        <div>
+                            <input id="demo_4" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3 align-self-center">
+                        <canvas id="pie" class="drop-shadow" height="250"></canvas>
+                    </div>
+                </div>
+
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!-- end col -->
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                    Nhóm loại hồ sơ
+                </h4>
+                <div class="">
+                    <canvas id="bar3" class="drop-shadow" height="400"></canvas>
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                    Loại hồ sơ
+                </h4>
+                <div class="">
+                    <canvas id="bar2" class="drop-shadow" height="400"></canvas>
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                    Hồ sơ chưa ký
+                    <input style='margin-left: 0.5em;display: inline-block;max-width: 500px;' class='form-control form-control-sm search_date search_date_wait' />
+                </h4>
+                <div class="">
+                    <table class="table mb-0" id="table_wait">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-top-0">Hồ sơ</th>
+                                <th class="border-top-0 text-center">Loại hồ sơ</th>
+                                <th class="border-top-0 text-center">Người ký</th>
+                                <th class="border-top-0 text-center">Thời gian</th>
+                            </tr><!--end tr-->
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table> <!--end table-->
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                    Hồ sơ hủy
+                    <input style='margin-left: 0.5em;display: inline-block;max-width: 500px;' class='form-control form-control-sm search_date search_date_cancle' />
+                </h4>
+                <div class="">
+                    <table class="table mb-0" id="table_cancle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-top-0">Hồ sơ</th>
+                                <th class="border-top-0 text-center">Loại hồ sơ</th>
+                                <th class="border-top-0 text-center">Lý do</th>
+                            </tr><!--end tr-->
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table> <!--end table-->
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                    Hồ sơ hoàn thành
+                    <input style='margin-left: 0.5em;display: inline-block;max-width: 500px;' class='form-control form-control-sm search_date search_date_success' />
+                </h4>
+                <div class="">
+                    <table class="table mb-0" id="table_success">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-top-0">Hồ sơ</th>
+                                <th class="border-top-0 text-center">Loại hồ sơ</th>
+                                <th class="border-top-0 text-center">Ngày hoàn thành</th>
+                                <th class="border-top-0 text-center">Thời gian</th>
+                            </tr><!--end tr-->
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table> <!--end table-->
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3">Comments</h4>
+                <div class="">
+                    <table class="table mb-0" id="table_comment">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-top-0">Comment</th>
+                                <th class="border-top-0">Đi đến</th>
+                            </tr><!--end tr-->
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table> <!--end table-->
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+
+    <div class="col-lg-6">
+        @if (is_admin)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title mt-0 mb-3">Người dùng</h4>
+                    <div class="">
+                        <table class="table mb-0" id="table_user">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="border-top-0">Người dùng</th>
+                                    <th class="border-top-0">Đã ký</th>
+                                    <th class="border-top-0">Nhắc nhở</th>
+                                </tr><!--end tr-->
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table> <!--end table-->
+                    </div><!--end /div-->
+                </div><!--end card-body-->
+            </div>
+
+            <!--end card-->
+        }
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mt-0 mb-3">Không ký</h4>
+                <div class="">
+                    <table class="table mb-0" id="table_no_sign">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-top-0">Hồ Sơ</th>
+                                <th class="border-top-0">Người dùng</th>
+                                <th class="border-top-0">Lý do</th>
+                            </tr><!--end tr-->
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table> <!--end table-->
+                </div><!--end /div-->
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div>
+    @if (is_admin)
+    {
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
+                        Email
+                        <select class="ml-2 form-control form-control-sm search_status search_status_email" style="width:150px;">
+                            <option value="0">Tất cả trạng thái</option>
+                            <option value="1">Chưa gửi</option>
+                            <option value="2">Đã gửi</option>
+                            <option value="3">Lỗi</option>
+                        </select>
+                    </h4>
+                    <div class="">
+                        <table class="table mb-0" id="table_email">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="border-top-0">Tiêu đề</th>
+                                    <th class="border-top-0 text-center">Đến</th>
+                                    <th class="border-top-0 text-center">Loại</th>
+                                    <th class="border-top-0 text-center">Trạng thái</th>
+                                    <th class="border-top-0 text-center">Lỗi</th>
+                                    <th class="border-top-0 text-center">Ngày gửi</th>
+                                </tr><!--end tr-->
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table> <!--end table-->
+                    </div><!--end /div-->
+                </div><!--end card-body-->
+            </div><!--end card-->
+        </div>
+    }
+</div>
+
+<!-- Chart JS -->
+<script src="lib/chartjs/chart.min.js"></script>
+@section Scripts {
+    <script>
+        !function ($) {
+            "use strict";
+
+            var ChartJs = function () { };
+
+            ChartJs.prototype.respChart = function (selector, type, data, options) {
+                // get selector by context
+                var ctx = selector.get(0).getContext("2d");
+                // pointing parent container to make chart js inherit its width
+                var container = $(selector).parent();
+
+                // enable resizing matter
+                //$(window).resize(generateChart);
+
+                // this function produce the responsive Chart JS
+                function generateChart() {
+                    // make chart width fit with its container
+                    var ww = selector.attr('width', $(container).width());
+                    switch (type) {
+                        case 'Line':
+                            new Chart(ctx, { type: 'line', data: data, options: options });
+                            break;
+                        case 'Doughnut':
+                            new Chart(ctx, { type: 'doughnut', data: data, options: options });
+                            break;
+                        case 'Pie':
+                            new Chart(ctx, { type: 'pie', data: data, options: options });
+                            break;
+                        case 'Bar':
+                            new Chart(ctx, { type: 'bar', data: data, options: options });
+                            break;
+                        case 'horizontalBar':
+                            new Chart(ctx, { type: 'horizontalBar', data: data, options: options });
+                            break;
+                        case 'Radar':
+                            new Chart(ctx, { type: 'radar', data: data, options: options });
+                            break;
+                        case 'PolarArea':
+                            new Chart(ctx, { data: data, type: 'polarArea', options: options });
+                            break;
+                    }
+                    // Initiate new chart or Redraw
+
+                };
+                // run function - render chart at first load
+                generateChart();
+            },
+
+                //init
+                ChartJs.prototype.initBar = function (barChart) {
+
+                    var barOpts = {
+                        responsive: true,
+                        legend: {
+                            labels: {
+                                fontColor: '#50649c'
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                display: true,
+                                gridLines: {
+                                    color: "#eaf0f7"
+                                },
+                                ticks: {
+                                    fontColor: '#a4abc5'
+                                }
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    callback: function (value) { if (value % 1 === 0) { return value; } },
+                                    fontColor: '#a4abc5'
+                                },
+                                gridLines: {
+                                    color: "#eaf0f7",
+                                }
+                            }]
+                        }
+
+                    };
+                    this.respChart($("#bar"), 'Bar', barChart, barOpts);
+                },
+                ChartJs.prototype.initBar2 = function (barChart) {
+
+                    var barOpts = {
+                        responsive: true,
+                        indexAxis: 'y',
+                        legend: {
+                            display: false,
+                            labels: {
+                                fontColor: '#50649c'
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                display: true,
+                                gridLines: {
+                                    color: "#eaf0f7"
+                                },
+                                ticks: {
+                                    fontColor: '#a4abc5'
+                                }
+                            }],
+                            yAxes: [{
+                                display: false,
+                            }]
+                        },
+                        //onClick: function (e) {
+                        //    var activePointLabel = this.getElementsAtEvent(e)[0]._model.label;
+                        //    console.log(this.getElementsAtEvent(e)[0]);
+                        //    alert(activePointLabel);
+                        //}
+
+                    };
+                    this.respChart($("#bar2"), 'horizontalBar', barChart, barOpts);
+
+
+                },
+                ChartJs.prototype.initBar3 = function (barChart) {
+
+                    var barOpts = {
+                        responsive: true,
+                        legend: {
+                            display: false,
+                            labels: {
+                                fontColor: '#50649c'
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                display: true,
+                                gridLines: {
+                                    color: "#eaf0f7"
+                                },
+                                ticks: {
+                                    fontColor: '#a4abc5'
+                                }
+                            }],
+                            yAxes: [{
+                                display: false,
+                            }]
+                        }
+                    };
+                    this.respChart($("#bar3"), 'horizontalBar', barChart, barOpts);
+
+
+                },
+                ChartJs.prototype.initPie = function (pieChart) {
+                    var pieChartOpts = {
+                        legend: {
+                            labels: {
+                                fontColor: '#50649c'
+                            }
+                        }
+                    };
+                    this.respChart($("#pie"), 'Pie', pieChart, pieChartOpts);
+                },
+                $.ChartJs = new ChartJs, $.ChartJs.Constructor = ChartJs
+
+        }(window.jQuery),
+
+            $(document).ready(function () {
+                $("#demo_4").ionRangeSlider({
+                    skin: "round",
+                    type: "double",
+                    grid: true,
+                    min: dateToTS(new Date(2022, 06, 1)),
+                    max: dateToTS(new Date()),
+                    from: dateToTS(moment().subtract(3, 'months').toDate()),
+                    to: dateToTS(new Date()),
+                    prettify: tsToDate,
+                    onFinish: function (data) {
+                        //console.log(data);
+                        // fired on every range slider update
+                        $("#time .nav-link.active").trigger("click");
+                    },
+                });
+
+
+
+                $(".search_date").daterangepicker({
+                    autoApply: true,
+                    maxDate: new Date(),
+                    locale: {
+                        format: 'DD/MM/YYYY'
+                    }
+                });
+
+                $(document).on("change", ".search_date_success", function () {
+                    table_success.ajax.reload();
+                });
+                $(document).on("change", ".search_date_cancle", function () {
+                    table_cancle.ajax.reload();
+                });
+                $(document).on("change", ".search_date_wait", function () {
+                    table_wait.ajax.reload();
+                });
+
+                $(document).on("change", ".search_status_email", function () {
+                    table_email.ajax.reload();
+                });
+
+                $(document).on("click", ".remind", function () {
+                    var user_id = $(this).data("id");
+                    $.ajax({
+                        dataType: "JSON",
+                        type: "POST",
+                        data: { user_id: user_id },
+                        url: "/admin/home/remind",
+                        success: function (resp) {
+                            if (resp.count > 0) {
+                                alert("Đã nhắc nhở!");
+                                table_wait.ajax.reload();
+                            } else {
+                                alert("Không có hồ sơ nào cần ký!");
+                            }
+                        }
+                    });
+                });
+                $(document).on("click", ".resend", function () {
+                    $(".preloader").fadeIn();
+                    var id = $(this).data("id");
+                    $.ajax({
+                        dataType: "JSON",
+                        type: "POST",
+                        data: { id: id },
+                        url: "/home/resend",
+                        success: function (resp) {
+                            if (resp.success) {
+                                alert("Đã gửi thành công!");
+                            } else {
+                                alert("Lỗi!");
+                            }
+                            table_email.ajax.reload();
+                            $(".preloader").fadeOut();
+                        }
+                    });
+                });
+                let table_comment = $('#table_comment').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    searching: false,
+                    bLengthChange: false,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableComment",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            //let search_date = $(".search_date_wait").val();
+                            //data['search_date'] = search_date;
+                        }
+                    },
+                    "columns": [{
+                        "data": "comment",
+                        "orderable": false
+                    }, {
+                        "data": "action",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+                let table_no_sign = $('#table_no_sign').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    pageLength: 5,
+                    "serverSide": true,
+                    searching: false,
+                    bLengthChange: false,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableNoSign",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            //let search_date = $(".search_date_wait").val();
+                            //data['search_date'] = search_date;
+                        }
+                    },
+                    "columns": [{
+                        "data": "name",
+                        "orderable": false
+                    }, {
+                        "data": "user",
+                        "orderable": false
+                    }, {
+                        "data": "reason",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+                let table_wait = $('#table_wait').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableWait",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            let search_date = $(".search_date_wait").val();
+                            data['search_date'] = search_date;
+                        }
+                    },
+                    "columns": [{
+                        "data": "name",
+                        "orderable": false
+                    }, {
+                        "data": "type",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "user_signature",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "time",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+                let table_email = $('#table_email').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableEmail",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            let search_status = $(".search_status_email").val();
+                            data['search_status'] = search_status;
+                        }
+                    },
+                    "columns": [{
+                        "data": "subject",
+                        "orderable": false
+                    }, {
+                        "data": "email_to",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "email_type",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "status",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "error",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "date",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+
+                let table_user = $('#table_user').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    pageLength: 5,
+                    bLengthChange: false,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableUser",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                        }
+                    },
+                    "columns": [{
+                        "data": "name",
+                        "orderable": false
+                    }, {
+                        "data": "num_sign",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "remind",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+                let table_cancle = $('#table_cancle').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableCancle",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            let search_date = $(".search_date_cancle").val();
+                            data['search_date'] = search_date;
+                        }
+                    },
+                    "columns": [{
+                        "data": "name",
+                        "width": "300px",
+                        "orderable": false
+                    }, {
+                        "data": "type",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "reason",
+                        "orderable": false
+                    }
+                    ]
+                });
+                let table_success = $('#table_success').DataTable({
+                    //"stateSave": true,
+                    "processing": true,
+                    "serverSide": true,
+                    // "ordering": false,
+                    "ajax": {
+                        "url": "/admin/home/tableSuccess",
+                        "dataType": "json",
+                        "type": "POST",
+                        'data': function (data) {
+                            let search_date = $(".search_date_success").val();
+                            data['search_date'] = search_date;
+                        }
+                    },
+                    "columns": [{
+                        "data": "name",
+                        "orderable": false
+                    }, {
+                        "data": "type",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "date_finish",
+                        "className": "text-center",
+                        "orderable": false
+                    }, {
+                        "data": "time",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                    ]
+                });
+                $("#time .nav-link").click(async function () {
+                    $("#bar").remove();
+                    $("#chart").append('<canvas id="bar" height="300"></canvas>')
+                    var time_type_check = $(this).attr("title");
+                    $("#time .nav-link").removeClass("active");
+                    var slider = $("#demo_4").data("ionRangeSlider");
+                    var from = slider.result.from_pretty;
+                    var to = slider.result.to_pretty;
+                    $(this).addClass("active");
+                    var barChart = await $.ajax({
+                        dataType: "JSON",
+                        url: "/admin/home/datachart",
+                        data: { time_type: time_type_check, from: from, to: to }
+                    });
+
+                    $.ChartJs.initBar(barChart);
+                })
+                $("#time .nav-link.active").trigger("click");
+
+                get_pieChart();
+                get_bar2Chart();
+                get_bar3Chart();
+            });
+        async function get_pieChart() {
+            var pieChart = await $.ajax({
+                dataType: "JSON",
+                url: "/admin/home/datachartpie"
+            });
+
+            $.ChartJs.initPie(pieChart);
+        }
+        async function get_bar2Chart() {
+            var pieChart = await $.ajax({
+                dataType: "JSON",
+                url: "/admin/home/datachartType"
+            });
+
+            $.ChartJs.initBar2(pieChart);
+        }
+        async function get_bar3Chart() {
+            var pieChart = await $.ajax({
+                dataType: "JSON",
+                url: "/admin/home/datachartTypeGroup"
+            });
+
+            $.ChartJs.initBar3(pieChart);
+        }
+        function dateToTS(date) {
+            return date.valueOf();
+        }
+
+        function tsToDate(ts) {
+            var d = new Date(ts);
+            return moment(d).format("YYYY-MM-DD");
+        }
+    </script>
+}
+

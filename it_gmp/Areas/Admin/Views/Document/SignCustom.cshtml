@@ -1,0 +1,322 @@
+﻿@{
+    ViewData["Title"] = "Sign";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container">
+    <div class="card no-shadow border">
+        <div class="card-body">
+            <div class="row g-0">
+
+                <div class="col-9" style="border: 5px solid #d7d7d7;
+    border-left: 0;">
+                    <div id='pdf-viewer' class=""></div>
+                </div>
+                <div class="col-3 order-first" style="border: 5px solid #d7d7d7;height: 80vh;display: inline-block;padding:10px">
+                    <div class="base-title">Chữ ký</div>
+                    <span class="base-subtitle">Kéo chữ ký vào văn bản để ký</span>
+                    <div id="sign">
+                        <div class="signature" data-id="@ViewBag.current_user_id">
+                            <div class="d-inline-block">
+                                <img class="sign_image" src="@ViewBag.current_user.image_sign" style="width:120px;height:auto;" class="" alt="...">
+                                <div class="sign_info" style="align-self:center">
+                                    <div>@ViewBag.current_user.FullName</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mb-2">
+                            <input class="form-control form-control-sm" value="@ViewBag.current_user.FullName" id="input-text" />
+                        </div>
+                        <div class="custom-control custom-switch switch-primary">
+                            <input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary" checked
+                                   value="true">
+                            <label class="custom-control-label" for="customSwitchPrimary">Sử dụng hình ảnh</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 text-center mt-3">
+                    <button class="btn-primary btn savefile">Xác nhận ký tên</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<template class="template_user_signature">
+    <div class="signature" data-id="{{id}}">
+        <div class="d-inline-block">
+            <img class="sign_image" src="{{image_sign}}" style="width:120px;height:auto;" class="" alt="...">
+            <div class="sign_info" style="align-self:center">
+                {{fullName}}
+            </div>
+        </div>
+    </div>
+</template>
+
+<link href="~/lib/elfinder/css/admin.min.css" rel="stylesheet" />
+<div class="modal fade elfinderShow">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="elfinder"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/lib/pdfview/pdf.js"></script>
+    <script type='text/javascript'>
+    var data = @Html.Raw(Json.Serialize(Model));
+    var current_user_id = '@ViewBag.current_user_id';
+    var current_user = @Html.Raw(Json.Serialize(ViewBag.current_user));
+    if(!data.files){
+        alert("Không có hồ sơ!");
+        location.href = "/";
+    }
+    var file = data.files[data.files.length - 1];
+    var url = file.url;
+
+    // If absolute URL from the remote server is provided, configure the CORS
+    // header on that server.
+
+    // Loaded via <script> tag, create shortcut to access PDF.js exports.
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
+    var scale = 1;
+    var thePdf = null;
+    // The workerSrc property shall be specified.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfview/pdf.worker.js';
+
+    // Asynchronous download of PDF
+    var loadingTask = pdfjsLib.getDocument(url);
+    loadingTask.promise.then(async function(pdf) {
+        console.log('PDF loaded');
+        thePdf = pdf;
+
+        viewer = document.getElementById('pdf-viewer');
+        for (page = 1; page <= pdf.numPages; page++) {
+            canvas = document.createElement("canvas");
+            canvas.className = 'pdf-page-canvas';
+            div = document.createElement("div");
+            div.className = "box-canvas";
+            div.appendChild(canvas);
+            viewer.appendChild(div);
+            await renderPage(page, canvas);
+        }
+        $("#sign .signature[data-id='"+current_user.id+"']").draggable({
+            stop: dragger_outside
+        });
+        $("#sign .sign_image" ).resizable();
+
+        //$(".signature[data-id='67688e5b-575d-4d12-8370-25e57105a24d'] .sign_info").remove();
+        //$("#pdf-viewer .signature[data-id='67688e5b-575d-4d12-8370-25e57105a24d']").css({
+        //    'top': "+=40px"
+        //})
+        $('.box-canvas').droppable({
+            // only accept elements matching this CSS selector
+            accept: '.signature',
+            // Require a 100% element overlap for a drop to be possible
+            drop: function(event, ui) {
+                var user_id = $(ui.draggable).data("id");
+                $(ui.draggable).appendTo($(this));
+                var newPosX = ui.offset.left - $(this).offset().left;
+                var newPosY = ui.offset.top - $(this).offset().top + this.scrollTop;
+                $(ui.draggable).css({
+                    "top": newPosY + "px",
+                    "left": newPosX + "px"
+                });
+                //console.log(newPosX)
+                if(newPosX < 0){
+                     $(ui.draggable).css({
+                        "top": 0 + "px",
+                        "left": 0 + "px"
+                    }).appendTo($("#sign"));
+                }else{
+                    var sign_in_init = $("#sign .signature[data-id='"+user_id+"']")
+                    if(sign_in_init.length){ // có
+                        sign_in_init.addClass("disabled");
+                    }else{
+                        sign_in_init = $(ui.draggable).clone();
+                        sign_in_init.addClass("disabled").css({
+                            "top": 0 + "px",
+                            "left": 0 + "px"
+                        });
+                        sign_in_init.appendTo($("#sign"));
+                    }
+                }
+            }
+        });
+
+        // Fetch the first page
+
+    }, function(reason) {
+        // PDF loading error
+        console.error(reason);
+    });
+    function dragger_outside( event, ui ){
+        console.log(ui);
+        if(ui.position.left < 0){
+           var user_id = $(ui.helper).data("id");
+           $("#sign .disabled.signature[data-id='"+user_id+"']").remove();
+           $(ui.helper).css({
+                "top": 0 + "px",
+                "left": 0 + "px"
+            }).appendTo($("#sign"));
+        }
+    }
+    async function renderPage(pageNumber, canvas) {
+        return thePdf.getPage(pageNumber).then(function(page) {
+            viewport = page.getViewport({
+                scale: scale
+            });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            page.render({
+                canvasContext: canvas.getContext('2d'),
+                viewport: viewport
+            });
+        });
+    }
+    </script>
+    <script>
+$(document).ready(function () {
+            $("#customSwitchPrimary").click(function () {
+                var checked = $(this).is(":checked");
+                if (!checked) {
+                    $(".ui-wrapper").addClass("d-none");
+                } else {
+                    $(".ui-wrapper").removeClass("d-none");
+                    $(".elfinderShow .elfinder").elfinder({
+                        // set your elFinder options here
+                        cssAutoLoad: false,
+                        width: '100%',
+                        height: '80%',
+                        resizable: false,
+                        baseUrl: "/lib/elfinder/",
+                        url: "/admin/filesystem/connector",
+                        rememberLastDir: false,
+                        mimeDetect: 'internal',
+                        onlyMimes: [
+                            'image/png',
+                        ],
+                        getFileCallback: function (file) {
+                            //Something code
+                            $(".elfinderShow").modal('hide');
+                            $(".sign_image").attr("src", file.path)
+                        },
+                        //onlyMimes: ["image", "text/plain"] // Get files of requested mime types only
+                        lang: 'vi',
+                    }).elfinder('instance');
+
+                    $(".elfinderShow").modal("show");
+                }
+            });
+            $("#input-text").keyup(function () {
+                var value = $(this).val();
+                $(".sign_info").text(value);;
+            });
+            $(document).on("click", "#sign .signature.disabled", function (e) {
+                var user_id = $(this).data("id");
+                var sign = $("#pdf-viewer .signature[data-id='" + user_id + "']");
+                $('#pdf-viewer').animate({
+                    scrollTop: sign.parent()[0].offsetTop + sign[0].offsetTop - 20
+                }, 'slow');
+            })
+            $(".savefile").click(function () {
+                if (confirm("Bạn chắc chắn muốn ký hồ sơ này!") == false) {
+                    return;
+                }
+                let sign = $(".signature");
+                var sign_x = sign[0].offsetLeft;
+                var sign_y = sign[0].offsetTop;
+                var parent = sign.closest(".box-canvas");
+                if (!parent.length) {
+                    alert("Kéo chữ ký vào văn bản để ký!");
+                    return;
+                }
+                var reason = $("#input-text").val();
+                var page = parent.index() + 1;
+
+                var height_page = $(".pdf-page-canvas", parent).height();
+
+                var sign_image = $(".sign_image", sign);
+                var sign_info = $(".sign_info", sign);
+
+                //var sign_info_x = sign_info[0].offsetLeft;
+                //var sign_info_y = sign_info[0].offsetTop;
+                var sign_image_x = sign_image[0].offsetLeft;
+                var sign_image_y = sign_image[0].offsetTop;
+
+                var image_size_width = sign_image.width();
+                var image_size_height = sign_image.height();
+                var image_sign = sign_image.attr("src");
+                var position_image_x = sign_image_x + sign_x;
+                var position_image_y = height_page - (image_size_height + sign_y);
+
+                if (!$("#customSwitchPrimary").is(":checked")) {
+                    image_size_width = 0;
+                    image_size_height = 0;
+                    image_sign = null;
+                    position_image_x = 0;
+                    position_image_y = 0;
+                }
+                var position_x = sign_x;
+                var position_y = height_page - (image_size_height + sign_y);
+                if (reason) {
+                    position_y -= 30;
+                }
+                //console.log(height_page)
+                //console.log(sign_image_x);
+                //console.log(sign_image_y);
+                //console.log(sign_x);
+                //console.log(sign_y);
+                //return;
+                //y = height_page - y;
+
+                $(".preloader").fadeIn();
+                $.ajax({
+                    url: "/admin/document/saveSignCustom",
+                    type: "POST",
+                    data: {
+                        page: page,
+                        position_x: position_x,
+                        position_y: position_y,
+                        position_image_x: position_image_x,
+                        position_image_y: position_image_y,
+                        image_size_width: image_size_width,
+                        image_size_height: image_size_height,
+                        image_sign: image_sign,
+                        url: url,
+                        reason: reason,
+                        user_sign: current_user_id,
+                        document_id: data.id,
+                        user_id: current_user_id,
+                        stt: data.users_signature.length,
+
+                    }, success: function (data) {
+                        alert(data.message);
+                        history.back();
+                    }
+                })
+            })
+})
+function placeCaretAtEnd(el) {
+            el.focus();
+            if (typeof window.getSelection != "undefined"
+                && typeof document.createRange != "undefined") {
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else if (typeof document.body.createTextRange != "undefined") {
+                var textRange = document.body.createTextRange();
+                textRange.moveToElementText(el);
+                textRange.collapse(false);
+                textRange.select();
+            }
+}
+    </script>
+}

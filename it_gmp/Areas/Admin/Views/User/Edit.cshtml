@@ -1,0 +1,210 @@
+﻿@{
+	ViewData["Title"] = "Edit";
+	Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+@if (TempData["StatusMessage"] != null)
+{
+	<div class="alert alert-success icon-custom-alert">
+		<i class="mdi mdi-check alert-icon"></i>
+		<div class="alert-text">
+			@Html.Raw(@TempData["StatusMessage"])
+		</div>
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			<span aria-hidden="true"><i class="mdi mdi-close"></i></span>
+		</button>
+	</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+	<div class="alert alert-danger icon-custom-alert">
+		<i class="mdi mdi-close alert-icon"></i>
+		<div class="alert-text">
+			@Html.Raw(TempData["ErrorMessage"])
+		</div>
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			<span aria-hidden="true"><i class="mdi mdi-close"></i></span>
+		</button>
+	</div>
+}
+<div class="row clearfix">
+	<div class="col-12">
+		<form method="POST" id="form" autocomplete="on">
+			<section class="card card-fluid">
+				<div class="card-header d-flex">
+					<a href="#" class="btn btn-sm btn-success" data-toggle='modal' data-animation='bounce' data-target='.modal-pass'>Đổi mật khẩu</a>
+					<div class="ml-auto">
+						<button type="submit" class="btn btn-sm btn-primary float-right">Save</button>
+					</div>
+				</div>
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-8">
+							<div class="form-group row">
+								<b class="col-12 col-lg-2 col-form-label">Email:<i class="text-danger">*</i></b>
+								<div class="col-12 col-lg-4 pt-1">
+									<input class="form-control form-control-sm price" type="email" name="email" required="" placeholder="Email" autocomplete="off" />
+								</div>
+								<b class="col-12 col-lg-2 col-form-label">Mã số nhân viên:</b>
+								<div class="col-12 col-lg-4 pt-1">
+									<input class="form-control form-control-sm" type="text" name="msnv" placeholder="Mã số nhân viên" autocomplete="off" />
+								</div>
+							</div>
+							<div class="form-group row">
+								<b class="col-12 col-lg-2 col-form-label">Họ và tên:<i class="text-danger">*</i></b>
+								<div class="col-12 col-lg-4 pt-1">
+									<input class="form-control form-control-sm" type="text" name="fullName" required="" placeholder="FullName" autocomplete="off" />
+								</div>
+
+								<b class="col-12 col-lg-2 col-form-label">Vị trí:</b>
+								<div class="col-12 col-lg-4 pt-1">
+									<input class="form-control form-control-sm" type="text" name="position" placeholder="Position" autocomplete="off" />
+								</div>
+							</div>
+							<div class="form-group row">
+								<b class="col-12 col-lg-2 col-form-label">Nhóm:</b>
+								<div class="col-lg-4 pt-1">
+									@Html.DropDownList("groups[]", (IEnumerable<SelectListItem>)ViewData["groups"], new
+									{
+										multiple = "true",
+									data_placeholder = "Select Role",
+										@class = "chosen form-control form-control-sm"
+									})
+								</div>
+								<b class="col-12 col-lg-2 col-form-label">Active:</b>
+								<div class="col-lg-4 pt-1">
+									<div class="custom-control custom-switch switch-success">
+										<input type="checkbox" id="is_active" class="custom-control-input" name="is_active" value="true">
+										<label for="is_active" class="custom-control-label"></label>
+									</div>
+								</div>
+							</div>
+
+							<div class="form-group row">
+								<b class="col-12 col-lg-2 col-form-label">Loại hồ sơ quản lý:</b>
+								<div class="col-lg-10 pt-1">
+									@Html.DropDownList("types[]", (IEnumerable<SelectListItem>)ViewData["types"], new
+										{
+											multiple = "true",
+											data_placeholder = "Select Type",
+											@class = "chosen form-control form-control-sm"
+										})
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<div class="form-group row">
+								<div class="col-12">
+									<div class="card no-shadow border">
+										<div class="card-header">
+											Image
+										</div>
+										<div class="card-body text-center">
+											<div id="image_url" class="image_ft"></div>
+										</div>
+
+									</div>
+								</div>
+								<div class="col-12 pt-2">
+									<div class="card no-shadow border">
+										<div class="card-header">
+											Image Signature
+										</div>
+										<div class="card-body text-center">
+											<div id="image_sign" class="image_ft"></div>
+										</div>
+									</div>
+									<div class="text-center"><a href="#" class="btn btn-sm btn-warning renew" style="width:200px">Cấp lại chứng thực</a></div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</form>
+	</div>
+</div>
+
+<div class="modal fade modal-pass" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form action="/admin/user/changepassword" method="POST">
+				<div class="modal-header">
+					<h5 class="modal-title mt-0" id="myLargeModalLabel">Đổi mật khẩu</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" name="id" value="@Model.Id" />
+					<div class="row justify-content-md-center">
+						<div class="col-md-4">
+							<div class="form-floating mt-2">
+								<input type="password" id="password" autocomplete="address-level4" class="form-control" name="NewPassword" minlength="6" required="" placeholder="Mật khẩu mới" autocomplete="off" />
+							</div>
+							<div class="form-floating mt-2">
+								<input type="password" class="form-control" autocomplete="address-level4" name="ConfirmPassword" minlength="6" data-rule-equalTo="#password" required="" placeholder="Nhập lại mật khẩu mới" autocomplete="off">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="model-fotter">
+					<div class="row justify-content-md-center m-2">
+						<div class="col-12 text-center">
+							<button type="submit" class="btn btn-sm btn-primary" style="width:200px">Cập nhật mật khẩu</button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<link href="~/lib/elfinder/css/admin.min.css" rel="stylesheet" />
+	<script type="text/javascript">
+    var data = @Html.Raw(Json.Serialize(Model));
+		var groups = @Html.Raw(Json.Serialize(ViewData["RolesForThisUser"]));
+		var user_types = @Html.Raw(Json.Serialize(ViewData["user_types"]));
+    data.groups = groups;
+		data.types = user_types;
+		if (data.lockoutEnd && moment(data.lockoutEnd).valueOf() >= moment().valueOf()) {
+			data.is_active = false;
+		} else {
+			data.is_active = true;
+		}
+    $("#image_url").imageFeature({
+       'image':"/private/images/user.webp",
+    });
+    $("#image_sign").imageFeature({
+       'image':"/private/images/tick.png",
+    });
+    if (data.image_url) {
+        $("#image_url").imageFeature("set_image", data.image_url);
+    }
+    if (data.image_sign) {
+        $("#image_sign").imageFeature("set_image", data.image_sign);
+    }
+    $(document).ready(function(){
+         fillForm($("#form"),data);
+         $(".renew").click(function(e){
+            e.preventDefault();
+             $.ajax({
+                url:"/admin/member/RenewCertificate/",
+                data:{
+                    user_id:data.id
+                },
+                type:"POST",
+                success: function(data){
+
+                }
+            })
+        })
+    })
+	</script>
+
+}
