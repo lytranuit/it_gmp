@@ -49,7 +49,7 @@ namespace it.Areas.Admin.Controllers
                     {
                         DocumentModel? document = null;
                         int? document_id = null;
-                        if (namesign.Contains("GMP"))
+                        if (namesign.Contains("GMP1"))
                         {
                             var list = namesign.Split("-");
                             document_id = Int32.Parse(list[2]);

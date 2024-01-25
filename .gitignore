@@ -368,3 +368,7 @@ it/appsettings.Production.json
 it/appsettings.Staging.json
 it/private_gmp/
 it/wwwroot/Files/
+it_gmp/appsettings.Development.json
+it_gmp/appsettings.json
+it_gmp/appsettings.Production.json
+it_gmp/private/

@@ -7,6 +7,8 @@ using it.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Diagnostics;
 
 namespace it.Areas.Identity.Pages.Account
 {
@@ -25,6 +27,8 @@ namespace it.Areas.Identity.Pages.Account
             _context = context;
             UserManager = UserMgr;
             _configuration = configuration;
+            var listener = _context.GetService<DiagnosticSource>();
+            (listener as DiagnosticListener).SubscribeWithAdapter(new CommandInterceptor());
         }
 
         public async Task<IActionResult> OnPost(string returnUrl = null)

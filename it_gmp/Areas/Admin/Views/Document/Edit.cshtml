@@ -36,7 +36,7 @@
                             }
                             @if ((bool)ViewData["is_manager_document"] == true && Model.status_id == (int)DocumentStatus.Current)
                             {
-                                <button type="submit" class="btn btn-sm btn-danger float-right mr-3 obsoleted" style="width:140px">Obsoleted</button>
+                                <button type="submit" class="btn btn-sm btn-danger float-right mr-3 obsoleted" style="width:140px">Hết hiệu lực</button>
                             }
                             @if (Model.status_id == (int)DocumentStatus.Draft)
                             {

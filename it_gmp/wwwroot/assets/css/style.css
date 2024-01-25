@@ -2603,6 +2603,9 @@ body.left-sidenav-dark .topbar .topbar-left {
 	background: linear-gradient(14deg, #22d4b3 36%, #71e6d1 100%);
 }
 
+.bg-success1-gradient {
+	background: linear-gradient(14deg, #0cb2c6 36%, #71e6d1 100%);
+}
 .bg-info-gradient {
 	background: linear-gradient(14deg, #4b545d 36%, #67737b 100%);
 }
@@ -2614,6 +2617,10 @@ body.left-sidenav-dark .topbar .topbar-left {
 .bg-danger-gradient {
 	background: linear-gradient(14deg, #fb7589 36%, #ff9595 100%);
 }
+.bg-danger1-gradient {
+	background: linear-gradient(14deg, #ff092e 36%, #ff9595 100%);
+}
+
 
 .bg-pink-gradient {
 	background: linear-gradient(14deg, #FE5D9E 36%, #8E73FE 100%);

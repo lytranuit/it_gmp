@@ -10,7 +10,7 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-3">
+    <div class="col">
         <div class="card report-card bg-purple-gradient shadow-purple">
             <div class="card-body">
                 <div class="float-right">
@@ -21,7 +21,7 @@
             </div><!--end card-body-->
         </div><!--end card-->
     </div> <!--end col-->
-    <div class="col-md-6 col-lg-3">
+    <div class="col">
         <div class="card report-card bg-warning-gradient shadow-warning">
             <div class="card-body">
                 <div class="float-right">
@@ -32,19 +32,42 @@
             </div><!--end card-body-->
         </div><!--end card-->
     </div> <!--end col-->
-    <div class="col-md-6 col-lg-3">
+    <div class="col">
         <div class="card report-card bg-success-gradient shadow-success">
             <div class="card-body">
                 <div class="float-right">
                     <i class="dripicons-checkmark report-main-icon bg-icon-success"></i>
                 </div>
-                <span class="badge badge-light text-success">Hoàn thành</span>
+                <span class="badge badge-light text-success">Ký hoàn thành</span>
                 <h3 class="my-3">@ViewBag.document_done_count</h3>
             </div><!--end card-body-->
         </div><!--end card-->
     </div> <!--end col-->
 
-    <div class="col-md-6 col-lg-3">
+    <div class="col">
+        <div class="card report-card bg-success1-gradient shadow-success">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="fas fa-thumbs-up report-main-icon bg-icon-success"></i>
+                </div>
+                <span class="badge badge-light text-success">Hiện hành</span>
+                <h3 class="my-3">@ViewBag.document_done_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+
+    <div class="col">
+        <div class="card report-card bg-danger1-gradient shadow-danger">
+            <div class="card-body">
+                <div class="float-right">
+                    <i class="fas fa-eraser report-main-icon bg-icon-danger"></i>
+                </div>
+                <span class="badge badge-light text-danger">Hết hiệu lực</span>
+                <h3 class="my-3">@ViewBag.document_done_count</h3>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col">
         <div class="card report-card bg-danger-gradient shadow-danger">
             <div class="card-body">
                 <div class="float-right">
@@ -55,6 +78,8 @@
             </div><!--end card-body-->
         </div><!--end card-->
     </div> <!--end col-->
+</div>
+<div class="row justify-content-center">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-body">

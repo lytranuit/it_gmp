@@ -3,6 +3,8 @@ using it.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Diagnostics;
 
 namespace it.TagHelpers
 {
@@ -16,6 +18,8 @@ namespace it.TagHelpers
             _context = context;
             UserManager = UserMgr;
             actionAccessor = ActionAccessor;
+            var listener = _context.GetService<DiagnosticSource>();
+            (listener as DiagnosticListener).SubscribeWithAdapter(new CommandInterceptor());
         }
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {

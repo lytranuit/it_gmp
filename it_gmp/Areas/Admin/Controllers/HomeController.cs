@@ -199,11 +199,11 @@ namespace it.Areas.Admin.Controllers
             var data = _context.ChartPie
                  .FromSqlRaw(sql);
             var d = data.FirstOrDefault();
-            var labels = new List<string>() { "Đang chờ ký", "Ký hoàn thành", "Hiện hành", "Obsoleted", "Hủy" };
+            var labels = new List<string>() { "Đang chờ ký", "Ký hoàn thành", "Hiện hành", "Hết hiệu lực", "Hủy" };
             var datasets = new List<ChartDataSet>();
             datasets.Add(new ChartDataSet
             {
-                backgroundColor = new List<string>() { "#efc039", "#1ecab8", "#0cb2c6", "ff6000", "#f1646c" },
+                backgroundColor = new List<string>() { "#efc039", "#1ecab8", "#0cb2c6", "#ff092e", "#f1646c" },
                 data = new List<int?>() { d.num_wait, d.num_finish, d.num_current, d.num_obsoleted, d.num_cancle }
             });
 

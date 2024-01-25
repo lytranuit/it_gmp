@@ -2095,7 +2095,7 @@ namespace it.Areas.Admin.Controllers
 
 
 
-            var field = timeStamp.ToString() + "-GMP-" + sign_old.document_id;
+            var field = timeStamp.ToString() + "-GMP1-" + sign_old.document_id;
 
             signer.SetFieldName(field);
             // Creating the signature
@@ -2517,7 +2517,7 @@ namespace it.Areas.Admin.Controllers
 
 
 
-            var field = timeStamp.ToString() + "-GMP-" + sign.document_id;
+            var field = timeStamp.ToString() + "-GMP1-" + sign.document_id;
 
             signer.SetFieldName(field);
             // Creating the signature

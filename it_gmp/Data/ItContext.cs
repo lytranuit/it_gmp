@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
-
+using System.Data.Common;
+using Microsoft.Extensions.DiagnosticAdapter;
 namespace it.Data
 {
     public class ItContext : DbContext
@@ -139,6 +141,27 @@ namespace it.Data
             {
                 AuditTrailsModel.Add(auditEntry.ToAudit());
             }
+        }
+    }
+    public class CommandInterceptor
+    {
+        [DiagnosticName("Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting")]
+        public void OnCommandExecuting(DbCommand command, DbCommandMethod executeMethod, Guid commandId, Guid connectionId, bool async, DateTimeOffset startTime)
+        {
+            var secondaryDatabaseName = "OrgData";
+            var schemaName = "dbo";
+            var list_talbe = new List<string>()
+            {
+                "AspNetUsers","AspNetUserRoles","emails","Token"
+            };
+            //var tableName = "AspNetUsers";
+            foreach (var tableName in list_talbe)
+            {
+                command.CommandText = command.CommandText.Replace($" [{tableName}]", $" [{schemaName}].[{tableName}]")
+                                                     .Replace($" [{schemaName}].[{tableName}]", $" [{secondaryDatabaseName}].[{schemaName}].[{tableName}]");
+            }
+
+
         }
     }
 }
