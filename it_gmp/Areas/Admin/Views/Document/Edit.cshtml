@@ -26,7 +26,7 @@
                             <span class="page-title">Chỉnh sửa hồ sơ</span>
                             <button type="submit" class="btn btn-sm btn-success float-right cap_nhat" style="width:140px">Cập nhật</button>
 
-                            @if ((bool)ViewData["is_manager_document"] == true && (Model.status_id == (int)DocumentStatus.Success || Model.status_id == (int)DocumentStatus.Current || Model.status_id == (int)DocumentStatus.Obsoleted || Model.status_id == (int)DocumentStatus.Superseded))
+                            @if ((bool)ViewData["is_manager_document"] == true && (Model.status_id == (int)DocumentStatus.Success || Model.status_id == (int)DocumentStatus.Current))
                             {
                                 <a class="btn btn-sm btn-secondary float-right mr-3" style="width:140px" href="/admin/document/signcustom/@Model.id">Ký thêm</a>
                             }
