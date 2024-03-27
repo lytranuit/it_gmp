@@ -12,10 +12,13 @@ namespace it.Areas.Admin.Controllers
     public class FileSystemController : Controller
     {
         private UserManager<UserModel> UserManager;
+        IConfiguration _configuration;
         IWebHostEnvironment _env;
-        public FileSystemController(IWebHostEnvironment env, UserManager<UserModel> UserMgr)
+        public FileSystemController(IWebHostEnvironment env, UserManager<UserModel> UserMgr, IConfiguration configuration)
         {
-            _env = env; UserManager = UserMgr;
+            _env = env;
+            UserManager = UserMgr;
+            _configuration = configuration;
         }
 
         // Url để client-side kết nối đến backend
@@ -40,7 +43,7 @@ namespace it.Areas.Admin.Controllers
             string user_id = UserManager.GetUserId(currentUser); // Get user id:
 
             // Thư mục gốc lưu trữ là wprivate/files (đảm bảo có tạo thư mục này)
-            string pathroot = "private\\upload\\" + user_id;
+            string pathroot = _configuration["Source:Path_Private"] + "\\upload\\" + user_id;
             string pathrooturl = "private/upload/" + user_id;
             bool exists = System.IO.Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), pathroot));
 

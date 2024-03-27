@@ -96,7 +96,7 @@ namespace it.Areas.Admin.Controllers
             return View();
         }
         // GET: Admin/Document/signdoc
-        public async Task<IActionResult> types(int id)
+        public async Task<IActionResult> manager(int id)
         {
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             string user_id = UserManager.GetUserId(currentUser); // Get user id:
@@ -161,7 +161,7 @@ namespace it.Areas.Admin.Controllers
             if (related_arr.Count > 0)
             {
                 var id = Int32.Parse(related_arr[0]);
-                ViewData["related_doc"] = _context.DocumentModel.Where(d => d.id == id).Include(d => d.users_signature).FirstOrDefault();
+                ViewData["related_doc"] = _context.DocumentModel.Where(d => d.id == id).Include(d => d.users_signature).Include(d => d.users_receive).FirstOrDefault();
             }
             ViewData["type_id"] = null;
             if (type_id > 0)
@@ -225,7 +225,8 @@ namespace it.Areas.Admin.Controllers
                 string mimeType = file.ContentType;
 
                 var newName = timeStamp + "-" + name;
-                var pathroot = "private\\documents\\" + DocumentModel.id + "\\";
+                var pathroot = _configuration["Source:Path_Private"] + "\\documents_gmp\\" + DocumentModel.id + "\\";
+
                 bool exists = System.IO.Directory.Exists(pathroot);
 
                 if (!exists)
@@ -236,7 +237,7 @@ namespace it.Areas.Admin.Controllers
                 newName = newName.Replace("+", "_");
                 newName = newName.Replace("%", "_");
                 string filePath = pathroot + newName;
-                string url = "/" + pathroot.Replace("\\", "/") + newName;
+                string url = "/private/documents_gmp/" + DocumentModel.id + "/" + newName;
                 DocumentFileModel DocumentFileModel = new DocumentFileModel
                 {
                     document_id = DocumentModel.id,
@@ -265,7 +266,7 @@ namespace it.Areas.Admin.Controllers
                     newName = newName.Replace("+", "_");
                     newName = newName.Replace("%", "_");
                     filePath = pathroot + newName;
-                    url = "/" + pathroot.Replace("\\", "/") + newName;
+                    url = "/private/documents_gmp/" + DocumentModel.id + "/" + newName;
                     DocumentAttachmentModel DocumentAttachmentModel = new DocumentAttachmentModel
                     {
                         document_id = DocumentModel.id,
@@ -295,14 +296,6 @@ namespace it.Areas.Admin.Controllers
 
                         DocumentSignatureModel DocumentSignatureModel = new DocumentSignatureModel() { document_id = DocumentModel.id, user_id = key, stt = k };
 
-                        var RepresentativeModel = _context.RepresentativeModel
-                        .Where(d => d.deleted_at == null && d.user_id == key && DateTime.Now.Date >= d.date_from.Date && DateTime.Now.Date <= d.date_to.Date)
-                        .FirstOrDefault();
-                        if (RepresentativeModel != null)
-                        {
-                            DocumentSignatureModel.representative_id = RepresentativeModel.representative_id;
-                            users_representative.Add(DocumentSignatureModel.representative_id);
-                        }
                         _context.Add(DocumentSignatureModel);
                     }
                     _context.SaveChanges();
@@ -383,29 +376,26 @@ namespace it.Areas.Admin.Controllers
                 }
                 else
                 {
-                    var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == DocumentModel.id).Include(d => d.user).Include(d => d.representative).FirstOrDefault();
+                    var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == DocumentModel.id).Include(d => d.user).FirstOrDefault();
                     string? user_signature_id = null;
-                    string? user_representative_id = null;
 
                     if (user_signature != null)
                     {
                         user_signature_id = user_signature.user_id;
-                        user_representative_id = user_signature.representative_id;
                     }
                     else
                     {
                         DocumentModel.deleted_at = DateTime.Now; // Ko ai ký nữa thì xóa
                     }
-                    if ((DocumentModel.user_next_signature_id != user_signature_id || DocumentModel.user_next_representative_id != user_representative_id) && DocumentModel.status_id == 2)
+                    if ((DocumentModel.user_next_signature_id != user_signature_id) && DocumentModel.status_id == 2)
                     {
                         DocumentModel.user_next_signature_id = user_signature_id;
-                        DocumentModel.user_next_representative_id = user_representative_id;
                         _context.Update(DocumentModel);
                         _context.SaveChanges();
                         //SEND MAIL
                         if (user_signature != null)
                         {
-                            var mail_string = user_signature.representative != null ? user_signature.representative.Email : user_signature.user.Email;
+                            var mail_string = user_signature.user.Email;
                             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                             var body = _view.Render("Emails/WaitSignDocument", new { link_logo = Domain + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain + "/admin/document/details/" + DocumentModel.id });
                             var attach = new List<string>()
@@ -528,7 +518,6 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature.OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
                 .Include(d => d.users_signature)
-                .ThenInclude(u => u.representative)
                 .FirstAsync();
 
             //return Ok(DocumentModel.users_signature);
@@ -904,14 +893,12 @@ namespace it.Areas.Admin.Controllers
                 {
 
 
-                    var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == id).Include(d => d.user).Include(d => d.representative).FirstOrDefault();
+                    var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == id).Include(d => d.user).FirstOrDefault();
                     string? user_signature_id = null;
-                    string? user_representative_id = null;
 
                     if (user_signature != null)
                     {
                         user_signature_id = user_signature.user_id;
-                        user_representative_id = user_signature.representative_id;
                         DocumentModel_old.status_id = 2; // Co nguoi ky thi trinh ky tiep
                     }
                     else
@@ -922,10 +909,9 @@ namespace it.Areas.Admin.Controllers
                             DocumentModel_old.date_finish = DateTime.Now;
                         }
                     }
-                    if ((DocumentModel_old.user_next_signature_id != user_signature_id || DocumentModel_old.user_next_representative_id != user_representative_id) && DocumentModel_old.status_id == 2)
+                    if ((DocumentModel_old.user_next_signature_id != user_signature_id) && DocumentModel_old.status_id == 2)
                     {
                         DocumentModel_old.user_next_signature_id = user_signature_id;
-                        DocumentModel_old.user_next_representative_id = user_representative_id;
                         _context.Update(DocumentModel_old);
 
                         //SEND MAIL
@@ -937,7 +923,7 @@ namespace it.Areas.Admin.Controllers
                             {
                                 attach.Add(file_sign.url);
                             };
-                            var mail_string = user_signature.representative != null ? user_signature.representative.Email : user_signature.user.Email;
+                            var mail_string = user_signature.user.Email;
                             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                             var body = _view.Render("Emails/WaitSignDocument", new { link_logo = Domain + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain + "/admin/document/details/" + DocumentModel_old.id });
                             var email = new EmailModel
@@ -956,13 +942,17 @@ namespace it.Areas.Admin.Controllers
 
                 }
 
-                /////Nêu Hiện hành thì gửi mail && Superseded document related
+                /////Nêu Hiện hành thì gửi mail && Obsoleted document related
                 if (DocumentModel_old.status_id == (int)DocumentStatus.Current)
                 {
                     var document_related_id_list = _context.DocumentRelatedModel.Where(d => d.document_id == DocumentModel_old.id).Select(d => d.document_related_id).ToList();
 
                     var document_related = _context.DocumentModel.Where(d => document_related_id_list.Contains(d.id) && d.status_id == (int)DocumentStatus.Current).ToList();
-                    document_related.ForEach(a => a.status_id = (int)DocumentStatus.Obsoleted);
+                    document_related.ForEach(a =>
+                    {
+                        a.status_id = (int)DocumentStatus.Obsoleted;
+                        a.date_expire = DocumentModel_old.date_effect;
+                    });
                     _context.UpdateRange(document_related);
                     await _context.SaveChangesAsync();
 
@@ -1262,6 +1252,12 @@ namespace it.Areas.Admin.Controllers
             string user_id = UserManager.GetUserId(currentUser); // Get user id:
             var user_current = await UserManager.GetUserAsync(currentUser); // Get user id:
             var is_manager = await UserManager.IsInRoleAsync(user_current, "Manager Esign");
+
+            var type_gmp = new List<int>();
+            if (is_manager)
+            {
+                type_gmp = _context.UserDocumentTypeModel.Where(d => d.user_id == user_id).Select(d => d.document_type_id).ToList();
+            }
             var is_admin = await UserManager.IsInRoleAsync(user_current, "Administrator");
             List<int> documents_unread = _context.DocumentUserUnreadModel.Where(d => d.user_id == user_id).Select(d => d.document_id).Distinct().ToList();
 
@@ -1279,17 +1275,20 @@ namespace it.Areas.Admin.Controllers
                     status = ds.status,
                     user_id = ds.user_id,
                 }).Distinct().Where(d => d.status == 1 && d.user_id == user_id).Select(d => d.document.id).ToList();
-                Console.WriteLine(data2.ToString());
+                //Console.WriteLine(data2.ToString());
                 customerData = customerData.Where(d => (d.user_next_signature_id == user_id && d.status_id == 2 && d.is_sign_parellel == false) || data2.Contains(d.id));
             }
             else if (type == "send")
             {
                 customerData = customerData.Where(d => d.user_id == user_id);
             }
-            else if (type == "follow")
+            else if (type == "manager")
             {
-                var document_follow = _context.DocumentUserFollowModel.Where(d => d.user_id == user_id).Select(d => d.document_id).ToList();
-                customerData = customerData.Where(d => document_follow.Contains(d.id));
+                if (is_manager)
+                {
+                    customerData = customerData.Where(d => type_gmp.Contains(d.type_id));
+                }
+
             }
             else if (type == "signdoc")
             {
@@ -1396,7 +1395,7 @@ namespace it.Areas.Admin.Controllers
                 var users_follow = new List<string>();
                 users_follow.Add(record.user_id);
                 var group_id = record.type != null ? record.type.group_id : 0;
-                if (is_admin)
+                if (is_admin || type_gmp.Contains(record.type_id))
                 {
                     users_follow.Add(user_id);
                 }
@@ -1451,7 +1450,7 @@ namespace it.Areas.Admin.Controllers
                 }
                 else if (status_id == (int)DocumentStatus.Obsoleted)
                 {
-                    html_status = "<button class='btn btn-danger btn-sm text-white'>Obsoleted</button>";
+                    html_status = "<button class='btn btn-danger btn-sm text-white'>Hết hiệu lực</button>";
                 }
                 else if (status_id == (int)DocumentStatus.Superseded)
                 {
@@ -1580,23 +1579,12 @@ namespace it.Areas.Admin.Controllers
         public async Task<JsonResult> GetUser(string id)
         {
             UserModel User = await UserManager.FindByIdAsync(id);
-            var RepresentativeModel = _context.RepresentativeModel
-                .Where(d => d.deleted_at == null && d.user_id == id && DateTime.Now.Date >= d.date_from.Date && DateTime.Now.Date <= d.date_to.Date)
-                .Include(d => d.representative)
-                .FirstOrDefault();
-            string? representative_id = null;
-            UserModel? representative = null;
-            if (RepresentativeModel != null)
-            {
-                representative = RepresentativeModel.representative;
-                representative_id = RepresentativeModel.representative_id;
-            }
             var is_sign = true;
             if (User.image_sign == "/private/images/tick.png")
             {
                 is_sign = false;
             }
-            return Json(new { Id = User.Id, representative = representative, representative_id = representative_id, position = User.position, FullName = User.FullName, Email = User.Email, image_url = User.image_url, image_sign = User.image_sign, is_sign = is_sign });
+            return Json(new { Id = User.Id, position = User.position, FullName = User.FullName, Email = User.Email, image_url = User.image_url, image_sign = User.image_sign, is_sign = is_sign });
         }
         public async Task<JsonResult> Get(int id)
         {
@@ -1605,57 +1593,13 @@ namespace it.Areas.Admin.Controllers
                  .Include(d => d.files)
                  .Include(d => d.attachments)
                  .Include(d => d.related)
-                 .Include(d => d.users_follow)
                  .Include(d => d.users_receive)
                  .Include(d => d.users_signature.OrderBy(u => u.stt))
                  .ThenInclude(u => u.user)
                  .Include(d => d.users_signature)
-                 .ThenInclude(u => u.representative)
                  .FirstOrDefault();
 
             return Json(new { data = DocumentModel });
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> fileupload()
-        {
-            var files = Request.Form.Files;
-            //return Json(files);
-            if (files != null && files.Count > 0)
-            {
-                var items = new List<DocumentFileModel>();
-                foreach (var file in files)
-                {
-                    var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-                    string name = file.FileName;
-                    string ext = Path.GetExtension(name);
-                    string mimeType = file.ContentType;
-
-                    //var fileName = Path.GetFileName(name);
-                    var newName = timeStamp + " - " + name;
-                    newName = newName.Replace("+", "_");
-                    newName = newName.Replace("%", "_");
-                    var filePath = "private\\documents\\" + newName;
-                    string url = "/private/documents/" + newName;
-                    items.Add(new DocumentFileModel
-                    {
-                        ext = ext,
-                        url = url,
-                        name = name,
-                        mimeType = mimeType,
-                        created_at = DateTime.Now
-                    });
-
-                    using (var fileSrteam = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(fileSrteam);
-                    }
-                }
-                _context.AddRange(items);
-                _context.SaveChanges();
-                return Json(new { success = 1, items = items });
-            }
-            return Json(new { message = "Lỗi" });
         }
 
         // GET: Admin/Document/Details/5
@@ -1713,7 +1657,6 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.attachments)
                 .Include(d => d.related)
                 .Include(d => d.events)
-                .Include(d => d.users_follow)
                 .Include(d => d.users_receive)
                 .ThenInclude(u => u.user)
                 .Include(d => d.comments.Where(d => d.deleted_at == null).OrderByDescending(u => u.id).Take(11))
@@ -1723,7 +1666,6 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature.OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
                 .Include(d => d.users_signature)
-                .ThenInclude(u => u.representative)
                 .FirstOrDefault();
             //return Ok(DocumentModel);
             foreach (var comment in DocumentModel.comments)
@@ -1793,7 +1735,6 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature.Where(u => u.status == 1).OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
                 .Include(d => d.users_signature)
-                .ThenInclude(u => u.representative)
                 .FirstAsync();
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             string current_user_id = UserManager.GetUserId(currentUser); // Get user id:
@@ -1870,7 +1811,8 @@ namespace it.Areas.Admin.Controllers
             {
 
                 ////check
-                var reader = new PdfReader("." + list_sign[0].url);
+
+                var reader = new PdfReader(list_sign[0].url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
                 var doc = new PdfDocument(reader);
                 foreach (DocumentSignatureModel sign in list_sign)
                 {
@@ -1908,19 +1850,14 @@ namespace it.Areas.Admin.Controllers
 
                 var DocumentModel = _context.DocumentModel
                   .Where(d => d.id == document_id)
-                  .Include(d => d.users_follow)
                   .Include(d => d.users_signature)
                   .Include(d => d.users_receive)
                   .FirstOrDefault();
 
-                var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
                 var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-                var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
                 var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
                 List<string> users_related = new List<string>();
-                users_related.AddRange(users_follow);
                 users_related.AddRange(users_signature);
-                users_related.AddRange(users_representative);
                 users_related.AddRange(users_receive);
                 users_related = users_related.Distinct().ToList();
                 var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -1966,20 +1903,24 @@ namespace it.Areas.Admin.Controllers
             }
             UserModel user = await UserManager.FindByIdAsync(user_id);
             var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-            string fileName = Path.GetFileNameWithoutExtension(sign.url);
-            string forlder = Path.GetDirectoryName(sign.url);
+
+            //string fileName = Path.GetFileNameWithoutExtension(sign.url);
+            string folder = Path.GetDirectoryName(sign.url);
+            folder = folder.Replace("\\private", _configuration["Source:Path_Private"]);
             string ext = Path.GetExtension(user.image_sign);
-            string save = forlder.Substring(1) + "\\" + timeStamp + "(" + user.FullName + " Signed).pdf";
+            string save = folder + "\\" + timeStamp + "(" + user.FullName + " Signed).pdf";
+
             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value + "/";
             //Draw the image
-            var file_image = "." + user.image_sign;
-            //PdfImage pdfImage = PdfImage.FromFile("." + user.image_sign);
+            var file_image = user.image_sign.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+
+            //return Ok(new { message = file_image });
             ImageData da = ImageDataFactory.Create(file_image);
             int image_size_width = (int)Math.Round((float)sign.image_size_width);
             int image_size_height = (int)Math.Round((float)sign.image_size_height);
             if (ext.ToLower() == ".png")
             {
-                using (System.Drawing.Image src = System.Drawing.Image.FromFile("." + user.image_sign))
+                using (System.Drawing.Image src = System.Drawing.Image.FromFile(file_image))
                 using (Bitmap dst = new Bitmap(image_size_width, image_size_height))
                 using (Graphics g = Graphics.FromImage(dst))
                 {
@@ -1987,11 +1928,16 @@ namespace it.Areas.Admin.Controllers
                     g.SmoothingMode = SmoothingMode.AntiAlias;
                     g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                     g.DrawImage(src, 0, 0, dst.Width, dst.Height);
-                    file_image = "wwwroot\\temp\\" + timeStamp + ".png";
-                    dst.Save(file_image, ImageFormat.Png);
-                    da = ImageDataFactory.CreatePng(new Uri(Domain + "/temp/" + timeStamp + ".png"));
+
+                    //var tmp = "wwwroot\\temp\\" + timeStamp + ".png";
+                    //dst.Save(tmp, ImageFormat.Png);
+                    //da = ImageDataFactory.CreatePng(new Uri(Domain + "/temp/" + timeStamp + ".png"));
+                    MemoryStream ms = new MemoryStream();
+                    dst.Save(ms, ImageFormat.Png);
+
+
+                    da = ImageDataFactory.CreatePng(ms.ToArray());
                 }
-                //pdfImage = PdfImage.FromFile("wwwroot\\temp\\" + timeStamp + "png");
             }
             else
             {
@@ -2005,25 +1951,23 @@ namespace it.Areas.Admin.Controllers
             //To disable Multi signatures uncomment this line : every new signature will invalidate older ones !
             //stamper = PdfStamper.CreateSignature(reader, os, '\0');
             var dest = new PdfWriter(save);
-            var reader = new PdfReader("." + sign.url);
+            var reader = new PdfReader(sign.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
 
             PdfSignerNoObjectStream signer = new PdfSignerNoObjectStream(reader, dest, new StampingProperties().UseAppendMode());
             // Creating the appearance
-            FontProgram fontProgram = FontProgramFactory.CreateFont("wwwroot/assets/fonts/vuArial.ttf");
+            FontProgram fontProgram = FontProgramFactory.CreateFont("./wwwroot/assets/fonts/vuArial.ttf");
             PdfFont font = PdfFontFactory.CreateFont(fontProgram, PdfEncodings.IDENTITY_H);
             var width = (int)sign.image_size_width;
             var heigth = (int)sign.image_size_height;
 
-            if (user_id != "67688e5b-575d-4d12-8370-25e57105a24d")
+            if (width < 180)
+                width = 180;
+            heigth += 40;
+            if (sign.reason != null)
             {
-                if (width < 180)
-                    width = 180;
-                heigth += 40;
-                if (sign.reason != null)
-                {
-                    heigth += 30;
-                }
+                heigth += 30;
             }
+
 
             PdfDocument doc = signer.GetDocument();
             PdfPage page = doc.GetPage((int)sign.page);
@@ -2047,39 +1991,29 @@ namespace it.Areas.Admin.Controllers
             PdfFormXObject layer2 = appearance.GetLayer2();
             //layer2.
             PdfCanvas canvas = new PdfCanvas(layer2, doc);
-            //PdfPage page = doc.GetPage(appearance.GetPageNumber());
-            //int rotation = page.GetRotation();
-            //if (rotation == 90)
-            //	canvas.ConcatMatrix(0, 1, -1, 0, rect.GetWidth(), 0);
-            //else if (rotation == 180)
-            //	canvas.ConcatMatrix(-1, 0, 0, -1, rect.GetWidth(), rect.GetHeight());
-            //else if (rotation == 270)
-            //	canvas.ConcatMatrix(0, -1, 1, 0, 0, rect.GetHeight());
 
 
             int p_y = 0;
-            if (user_id != "67688e5b-575d-4d12-8370-25e57105a24d")
+            p_y += 40;
+            var position = user.position != null && user.position != "" ? " (" + user.position + ")" : "";
+            var text = user.FullName + position + "\n" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            if (sign.reason != null)
             {
-                p_y += 40;
-                var position = user.position != null && user.position != "" ? " (" + user.position + ")" : "";
-                var text = user.FullName + position + "\n" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-                if (sign.reason != null)
-                {
-                    text += "\nÝ kiến: " + sign.reason;
-                    p_y += 30;
-                }
-                iText.Kernel.Geom.Rectangle signatureRect = new iText.Kernel.Geom.Rectangle(0, 0, 180, p_y);
-                Canvas signLayoutCanvas = new Canvas(canvas, signatureRect);
-                Paragraph paragraph = new Paragraph(text).SetFont(font).SetMargin(0).SetMultipliedLeading(1.2f).SetFontSize(10);
-                Div div = new Div();
-                div.SetHeight(signatureRect.GetHeight());
-                div.SetWidth(signatureRect.GetWidth());
-
-                div.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.TOP);
-                div.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
-                div.Add(paragraph);
-                signLayoutCanvas.Add(div);
+                text += "\nÝ kiến: " + sign.reason;
+                p_y += 30;
             }
+            iText.Kernel.Geom.Rectangle signatureRect = new iText.Kernel.Geom.Rectangle(0, 0, 180, p_y);
+            Canvas signLayoutCanvas = new Canvas(canvas, signatureRect);
+            Paragraph paragraph = new Paragraph(text).SetFont(font).SetMargin(0).SetMultipliedLeading(1.2f).SetFontSize(10);
+            Div div = new Div();
+            div.SetHeight(signatureRect.GetHeight());
+            div.SetWidth(signatureRect.GetWidth());
+
+            div.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.TOP);
+            div.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
+            div.Add(paragraph);
+            signLayoutCanvas.Add(div);
+
             iText.Kernel.Geom.Rectangle dataRect = new iText.Kernel.Geom.Rectangle(0, p_y, (float)sign.image_size_width, rect.GetHeight() - p_y);
             Canvas dataLayoutCanvas = new Canvas(canvas, dataRect);
             iText.Layout.Element.Image image = new iText.Layout.Element.Image(da);
@@ -2099,8 +2033,9 @@ namespace it.Areas.Admin.Controllers
 
             signer.SetFieldName(field);
             // Creating the signature
-            string KEYSTORE = "private/pfx/" + user_id + ".pfx";
+            string KEYSTORE = _configuration["Source:Path_Private"] + "\\pfx\\" + user_id + ".pfx";
             char[] PASSWORD = "!PMP_it123456".ToCharArray();
+
 
             Pkcs12Store pk12 = new Pkcs12Store(new FileStream(KEYSTORE,
             FileMode.Open, FileAccess.Read), PASSWORD);
@@ -2149,7 +2084,7 @@ namespace it.Areas.Admin.Controllers
             var item = new DocumentFileModel
             {
                 ext = ".pdf",
-                url = forlder.Replace("\\", "/") + "/" + timeStamp + "(" + user.FullName + " Signed).pdf",
+                url = "/private/documents_gmp/" + sign_old.document_id + "/" + timeStamp + "(" + user.FullName + " Signed).pdf",
                 name = timeStamp + "(" + user.FullName + " Signed).pdf",
                 mimeType = "application/pdf",
                 created_at = DateTime.Now,
@@ -2160,81 +2095,6 @@ namespace it.Areas.Admin.Controllers
             _context.SaveChanges();
 
             var DocumentModel_old = await _context.DocumentModel.FindAsync(sign_old.document_id);
-            ///Đóng mộc
-            //if (DocumentModel_old.type_id == 50)
-            //{
-            //    PdfSignerNoObjectStream signer1 = new PdfSignerNoObjectStream(new PdfReader(save), new FileStream(forlder.Substring(1) + "\\" + fileName + "(" + user.FullName + " Signed_moc).pdf", FileMode.Create), new StampingProperties().UseAppendMode());
-
-            //    // Creating the appearance
-            //    var width1 = 60;
-            //    var heigth1 = 60;
-            //    iText.Kernel.Geom.Rectangle rect1 = new iText.Kernel.Geom.Rectangle((int)sign.position_x - 15, (int)sign.position_y + p_y, width1, heigth1);
-            //    PdfSignatureAppearance appearance1 = signer1.GetSignatureAppearance()
-            //        .SetReuseAppearance(false)
-            //        .SetPageRect(rect1)
-            //        .SetPageNumber((int)sign.page);
-
-            //    PdfFormXObject layer21 = appearance1.GetLayer2();
-            //    PdfDocument doc1 = signer1.GetDocument();
-            //    PdfCanvas canvas1 = new PdfCanvas(layer21, doc1);
-
-
-
-            //    ImageData da1 = ImageDataFactory.Create("./private/images/dau_moc.png");
-            //    iText.Kernel.Geom.Rectangle dataRect1 = new iText.Kernel.Geom.Rectangle(0, 0, width1, heigth1);
-            //    Canvas dataLayoutCanvas1 = new Canvas(canvas1, dataRect1);
-            //    iText.Layout.Element.Image image1 = new iText.Layout.Element.Image(da1);
-            //    image1.SetAutoScale(true);
-            //    Div dataDiv1 = new Div();
-            //    dataDiv1.SetHeight(dataRect1.GetHeight());
-            //    dataDiv1.SetWidth(dataRect1.GetWidth());
-            //    dataDiv1.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.MIDDLE);
-            //    dataDiv1.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
-            //    dataDiv1.Add(image1);
-            //    dataLayoutCanvas1.Add(dataDiv1);
-
-            //    signer1.SetFieldName("dau_moc");
-            //    // Creating the signature
-            //    string KEYSTORE1 = "private/pfx/dau_moc.pfx";
-            //    char[] PASSWORD1 = "!PMP_it123456".ToCharArray();
-
-            //    Pkcs12Store pk121 = new Pkcs12Store(new FileStream(KEYSTORE1,
-            //    FileMode.Open, FileAccess.Read), PASSWORD1);
-            //    string alias1 = null;
-            //    foreach (object a in pk121.Aliases)
-            //    {
-            //        alias1 = ((string)a);
-            //        if (pk121.IsKeyEntry(alias1))
-            //        {
-            //            break;
-            //        }
-            //    }
-            //    ICipherParameters pk1 = pk121.GetKey(alias1).Key;
-            //    X509CertificateEntry[] ce1 = pk121.GetCertificateChain(alias1);
-            //    X509Certificate[] chain1 = new X509Certificate[ce1.Length];
-            //    for (int k = 0; k < ce1.Length; ++k)
-            //    {
-            //        chain1[k] = ce1[k].Certificate;
-            //    }
-            //    IExternalSignature pks1 = new PrivateKeySignature(pk1, DigestAlgorithms.SHA256);
-
-            //    signer1.SignDetached(pks1, chain1, null, null, null, 0,
-            //            PdfSignerNoObjectStream.CryptoStandard.CMS);
-
-            //    /// Add document file
-            //    var item1 = new DocumentFileModel
-            //    {
-            //        ext = ".pdf",
-            //        url = forlder.Replace("\\", "/") + "/" + fileName + "(" + user.FullName + " Signed_moc).pdf",
-            //        name = fileName + "(" + user.FullName + " Signed_moc).pdf",
-            //        mimeType = "application/pdf",
-            //        created_at = DateTime.Now,
-            //        document_id = sign_old.document_id
-            //    };
-
-            //    _context.Add(item1);
-            //    _context.SaveChanges();
-            //}
             ///UPDATE NEXT SIGN
             DocumentModel_old.time_signature_previous = DateTime.Now;
 
@@ -2281,18 +2141,15 @@ namespace it.Areas.Admin.Controllers
             }
             else
             {
-                var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == sign_old.document_id).Include(d => d.user).Include(d => d.representative).FirstOrDefault();
+                var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == sign_old.document_id).Include(d => d.user).FirstOrDefault();
                 string? user_signature_id = null;
-                string? user_presentative_id = null;
                 if (user_signature != null)
                 {
                     user_signature_id = user_signature.user_id;
-                    user_presentative_id = user_signature.representative_id;
                 }
-                if (DocumentModel_old.user_next_signature_id != user_signature_id || DocumentModel_old.user_next_representative_id != user_presentative_id)
+                if (DocumentModel_old.user_next_signature_id != user_signature_id)
                 {
                     DocumentModel_old.user_next_signature_id = user_signature_id;
-                    DocumentModel_old.user_next_representative_id = user_presentative_id;
                     if (user_signature_id == null)
                     {
                         if (DocumentModel_old.status_id == 2)
@@ -2327,7 +2184,7 @@ namespace it.Areas.Admin.Controllers
                     }   //SEND MAIL
                     else if (user_signature != null)
                     {
-                        var mail_string = user_signature.representative != null ? user_signature.representative.Email : user_signature.user.Email;
+                        var mail_string = user_signature.user.Email;
                         string Domain_1 = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                         var body = _view.Render("Emails/WaitSignDocument", new { link_logo = Domain_1 + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain_1 + "/admin/document/details/" + DocumentModel_old.id });
                         var attach = new List<string>()
@@ -2362,19 +2219,14 @@ namespace it.Areas.Admin.Controllers
             //Create unread
             var DocumentModel = _context.DocumentModel
               .Where(d => d.id == sign_old.document_id)
-              .Include(d => d.users_follow)
               .Include(d => d.users_signature)
               .Include(d => d.users_receive)
               .FirstOrDefault();
 
-            var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
             var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-            var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
             var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
             List<string> users_related = new List<string>();
-            users_related.AddRange(users_follow);
             users_related.AddRange(users_signature);
-            users_related.AddRange(users_representative);
             users_related.AddRange(users_receive);
             users_related = users_related.Distinct().ToList();
             var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -2560,7 +2412,7 @@ namespace it.Areas.Admin.Controllers
             var item = new DocumentFileModel
             {
                 ext = ".pdf",
-                url = "/private/documents/" + sign.document_id + "/" + timeStamp + ".pdf",
+                url = "/private/documents_gmp/" + sign.document_id + "/" + timeStamp + ".pdf",
                 name = timeStamp + ".pdf",
                 mimeType = "application/pdf",
                 created_at = DateTime.Now,
@@ -2673,7 +2525,6 @@ namespace it.Areas.Admin.Controllers
 
             var DocumentModel = _context.DocumentModel
               .Where(d => d.id == DocumentSignatureModel.document_id)
-              .Include(d => d.users_follow)
               .Include(d => d.users_signature)
               .Include(d => d.users_receive)
               .FirstOrDefault();
@@ -2749,14 +2600,10 @@ namespace it.Areas.Admin.Controllers
             _context.Add(DocumentEventModel);
 
             //Create unread 
-            var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
             var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-            var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
             var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
             List<string> users_related = new List<string>();
-            users_related.AddRange(users_follow);
             users_related.AddRange(users_signature);
-            users_related.AddRange(users_representative);
             users_related.AddRange(users_receive);
             users_related = users_related.Distinct().ToList();
             var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -2802,7 +2649,6 @@ namespace it.Areas.Admin.Controllers
 
             var DocumentModel = _context.DocumentModel
               .Where(d => d.id == id)
-              .Include(d => d.users_follow)
               .Include(d => d.users_signature)
               .Include(d => d.users_receive)
               .FirstOrDefault();
@@ -2840,14 +2686,10 @@ namespace it.Areas.Admin.Controllers
             };
             _context.Add(DocumentEventModel);
 
-            var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
             var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-            var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
             var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
             List<string> users_related = new List<string>();
-            users_related.AddRange(users_follow);
             users_related.AddRange(users_signature);
-            users_related.AddRange(users_representative);
             users_related.AddRange(users_receive);
             users_related = users_related.Distinct().ToList();
             var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -2910,8 +2752,9 @@ namespace it.Areas.Admin.Controllers
 
                     newName = newName.Replace("+", "_");
                     newName = newName.Replace("%", "_");
-                    var filePath = "private\\documents\\" + DocumentCommentModel.document_id + "\\" + newName;
-                    string url = "/private/documents/" + DocumentCommentModel.document_id + "/" + newName;
+                    var dir = _configuration["Source:Path_Private"] + "\\documents_gmp\\" + DocumentCommentModel.document_id;
+                    var filePath = dir + "\\" + newName;
+                    string url = "/private/documents_gmp/" + DocumentCommentModel.document_id + "/" + newName;
                     items_comment.Add(new DocumentCommentFileModel
                     {
                         ext = ext,
@@ -2953,19 +2796,14 @@ namespace it.Areas.Admin.Controllers
 
             var DocumentModel = _context.DocumentModel
                         .Where(d => d.id == DocumentCommentModel.document_id)
-                        .Include(d => d.users_follow)
                         .Include(d => d.users_signature)
                         .Include(d => d.users_receive)
                         .FirstOrDefault();
 
-            var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
             var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-            var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
             var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
             List<string> users_related = new List<string>();
-            users_related.AddRange(users_follow);
             users_related.AddRange(users_signature);
-            users_related.AddRange(users_representative);
             users_related.AddRange(users_receive);
             users_related = users_related.Distinct().ToList();
             var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -3065,7 +2903,7 @@ namespace it.Areas.Admin.Controllers
         [HttpPost]
         public async Task<JsonResult> GetType(int id)
         {
-            DocumentTypeModel type = _context.DocumentTypeModel.Where(d => d.id == id).Include(d => d.users_follow).Include(d => d.users_receive).FirstOrDefault();
+            DocumentTypeModel type = _context.DocumentTypeModel.Where(d => d.id == id).Include(d => d.users_receive).FirstOrDefault();
             return Json(new { success = 1, item = type });
         }
         private int checkPermission(string permission, int? document_id, bool is_admin = false, bool is_manager = false)
@@ -3077,16 +2915,23 @@ namespace it.Areas.Admin.Controllers
                 ///CHỈ user tạo và user follow
                 var DocumentModel = _context.DocumentModel
                             .Where(d => d.id == document_id)
-                            .Include(d => d.users_follow)
                             .FirstOrDefault();
                 if (DocumentModel == null)
                 {
                     return 1;
                 }
-                var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
+                var users_follow = new List<string>();
                 if (is_admin)
                 {
                     users_follow.Add(user_id);
+                }
+                if (is_manager)
+                {
+                    var type_gmp = _context.UserDocumentTypeModel.Where(d => d.user_id == user_id).Select(d => d.document_type_id).ToList();
+                    if (type_gmp.Contains(DocumentModel.type_id) == true)
+                    {
+                        users_follow.Add(user_id);
+                    }
                 }
                 List<string> users_related = new List<string>();
                 users_related.AddRange(users_follow);
@@ -3120,34 +2965,31 @@ namespace it.Areas.Admin.Controllers
             }
             else if (permission == "details")
             {
-                System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-                string user_id = UserManager.GetUserId(currentUser); // Get user id:
-                ///CHỈ user tạo và user follow
-                var DocumentModel = _context.DocumentModel
-                            .Where(d => d.id == document_id)
-                            .Include(d => d.users_follow)
-                            .Include(d => d.users_signature)
-                            .Include(d => d.users_receive)
-                            .FirstOrDefault();
-                if (DocumentModel == null)
-                {
-                    return 1;
-                }
-                List<string> users_related = new List<string>();
-                var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
-                var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-                var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
-                var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
-                if (is_admin)
-                {
-                    users_follow.Add(user_id);
-                }
-                users_related.AddRange(users_follow);
-                users_related.AddRange(users_signature);
-                users_related.AddRange(users_receive);
-                users_related.AddRange(users_representative);
-                users_related.Add(DocumentModel.user_id);
-                users_related = users_related.Distinct().ToList();
+                //System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+                //string user_id = UserManager.GetUserId(currentUser); // Get user id:
+                /////CHỈ user tạo và user follow
+                //var DocumentModel = _context.DocumentModel
+                //            .Where(d => d.id == document_id)
+                //            .Include(d => d.users_signature)
+                //            .Include(d => d.users_receive)
+                //            .FirstOrDefault();
+                //if (DocumentModel == null)
+                //{
+                //    return 1;
+                //}
+                //List<string> users_related = new List<string>();
+                //var users_follow = new List<string>();
+                //var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
+                //var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
+                //if (is_admin)
+                //{
+                //    users_follow.Add(user_id);
+                //}
+                //users_related.AddRange(users_follow);
+                //users_related.AddRange(users_signature);
+                //users_related.AddRange(users_receive);
+                //users_related.Add(DocumentModel.user_id);
+                //users_related = users_related.Distinct().ToList();
                 //if (!users_related.Contains(user_id)) /// CHECK QUYỀN
                 //{
                 //	return 1;
@@ -3161,17 +3003,25 @@ namespace it.Areas.Admin.Controllers
                 ///CHỈ user tạo và user follow
                 var DocumentModel = _context.DocumentModel
                             .Where(d => d.id == document_id)
-                            .Include(d => d.users_follow)
                             .FirstOrDefault();
                 if (DocumentModel == null)
                 {
                     return 1;
                 }
-                var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
+                var users_follow = new List<string>();
                 List<string> users_related = new List<string>();
                 if (is_admin)
                 {
                     users_follow.Add(user_id);
+                }
+
+                if (is_manager)
+                {
+                    var type_gmp = _context.UserDocumentTypeModel.Where(d => d.user_id == user_id).Select(d => d.document_type_id).ToList();
+                    if (type_gmp.Contains(DocumentModel.type_id) == true)
+                    {
+                        users_follow.Add(user_id);
+                    }
                 }
                 users_related.AddRange(users_follow);
                 users_related.Add(DocumentModel.user_id);
@@ -3270,17 +3120,25 @@ namespace it.Areas.Admin.Controllers
                 string user_id = UserManager.GetUserId(currentUser); // Get user id:
                 var DocumentModel = _context.DocumentModel
                             .Where(d => d.id == document_id)
-                            .Include(d => d.users_follow)
                             .FirstOrDefault();
 
                 if (DocumentModel == null)
                 {
                     return 1;
                 }
-                var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
+                var users_follow = new List<string>();
                 if (is_admin)
                 {
                     users_follow.Add(user_id);
+                }
+
+                if (is_manager)
+                {
+                    var type_gmp = _context.UserDocumentTypeModel.Where(d => d.user_id == user_id).Select(d => d.document_type_id).ToList();
+                    if (type_gmp.Contains(DocumentModel.type_id) == true)
+                    {
+                        users_follow.Add(user_id);
+                    }
                 }
                 List<string> users_related = new List<string>();
                 users_related.AddRange(users_follow);
@@ -3302,8 +3160,6 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature)
                 .ThenInclude(d => d.user)
                 .Include(d => d.users_signature)
-                .ThenInclude(d => d.representative)
-                .Include(d => d.users_follow)
                 .Include(d => d.users_receive)
                 .Include(d => d.files)
                 .FirstOrDefault();
@@ -3314,10 +3170,9 @@ namespace it.Areas.Admin.Controllers
             user_signature.date = null;
             user_signature.reason = null;
             DocumentModel.user_next_signature_id = user_signature.user_id;
-            DocumentModel.user_next_representative_id = user_signature.representative_id;
 
             //SEND MAIL
-            var mail_string = user_signature.representative != null ? user_signature.representative.Email : user_signature.user.Email;
+            var mail_string = user_signature.user.Email;
             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
             var body = _view.Render("Emails/WaitSignDocument", new { link_logo = Domain + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain + "/admin/document/details/" + DocumentModel.id });
             var email = new EmailModel
@@ -3339,14 +3194,10 @@ namespace it.Areas.Admin.Controllers
             };
             _context.Add(DocumentEventModel);
             //Create unread 
-            var users_follow = DocumentModel.users_follow.Select(a => a.user_id).ToList();
             var users_signature = DocumentModel.users_signature.Select(a => a.user_id).ToList();
-            var users_representative = DocumentModel.users_signature.Where(a => a.representative_id != null).Select(a => a.representative_id).ToList();
             var users_receive = DocumentModel.users_receive.Select(a => a.user_id).ToList();
             List<string> users_related = new List<string>();
-            users_related.AddRange(users_follow);
             users_related.AddRange(users_signature);
-            users_related.AddRange(users_representative);
             users_related.AddRange(users_receive);
             users_related = users_related.Distinct().ToList();
             //var itemToRemove = users_related.SingleOrDefault(r => r == user_id);
@@ -3398,7 +3249,9 @@ namespace it.Areas.Admin.Controllers
 
             var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             var link = "/private/check/" + timeStamp + ".pdf";
-            System.IO.File.WriteAllBytes("." + link, ms);
+            var dir = _configuration["Source:Path_Private"] + "\\check";
+            var filePath = dir + "\\" + timeStamp + ".pdf";
+            System.IO.File.WriteAllBytes(filePath, ms);
             return Json(new { success = true, link = link });
         }
         public byte[] Combine(List<byte[]> pdfs, List<List<int>>? list_page)

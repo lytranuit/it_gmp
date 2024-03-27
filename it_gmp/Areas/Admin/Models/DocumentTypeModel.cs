@@ -22,7 +22,6 @@ namespace it.Areas.Admin.Models
         public virtual DocumentTypeGroupModel? group { get; set; }
 
         public virtual TemplateModel? template { get; set; }
-        public virtual List<DocumentTypeFollowModel>? users_follow { get; set; }
         public virtual List<DocumentTypeReceiveModel>? users_receive { get; set; }
         public virtual List<UserDocumentTypeModel>? users_manager { get; set; }
         public DateTime? created_at { get; set; }

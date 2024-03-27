@@ -1,0 +1,237 @@
+﻿@{
+    ViewData["Title"] = "Receive";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+<div class="row clearfix">
+
+    <div class="page-title-box col-12">
+        <div class="float-left">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Hệ thống</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Hồ sơ</a></li>
+                <li class="breadcrumb-item active">Danh sách đã nhận</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-12">
+        <section class="card card-fluid">
+            <div class="card-body">
+                <div class="table-responsive-md">
+                    <div class="custom-control custom-switch switch-primary">
+                        <input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary"
+                               value="true">
+                        <label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
+                    </div>
+                    <table id="quanlytin" class="table table-striped table-bordered table-hover" cellspacing="0"
+                           width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Hồ sơ</th>
+                                <th>Người ký</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="modal fade modal-reason" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title mt-0" id="myLargeModalLabel">Lý do hủy</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="cancle_reason" action="/admin/document/cancledocument" method="POST">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <input type="hidden" name="id" />
+                            <textarea required name="reason" class="form-control" rows="5"
+                                      placeholder="Lý do"></textarea>
+                        </div>
+                        <div class="col-md-12 mt-2 text-center">
+                            <button type="submit" class="btn btn-sm btn-danger">Chấp nhận hủy</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        var keyword = @Html.Raw(Json.Serialize(ViewData["keyword"]));
+        var page = 'manager';
+        var type = @Html.Raw(Json.Serialize(ViewData["type"]));
+        $(document).ready(function () {
+            let filter_cancle = localStorage.getItem('IGNORE_CANCLE');
+            if (filter_cancle == 1) {
+                $(".filter_cancle").attr("checked", true);
+            }
+            let table = $('#quanlytin').DataTable({
+                "stateSave": true,
+                "processing": true,
+                "serverSide": true,
+                // "ordering": false,
+                "ajax": {
+                    "url": "/admin/document/table",
+                    "dataType": "json",
+                    "type": "POST",
+                    'data': function (data) {
+                        data['type'] = "manager";
+
+                        //let search_type = localStorage.getItem('SEARCH_TYPE') || "code";
+                        //let search_status = localStorage.getItem('SEARCH_STATUS') || "0";
+                        //let search_priority = localStorage.getItem('SEARCH_PRIORITY') || "0";
+                        let search_type = $(".search_type").val();
+                        let search_status = $(".search_status").val();
+                        let search_priority = $(".search_priority").val();
+                        let search_type_option = $(".search_type_option").val();
+                        let search_date = $(".search_date").val();
+                        let filter_cancle = $(".filter_cancle").is(":checked");
+                        data['search_type'] = search_type;
+                        data['search_status'] = search_status;
+                        data['search_priority'] = search_priority;
+                        data['search_type_option'] = search_type_option;
+                        data['search_date'] = search_date;
+                        data['filter_cancle'] = filter_cancle;
+                    }
+                },
+                "columns": [{
+                    "data": "priority",
+                    "className": "text-center",
+                    "width": "50px",
+                    "orderable": false
+                }, {
+                    "data": "name",
+                    "width": "800px",
+                    "orderable": false
+                }, {
+                    "data": "user_signature",
+                    "className": "text-center",
+                    "orderable": false
+                }, {
+                    "data": "status",
+                    "className": "text-center",
+                    "orderable": false
+                },
+                {
+                    "data": "action",
+                    "orderable": false
+                }
+                ],
+                initComplete: function () {
+                    $("body").trigger("table_load");
+                    $(".dataTables_filter").prepend("Lọc theo: <select style='margin-right: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_type'><option value='code'>Mã hồ sơ</option><option value='name_vi'>Tiêu đề</option><option value='keyword'>Cá nhân</option><option value='priority'>Độ ưu tiên</option><option value='status'>Trạng thái</option><option value='type'>Loại hồ sơ</option><option value='created_by'>Người tạo</option><option value='created_at'>Ngày tạo</option><option value='date_finish'>Ngày hoàn thành</option><option value='unread'>Chưa đọc</option></select>");
+                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_priority d-none'> <option value='1'>Thấp</option><option value='2' selected>Bình thường</option><option value='3'>Cao</option><option value='4'>Khẩn cấp</option></select>");
+                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_status d-none'><option value='1'>Tạo mới</option><option value='2'>Trình ký</option><option value='3'>Hủy</option><option value='4'>Đã ký xong</option><option value='6'>Hiện hành</option><option value='7'>Superseded</option><option value='8'>Obsoleted</option></select>");
+                    $(".dataTables_filter label").append("<input style='margin-left: 0.5em;display: inline-block;width: 500px;' class='form-control form-control-sm search_date d-none' />");
+                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_keyword_option d-none'></select>");
+                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_type_option d-none'></select>");
+
+                    $(".search_date").daterangepicker({
+                        autoApply: true,
+                        maxDate: new Date(),
+                        locale: {
+                            format: 'DD/MM/YYYY'
+                        }
+                    });
+                    var html_keyword = "";
+                    for (var t of keyword) {
+                        html_keyword += "<option value='" + t.keyword + "'>" + t.keyword + "</option>";
+                    }
+                    $(".search_keyword_option").html(html_keyword);
+
+                    //let search_priority = localStorage.getItem('SEARCH_PRIORITY') || "0";
+                    //$(".search_priority").val(search_priority);
+
+                    //let search_type = localStorage.getItem('SEARCH_TYPE') || "code";
+                    //$(".search_type").val(search_type).trigger("change");
+                    var html_type = "";
+                    for (var t of type) {
+                        html_type += "<option value='" + t.id + "'>" + t.name + "</option>";
+                    }
+                    $(".search_type_option").html(html_type);
+                },
+            });
+
+            $(document).on("click", ".huy", function () {
+                let id = $(this).data("id");
+                $("#cancle_reason [name='id']").val(id);
+            });
+            $(document).on("change", ".search_type", function () {
+                let search_type = $(this).val();
+                localStorage.setItem('SEARCH_TYPE', search_type);
+                $(".dataTables_filter label").removeClass("d-none");
+                $(".dataTables_filter label input").addClass("d-none");
+                $(".search_keyword_option").addClass("d-none");
+                $(".search_status").addClass("d-none");
+                $(".search_priority").addClass("d-none");
+                $(".search_type_option").addClass("d-none");
+                $(".search_date").addClass("d-none");
+                $(".search_amount_type").addClass("d-none");
+                $(".search_branch").addClass("d-none");
+                if (search_type == "status") {
+                    $(".search_status").removeClass("d-none");
+                } else if (search_type == "priority") {
+                    $(".search_priority").removeClass("d-none");
+                } else if (search_type == "keyword") {
+                    $(".search_keyword_option").removeClass("d-none");
+                } else if (search_type == "amount") {
+                    $(".search_amount_type").removeClass("d-none");
+                } else if (search_type == "unread") {
+                    $(".dataTables_filter label").addClass("d-none");
+                } else if (search_type == "type") {
+                    $(".search_type_option").removeClass("d-none");
+                } else if (search_type == "branch_id") {
+                    $(".search_branch").removeClass("d-none");
+                } else if (search_type == "date_finish" || search_type == 'created_at') {
+                    $(".search_date").removeClass("d-none");
+                } else {
+                    $(".dataTables_filter label input").not(".search_date").removeClass("d-none");
+                }
+                table.ajax.reload();
+            });
+            $(document).on("change", ".search_status", function () {
+                let search_status = $(this).val();
+                localStorage.setItem('SEARCH_STATUS', search_status);
+                table.ajax.reload();
+            });
+            $(document).on("change", ".search_priority", function () {
+                let search_priority = $(this).val();
+                localStorage.setItem('SEARCH_PRIORITY', search_priority);
+                table.ajax.reload();
+            });
+            $(document).on("change", ".search_type_option", function () {
+                let search = $(this).val();
+                localStorage.setItem('SEARCH_TYPE_OPTION', search);
+                table.ajax.reload();
+            });
+
+            $(document).on("change", ".search_date", function () {
+                let search = $(this).val();
+                localStorage.setItem('SEARCH_DATE', search);
+                table.ajax.reload();
+            });
+
+            $(document).on("click", ".filter_cancle", function () {
+                let search = +$(this).is(":checked");
+                localStorage.setItem('IGNORE_CANCLE', search);
+                table.ajax.reload();
+            })
+            $(document).on("change", ".search_keyword_option", function () {
+                let search = $(this).val();
+                localStorage.setItem('SEARCH_KEYWORD_OPTION', search);
+                table.ajax.reload();
+            });
+        });
+    </script>
+}

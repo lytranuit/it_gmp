@@ -150,22 +150,22 @@ namespace it.Areas.Admin.Controllers
         }
 
         // POST: MemberController/CreateSignature
-        [HttpPost]
-        public IActionResult CreateSignature()
-        {
+        //[HttpPost]
+        //public IActionResult CreateSignature()
+        //{
 
-            var base64 = Request.Form["base_image"].FirstOrDefault();
-            var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-            string id = UserManager.GetUserId(currentUser); // Get user id:
-            byte[] bytes = Convert.FromBase64String(base64.Split(',')[1]);
-            using (FileStream stream = new FileStream("private\\upload\\" + id + "\\" + timeStamp + ".png", FileMode.Create))
-            {
-                stream.Write(bytes, 0, bytes.Length);
-                stream.Flush();
-            }
-            return Json(new { success = 1, image = "/private/upload/" + id + "/" + timeStamp + ".png" });
-        }
+        //    var base64 = Request.Form["base_image"].FirstOrDefault();
+        //    var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+        //    System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        //    string id = UserManager.GetUserId(currentUser); // Get user id:
+        //    byte[] bytes = Convert.FromBase64String(base64.Split(',')[1]);
+        //    using (FileStream stream = new FileStream("private\\upload\\" + id + "\\" + timeStamp + ".png", FileMode.Create))
+        //    {
+        //        stream.Write(bytes, 0, bytes.Length);
+        //        stream.Flush();
+        //    }
+        //    return Json(new { success = 1, image = "/private/upload/" + id + "/" + timeStamp + ".png" });
+        //}
 
         // POST: UserController/Create
         [HttpPost]

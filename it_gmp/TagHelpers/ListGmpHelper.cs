@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Diagnostics;
 
-namespace it.TagHelpers
+namespace it_gmp.TagHelpers
 {
     public class ListGmpHelper : TagHelper
     {

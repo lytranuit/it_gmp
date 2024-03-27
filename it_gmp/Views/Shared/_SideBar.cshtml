@@ -2,7 +2,7 @@
 @using it
 @using it.Areas.Admin.Models
 @inject UserManager<UserModel> userManager;
-@addTagHelper *, it
+@addTagHelper *, it_gmp
 @{
     var user = await userManager.GetUserAsync(User);
     var is_admin = await userManager.IsInRoleAsync(user, "Administrator");
@@ -63,18 +63,21 @@
                         <count-unread-receive></count-unread-receive>
                     </a>
                 </li>
-                <!---<li class="nav-item">
-                    <a class="nav-link" href="/admin/document/follow">
-                        <i class="ti-control-record"></i>Danh sách kiểm tra
-                        <count-unread-review></count-unread-review>
-                    </a>
-                </li>-->
+
                 <li class="nav-item send">
                     <a class="nav-link" href="/admin/document">
                         <i class="ti-control-record"></i>Danh sách đã gửi
                         <count-unread-send></count-unread-send>
                     </a>
-                </li>
+                </li>@if (is_admin || is_manager)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/document/manager">
+                            <i class="ti-control-record"></i>Danh sách quản lý
+                            <count-unread-manager></count-unread-manager>
+                        </a>
+                    </li>
+                }
             </ul>
         </li>
         @if (is_admin)

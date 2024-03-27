@@ -26,10 +26,8 @@ namespace it.Data
 		public DbSet<TemplateModel> TemplateModel { get; set; }
         //public DbSet<User2Model> User2Model { get; set; }
         public DbSet<EmailModel> EmailModel { get; set; }
-        public DbSet<RepresentativeModel> RepresentativeModel { get; set; }
         public DbSet<DocumentTypeModel> DocumentTypeModel { get; set; }
         public DbSet<DocumentTypeGroupModel> DocumentTypeGroupModel { get; set; }
-        public DbSet<DocumentTypeFollowModel> DocumentTypeFollowModel { get; set; }
         public DbSet<DocumentTypeReceiveModel> DocumentTypeReceiveModel { get; set; }
         public DbSet<DocumentModel> DocumentModel { get; set; }
         public DbSet<DocumentFileModel> DocumentFileModel { get; set; }
@@ -38,17 +36,12 @@ namespace it.Data
         public DbSet<DocumentRelatedModel> DocumentRelatedModel { get; set; }
         public DbSet<DocumentSignatureModel> DocumentSignatureModel { get; set; }
         public DbSet<DocumentUserReceiveModel> DocumentUserReceiveModel { get; set; }
-        public DbSet<DocumentUserFollowModel> DocumentUserFollowModel { get; set; }
         public DbSet<DocumentCommentModel> DocumentCommentModel { get; set; }
         public DbSet<DocumentCommentFileModel> DocumentCommentFileModel { get; set; }
         public DbSet<DocumentUserReadModel> DocumentUserReadModel { get; set; }
         public DbSet<DocumentUserKeywordModel> DocumentUserKeywordModel { get; set; }
         public DbSet<DocumentUserUnreadModel> DocumentUserUnreadModel { get; set; }
         public DbSet<DocumentEventModel> DocumentEventModel { get; set; }
-        public DbSet<ProcessTableModel> ProcessTableModel { get; set; }
-        public DbSet<ProcessTableDataModel> ProcessTableDataModel { get; set; }
-        public DbSet<ProcessModel> ProcessModel { get; set; }
-        public DbSet<ProcessStepModel> ProcessStepModel { get; set; }
         public DbSet<TokenModel> TokenModel { get; set; }
 
         public DbSet<Chart> Chart { get; set; }

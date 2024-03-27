@@ -659,31 +659,16 @@
                 }
             });
 
-            $(".processed").click(function (e) {
-                e.preventDefault();
-                let text = "Đã xử lý hồ sơ này?";
-                if (confirm(text) == true) {
-                    $("#form").append("<input name='status_id' value='5' />");
-                    $(".cap_nhat").trigger("click");
-                }
-            });
             $(".hien_hanh").click(function (e) {
                 e.preventDefault();
                 let text = "Hiện hành hồ sơ này?";
                 if (confirm(text) == true) {
-                    $("[name='date_effect']").prop("required", true);
-                    $("#form").append("<input name='status_id' value='6' />");
-                    $(".cap_nhat").trigger("click");
-
-                }
-            });
-            $(".superseded").click(function (e) {
-                e.preventDefault();
-                let text = "Thay thế hồ sơ này?";
-                if (confirm(text) == true) {
-                    $("[name='date_effect']").prop("required", true);
-                    $("[name='date_expire']").prop("required", true);
-                    $("#form").append("<input name='status_id' value='7' />");
+                    // $("[name='date_effect']").prop("required", true);
+                    if (!$("[name='date_effect']").val()) {
+                        alert("Yêu cầu nhập ngày hiệu lực!");
+                        return false;
+                    }
+                    $("#form").append("<input name='status_id' value='6' type='hidden'/>");
                     $(".cap_nhat").trigger("click");
 
                 }
@@ -692,9 +677,15 @@
                 e.preventDefault();
                 let text = "Hết hiệu lực hồ sơ này?";
                 if (confirm(text) == true) {
-                    $("[name='date_effect']").prop("required", true);
-                    $("[name='date_expire']").prop("required", true);
-                    $("#form").append("<input name='status_id' value='8' />");
+                    if (!$("[name='date_effect']").val()) {
+                        alert("Yêu cầu nhập ngày hiệu lực!");
+                        return false;
+                    }
+                    if (!$("[name='date_expire']").val()) {
+                        alert("Yêu cầu nhập ngày hết hiệu lực!");
+                        return false;
+                    }
+                    $("#form").append("<input name='status_id' value='8' type='hidden'/>");
                     $(".cap_nhat").trigger("click");
 
                 }

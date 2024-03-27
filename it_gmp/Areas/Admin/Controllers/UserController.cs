@@ -19,12 +19,14 @@ namespace it.Areas.Admin.Controllers
     [Authorize(Roles = "Administrator")]
     public class UserController : BaseController
     {
+        IConfiguration _configuration;
         private UserManager<UserModel> UserManager;
         private RoleManager<IdentityRole> RoleManager;
-        public UserController(ItContext context, UserManager<UserModel> UserMgr, RoleManager<IdentityRole> RoleMgr) : base(context)
+        public UserController(ItContext context, UserManager<UserModel> UserMgr, RoleManager<IdentityRole> RoleMgr, IConfiguration configuration) : base(context)
         {
             UserManager = UserMgr;
             RoleManager = RoleMgr;
+            _configuration = configuration;
         }
         // GET: UserController
         public ActionResult Index()
@@ -126,14 +128,14 @@ namespace it.Areas.Admin.Controllers
             string passwordPublic = "!PMP_it123456";
             var createClientServerAuthCerts = serviceProvider.GetService<CreateCertificatesClientServerAuth>();
 
-            X509Certificate2 rootCaL1 = new X509Certificate2("private/rootca/localhost_root.pfx", passwordPublic);
+            X509Certificate2 rootCaL1 = new X509Certificate2(_configuration["Source:Path_Private"] + "\\rootca\\localhost_root.pfx", passwordPublic);
             var serverL3 = createClientServerAuthCerts.NewClientChainedCertificate(
                 new DistinguishedName { CommonName = user.FullName + "<" + user.Email + ">", OrganisationUnit = user.position },
                 new ValidityPeriod { ValidFrom = DateTime.UtcNow, ValidTo = DateTime.UtcNow.AddYears(10) },
                 "localhost", rootCaL1);
             var importExportCertificate = serviceProvider.GetService<ImportExportCertificate>();
             var serverCertL3InPfxBtyes = importExportCertificate.ExportChainedCertificatePfx(passwordPublic, serverL3, rootCaL1);
-            System.IO.File.WriteAllBytes("private/pfx/" + user.Id + ".pfx", serverCertL3InPfxBtyes);
+            System.IO.File.WriteAllBytes(_configuration["Source:Path_Private"] + "\\pfx\\" + user.Id + ".pfx", serverCertL3InPfxBtyes);
 
             user.signature = "/private/pfx/" + user.Id + ".pfx";
             _context.Update(user);
@@ -175,7 +177,7 @@ namespace it.Areas.Admin.Controllers
             {
                 return Ok(User);
             }
-            UserModel User_old = await UserManager.FindByIdAsync(User.Id);
+            UserModel User_old = _context.UserModel.Where(d => d.Id == id).FirstOrDefault();
             var OldValues = JsonConvert.SerializeObject(User_old);
             User_old.Email = User.Email;
             User_old.UserName = User.Email;

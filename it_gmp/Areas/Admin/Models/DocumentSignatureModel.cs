@@ -31,10 +31,6 @@ namespace it.Areas.Admin.Models
 
         [ForeignKey("user_id")]
         public virtual UserModel? user { get; set; }
-        public string? representative_id { get; set; }
-
-        [ForeignKey("representative_id")]
-        public virtual UserModel? representative { get; set; }
         public string? user_sign { get; set; }
 
         [ForeignKey("user_sign")]
