@@ -106,7 +106,8 @@ app.UseStaticFiles(new StaticFileOptions
 {
 	FileProvider = new PhysicalFileProvider(builder.Configuration["Source:Path_Private"]),
 	RequestPath = "/private",
-	OnPrepareResponse = ctx =>
+    ServeUnknownFileTypes = true,
+    OnPrepareResponse = ctx =>
 	{
 		var token = builder.Configuration["Key_Access"];
 		var token_query = ctx.Context.Request.Query["token"].ToString();

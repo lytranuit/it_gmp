@@ -64,7 +64,7 @@
     <script type='text/javascript'>
         var page = "sign";
         var data = @Html.Raw(Json.Serialize(Model));
-        var user_signature = @Html.Raw(Json.Serialize(ViewBag.user_signature));
+        var users_signature = @Html.Raw(Json.Serialize(ViewBag.users_signature));
         var current_user_id = '@ViewBag.current_user_id';
         if (!data.files) {
             alert("Không có hồ sơ!");
@@ -99,38 +99,40 @@
                 viewer.appendChild(div);
                 await renderPage(page, canvas);
             }
-            var template = $(".template_user_signature").html();
-            var user = user_signature.user_id != current_user_id ? user_signature.representative : user_signature.user;
-            user.sign_id = user_signature.id;
-            user.position = user.position ? "(" + user.position + ")" : "";
-            var rendered = Mustache.render(template, user);
-            if (user_signature.page > 0) {
-                let parent = $(".box-canvas:eq(" + (user_signature.page - 1) + ")");
-                parent.append(rendered);
-                var height_page = $(".pdf-page-canvas", parent).height();
-                $("#pdf-viewer .signature[data-sign_id='" + user.sign_id + "']").css({
-                    'left': user_signature.position_x + "px",
-                    'top': (height_page - (user_signature.position_y + user_signature.image_size_height + 40)) + "px"
-                });
-                //.draggable({
-                //    stop: dragger_outside
-                //});
-                $("#pdf-viewer .signature[data-sign_id='" + user.sign_id + "'] .sign_image").css({
-                    width: user_signature.image_size_width + "px",
-                    height: user_signature.image_size_height + "px",
-                }).resizable();
-                $("#sign").append(rendered);
-                $("#sign .signature[data-sign_id='" + user.sign_id + "']").addClass("disabled");
-            } else {
-                $("#sign").append(rendered);
-                $("#sign .signature[data-sign_id='" + user.sign_id + "']").draggable({
-                    stop: dragger_outside
-                });
-                $("#sign .signature[data-sign_id='" + user.sign_id + "'] .sign_image").one("load", function () {
-                    if ($(this).height() > 0) {
-                        $(this).resizable();
-                    }
-                })
+            for (let user_signature of users_signature) {
+                var template = $(".template_user_signature").html();
+                var user = user_signature.user_id != current_user_id ? user_signature.representative : user_signature.user;
+                user.sign_id = user_signature.id;
+                user.position = user.position ? "(" + user.position + ")" : "";
+                var rendered = Mustache.render(template, user);
+                if (user_signature.page > 0) {
+                    let parent = $(".box-canvas:eq(" + (user_signature.page - 1) + ")");
+                    parent.append(rendered);
+                    var height_page = $(".pdf-page-canvas", parent).height();
+                    $("#pdf-viewer .signature[data-sign_id='" + user.sign_id + "']").css({
+                        'left': user_signature.position_x + "px",
+                        'top': (height_page - (user_signature.position_y + user_signature.image_size_height + 40)) + "px"
+                    });
+                    //.draggable({
+                    //    stop: dragger_outside
+                    //});
+                    $("#pdf-viewer .signature[data-sign_id='" + user.sign_id + "'] .sign_image").css({
+                        width: user_signature.image_size_width + "px",
+                        height: user_signature.image_size_height + "px",
+                    }).resizable();
+                    $("#sign").append(rendered);
+                    $("#sign .signature[data-sign_id='" + user.sign_id + "']").addClass("disabled");
+                } else {
+                    $("#sign").append(rendered);
+                    $("#sign .signature[data-sign_id='" + user.sign_id + "']").draggable({
+                        stop: dragger_outside
+                    });
+                    $("#sign .signature[data-sign_id='" + user.sign_id + "'] .sign_image").one("load", function () {
+                        if ($(this).height() > 0) {
+                            $(this).resizable();
+                        }
+                    })
+                }
             }
             $('.box-canvas').droppable({
                 // only accept elements matching this CSS selector
@@ -231,53 +233,47 @@
                 if (confirm("Bạn chắc chắn muốn ký hồ sơ này!") == false) {
                     return;
                 }
-                let sign = $(".signature");
-                var sign_x = sign[0].offsetLeft;
-                var sign_y = sign[0].offsetTop;
-                var parent = sign.closest(".box-canvas");
-                if (!parent.length) {
-                    alert("Kéo chữ ký vào văn bản để ký!");
-                    return;
-                }
-                var reason_b = $(".reason", sign).text();
-                var explode = reason_b.split("Ý kiến:");
-                var reason;
-                if (explode.length > 1) {
-                    reason = explode[1];
-                }
-                var page = parent.index() + 1;
-                var height_page = $(".pdf-page-canvas", parent).height();
-                var sign_image = $(".sign_image", sign);
-                var sign_info = $(".sign_info", sign);
-                //var sign_info_x = sign_info[0].offsetLeft;
-                //var sign_info_y = sign_info[0].offsetTop;
-                var sign_image_x = sign_image[0].offsetLeft;
-                var sign_image_y = sign_image[0].offsetTop;
-                var image_size_width = sign_image.width();
-                var image_size_height = sign_image.height();
-                var position_image_x = sign_image_x + sign_x;
-                var position_image_y = height_page - (image_size_height + sign_y);
-                var position_x = sign_x;
-                var position_y = height_page - (image_size_height + sign_y + 40);
-                if (reason) {
-                    position_y -= 30;
-                }
-                if (!sign_info.length) {
-                    position_y = position_image_y;
-                }
-                //console.log(height_page)
-                //console.log(sign_image_x);
-                //console.log(sign_image_y);
-                //console.log(sign_x);
-                //console.log(sign_y);
-                //return;
-                //y = height_page - y;
+                var data1 = [];
+                $(".signature").not(".disabled").each(function(){
+                    let sign = $(this);
+                    console.log(sign);
+                    var sign_x = sign[0].offsetLeft;
+                    var sign_y = sign[0].offsetTop;
 
-                $(".preloader").fadeIn();
-                $.ajax({
-                    url: "/admin/document/save",
-                    type: "POST",
-                    data: {
+                    var parent = sign.closest(".box-canvas");
+                    if (!parent.length) {
+                        alert("Kéo chữ ký vào văn bản để ký!");
+                        return;
+                    }
+                    var reason_b = $(".reason", sign).text();
+                    var explode = reason_b.split("Ý kiến:");
+                    var reason;
+                    if (explode.length > 1) {
+                        reason = explode[1];
+                    }
+                    var page = parent.index() + 1;
+                    var height_page = $(".pdf-page-canvas", parent).height();
+                    var sign_image = $(".sign_image", sign);
+                    var sign_info = $(".sign_info", sign);
+                    var sign_id = sign.data("sign_id");
+                    //var sign_info_x = sign_info[0].offsetLeft;
+                    //var sign_info_y = sign_info[0].offsetTop;
+                    var sign_image_x = sign_image[0].offsetLeft;
+                    var sign_image_y = sign_image[0].offsetTop;
+                    var image_size_width = sign_image.width();
+                    var image_size_height = sign_image.height();
+                    var position_image_x = sign_image_x + sign_x;
+                    var position_image_y = height_page - (image_size_height + sign_y);
+                    var position_x = sign_x;
+                    var position_y = height_page - (image_size_height + sign_y + 40);
+                    if (reason) {
+                        position_y -= 30;
+                    }
+                    if (!sign_info.length) {
+                        position_y = position_image_y;
+                    }
+
+                    data1.push({
                         page: page,
                         position_x: position_x,
                         position_y: position_y,
@@ -288,8 +284,17 @@
                         url: url,
                         reason: reason,
                         user_sign: current_user_id,
-                        id: user_signature.id,
-                    }, success: function (data) {
+                        document_id :data.id,
+                        id: sign_id,
+                    })
+                });
+                // console.log(data);
+                // return;
+                $(".preloader").fadeIn();
+                $.ajax({
+                    url: "/admin/document/save",
+                    type: "POST",
+                    data: {signs:data1 }, success: function (data) {
                         alert(data.message);
                         if (data.failed != 1) {
                             history.back();

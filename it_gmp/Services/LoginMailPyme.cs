@@ -29,23 +29,23 @@ namespace it.Services
 
                 var values = new Dictionary<string, string>
                 {
-                    { "kerio_username", email },
-                    { "kerio_password", password }
+                    { "user", email },
+                    { "pass", password }
                 };
                 var content = new FormUrlEncodedContent(values);
-                var url = "https://mail.astahealthcare.com/webmail/login/dologin";
+                var url = "https://mail.astahealthcare.com/login/?login_only=1";
                 var response = await client.PostAsync(url, content);
                 if (response.IsSuccessStatusCode)
                 {
-                    var AbsoluteUri = response.RequestMessage.RequestUri.AbsoluteUri;//"https://mail.astahealthcare.com/webmail/"  
-                    if (AbsoluteUri == "https://mail.astahealthcare.com/webmail/")
-                    {
-                        return new LoginResponse() { authed = true };
-                    }
-                    else
-                    {
-                        return new LoginResponse() { authed = false };
-                    }
+                    //var AbsoluteUri = response.RequestMessage.RequestUri.AbsoluteUri;//"https://mail.astahealthcare.com/webmail/"  
+                    //if (AbsoluteUri == "https://mail.astahealthcare.com/webmail/")
+                    //{
+                    return new LoginResponse() { authed = true };
+                    //}
+                    //else
+                    //{
+                    //    return new LoginResponse() { authed = false };
+                    //}
                 }
                 else
                 {

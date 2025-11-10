@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Signing;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
@@ -865,7 +866,8 @@ namespace it.Areas.Admin.Controllers
                         if (file_sign != null)
                         {
                             attach.Add(file_sign.url);
-                        };
+                        }
+                        ;
                         var email = new EmailModel
                         {
                             email_to = mail_string,
@@ -922,7 +924,8 @@ namespace it.Areas.Admin.Controllers
                             if (file_sign != null)
                             {
                                 attach.Add(file_sign.url);
-                            };
+                            }
+                            ;
                             var mail_string = user_signature.user.Email;
                             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                             var body = _view.Render("Emails/WaitSignDocument", new { link_logo = Domain + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain + "/admin/document/details/" + DocumentModel_old.id });
@@ -1740,9 +1743,9 @@ namespace it.Areas.Admin.Controllers
             string current_user_id = UserManager.GetUserId(currentUser); // Get user id:
                                                                          //return Ok(users_signture.Count);
 
-            var user_signature = DocumentModel.users_signature.Where(u => u.status == 1 && u.user_id == current_user_id).OrderBy(u => u.stt).FirstOrDefault();
+            var users_signature = DocumentModel.users_signature.Where(u => u.status == 1 && u.user_id == current_user_id).OrderBy(u => u.stt).ToList();
             ViewBag.current_user_id = current_user_id;
-            ViewBag.user_signature = user_signature;
+            ViewBag.users_signature = users_signature;
             return View(DocumentModel);
         }
         // GET: Admin/Document/Sign/5
@@ -1889,214 +1892,255 @@ namespace it.Areas.Admin.Controllers
             return Ok(new { message = "Thành công" });
         }
         [HttpPost]
-        public async Task<IActionResult> Save(DocumentSignatureModel sign)
+        public async Task<IActionResult> Save(List<DocumentSignatureModel> signs)
         {
+            if (signs.Count == 0)
+            {
+                return Ok(new { message = "Không có dữ liệu ký!", failed = 1 });
+            }
             //return Ok(sign);
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             string user_id = UserManager.GetUserId(currentUser); // Get user id:
-
-            DocumentSignatureModel sign_old = await _context.DocumentSignatureModel.Where(d => d.id == sign.id).FirstAsync();
-
-            if (checkPermission("sign", sign_old.document_id) != 0)
-            {
-                return RedirectToAction(nameof(Details), new { id = sign_old.document_id });
-            }
             UserModel user = await UserManager.FindByIdAsync(user_id);
+            var document_id = signs.FirstOrDefault().document_id;
+
+
+            if (checkPermission("sign", document_id) != 0)
+            {
+                return RedirectToAction(nameof(Details), new { id = document_id });
+            }
+
+
             var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+            var item = new DocumentFileModel();
+            var url = signs.FirstOrDefault().url;
 
-            //string fileName = Path.GetFileNameWithoutExtension(sign.url);
-            string folder = Path.GetDirectoryName(sign.url);
-            folder = folder.Replace("\\private", _configuration["Source:Path_Private"]);
-            string ext = Path.GetExtension(user.image_sign);
-            string save = folder + "\\" + timeStamp + "(" + user.FullName + " Signed).pdf";
+            var tempFile = url;
 
-            string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value + "/";
-            //Draw the image
-            var file_image = user.image_sign.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+            var url_save = "";
 
-            //return Ok(new { message = file_image });
-            ImageData da = ImageDataFactory.Create(file_image);
-            int image_size_width = (int)Math.Round((float)sign.image_size_width);
-            int image_size_height = (int)Math.Round((float)sign.image_size_height);
-            if (ext.ToLower() == ".png")
+            var stt = 0;
+            foreach (DocumentSignatureModel sign in signs)
             {
-                using (System.Drawing.Image src = System.Drawing.Image.FromFile(file_image))
-                using (Bitmap dst = new Bitmap(image_size_width, image_size_height))
-                using (Graphics g = Graphics.FromImage(dst))
+                var timeStamp2 = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                url_save = "/private/documents_gmp/" + document_id + "/" + timeStamp2 + "(" + user.FullName + " Signed).pdf";
+                var reader = new PdfReader(tempFile.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
+                var dest = new PdfWriter(url_save.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
+
+                PdfSignerNoObjectStream signer = new PdfSignerNoObjectStream(reader, dest, new StampingProperties().UseAppendMode());
+
+                tempFile = url_save;
+
+                var timeStamp1 = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                DocumentSignatureModel sign_old = await _context.DocumentSignatureModel.Where(d => d.id == sign.id).FirstAsync();
+
+                //document_id = sign_old.document_id;
+
+
+
+
+                //string fileName = Path.GetFileNameWithoutExtension(sign.url);
+
+                string ext = Path.GetExtension(user.image_sign);
+
+
+                string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value + "/";
+                //Draw the image
+                var file_image = user.image_sign.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+
+                //return Ok(new { message = file_image });
+                ImageData da = ImageDataFactory.Create(file_image);
+                int image_size_width = (int)Math.Round((float)sign.image_size_width);
+                int image_size_height = (int)Math.Round((float)sign.image_size_height);
+                if (ext.ToLower() == ".png")
                 {
-                    //g.Clear(Color.White);
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    g.DrawImage(src, 0, 0, dst.Width, dst.Height);
+                    using (System.Drawing.Image src = System.Drawing.Image.FromFile(file_image))
+                    using (Bitmap dst = new Bitmap(image_size_width, image_size_height))
+                    using (Graphics g = Graphics.FromImage(dst))
+                    {
+                        //g.Clear(Color.White);
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.DrawImage(src, 0, 0, dst.Width, dst.Height);
 
-                    //var tmp = "wwwroot\\temp\\" + timeStamp + ".png";
-                    //dst.Save(tmp, ImageFormat.Png);
-                    //da = ImageDataFactory.CreatePng(new Uri(Domain + "/temp/" + timeStamp + ".png"));
-                    MemoryStream ms = new MemoryStream();
-                    dst.Save(ms, ImageFormat.Png);
+                        //var tmp = "wwwroot\\temp\\" + timeStamp + ".png";
+                        //dst.Save(tmp, ImageFormat.Png);
+                        //da = ImageDataFactory.CreatePng(new Uri(Domain + "/temp/" + timeStamp + ".png"));
+                        MemoryStream ms = new MemoryStream();
+                        dst.Save(ms, ImageFormat.Png);
 
 
-                    da = ImageDataFactory.CreatePng(ms.ToArray());
+                        da = ImageDataFactory.CreatePng(ms.ToArray());
+                    }
                 }
-            }
-            else
-            {
-                //System.Drawing.Image image = System.Drawing.Image.FromFile("." + user.image_sign);
-                //image = FixedSize(image, image_size_width, image_size_height);
-                //pdfImage = PdfImage.FromImage(image);
-            }
-            // os = new FileStream(dest, FileMode.Create, FileAccess.Write);
-
-            //Activate MultiSignatures
-            //To disable Multi signatures uncomment this line : every new signature will invalidate older ones !
-            //stamper = PdfStamper.CreateSignature(reader, os, '\0');
-            var dest = new PdfWriter(save);
-            var reader = new PdfReader(sign.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
-
-            PdfSignerNoObjectStream signer = new PdfSignerNoObjectStream(reader, dest, new StampingProperties().UseAppendMode());
-            // Creating the appearance
-            FontProgram fontProgram = FontProgramFactory.CreateFont("./wwwroot/assets/fonts/vuArial.ttf");
-            PdfFont font = PdfFontFactory.CreateFont(fontProgram, PdfEncodings.IDENTITY_H);
-            var width = (int)sign.image_size_width;
-            var heigth = (int)sign.image_size_height;
-
-            if (width < 180)
-                width = 180;
-            heigth += 40;
-            if (sign.reason != null)
-            {
-                heigth += 30;
-            }
-
-
-            PdfDocument doc = signer.GetDocument();
-            PdfPage page = doc.GetPage((int)sign.page);
-            int rotation = page.GetRotation();
-            if (rotation != 0)
-            {
-                return Ok(new { message = "Không thể ký vào trang đã xoay(Rotate)!", failed = 1 });
-            }
-            iText.Kernel.Geom.Rectangle rect = new iText.Kernel.Geom.Rectangle((int)sign.position_x, (int)sign.position_y, width, heigth);
-
-            PdfSignatureAppearance appearance = signer.GetSignatureAppearance()
-                .SetReuseAppearance(false)
-                .SetPageRect(rect)
-                .SetPageNumber((int)sign.page);
-
-
-            if (sign.reason != null)
-            {
-                appearance = appearance.SetReason(sign.reason);
-            }
-            PdfFormXObject layer2 = appearance.GetLayer2();
-            //layer2.
-            PdfCanvas canvas = new PdfCanvas(layer2, doc);
-
-
-            int p_y = 0;
-            p_y += 40;
-            var position = user.position != null && user.position != "" ? " (" + user.position + ")" : "";
-            var text = user.FullName + position + "\n" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            if (sign.reason != null)
-            {
-                text += "\nÝ kiến: " + sign.reason;
-                p_y += 30;
-            }
-            iText.Kernel.Geom.Rectangle signatureRect = new iText.Kernel.Geom.Rectangle(0, 0, 180, p_y);
-            Canvas signLayoutCanvas = new Canvas(canvas, signatureRect);
-            Paragraph paragraph = new Paragraph(text).SetFont(font).SetMargin(0).SetMultipliedLeading(1.2f).SetFontSize(10);
-            Div div = new Div();
-            div.SetHeight(signatureRect.GetHeight());
-            div.SetWidth(signatureRect.GetWidth());
-
-            div.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.TOP);
-            div.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
-            div.Add(paragraph);
-            signLayoutCanvas.Add(div);
-
-            iText.Kernel.Geom.Rectangle dataRect = new iText.Kernel.Geom.Rectangle(0, p_y, (float)sign.image_size_width, rect.GetHeight() - p_y);
-            Canvas dataLayoutCanvas = new Canvas(canvas, dataRect);
-            iText.Layout.Element.Image image = new iText.Layout.Element.Image(da);
-            image.SetAutoScale(true);
-            Div dataDiv = new Div();
-            dataDiv.SetHeight(dataRect.GetHeight());
-            dataDiv.SetWidth(dataRect.GetWidth());
-            dataDiv.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.MIDDLE);
-            dataDiv.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
-            dataDiv.Add(image);
-            dataLayoutCanvas.Add(dataDiv);
-
-
-
-
-            var field = timeStamp.ToString() + "-GMP1-" + sign_old.document_id;
-
-            signer.SetFieldName(field);
-            // Creating the signature
-            string KEYSTORE = _configuration["Source:Path_Private"] + "\\pfx\\" + user_id + ".pfx";
-            char[] PASSWORD = "!PMP_it123456".ToCharArray();
-
-
-            Pkcs12Store pk12 = new Pkcs12Store(new FileStream(KEYSTORE,
-            FileMode.Open, FileAccess.Read), PASSWORD);
-            string alias = null;
-            foreach (object a in pk12.Aliases)
-            {
-                alias = ((string)a);
-                if (pk12.IsKeyEntry(alias))
+                else
                 {
-                    break;
+                    //System.Drawing.Image image = System.Drawing.Image.FromFile("." + user.image_sign);
+                    //image = FixedSize(image, image_size_width, image_size_height);
+                    //pdfImage = PdfImage.FromImage(image);
                 }
+                // os = new FileStream(dest, FileMode.Create, FileAccess.Write);
+
+                //Activate MultiSignatures
+                //To disable Multi signatures uncomment this line : every new signature will invalidate older ones !
+                //stamper = PdfStamper.CreateSignature(reader, os, '\0');
+
+
+
+
+                // Creating the appearance
+                FontProgram fontProgram = FontProgramFactory.CreateFont("./wwwroot/assets/fonts/vuArial.ttf");
+                PdfFont font = PdfFontFactory.CreateFont(fontProgram, PdfEncodings.IDENTITY_H);
+                var width = (int)sign.image_size_width;
+                var heigth = (int)sign.image_size_height;
+
+                if (width < 180)
+                    width = 180;
+                heigth += 40;
+                if (sign.reason != null)
+                {
+                    heigth += 30;
+                }
+
+
+                PdfDocument doc = signer.GetDocument();
+                PdfPage page = doc.GetPage((int)sign.page);
+                int rotation = page.GetRotation();
+                if (rotation != 0)
+                {
+                    return Ok(new { message = "Không thể ký vào trang đã xoay(Rotate)!", failed = 1 });
+                }
+                iText.Kernel.Geom.Rectangle rect = new iText.Kernel.Geom.Rectangle((int)sign.position_x, (int)sign.position_y, width, heigth);
+
+                PdfSignatureAppearance appearance = signer.GetSignatureAppearance()
+                    .SetReuseAppearance(false)
+                    .SetPageRect(rect)
+                    .SetPageNumber((int)sign.page);
+
+
+                if (sign.reason != null)
+                {
+                    appearance = appearance.SetReason(sign.reason);
+                }
+                PdfFormXObject layer2 = appearance.GetLayer2();
+                //layer2.
+                PdfCanvas canvas = new PdfCanvas(layer2, doc);
+
+
+                int p_y = 0;
+                p_y += 40;
+                var position = user.position != null && user.position != "" ? " (" + user.position + ")" : "";
+                var text = user.FullName + position + "\n" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+                if (sign.reason != null)
+                {
+                    text += "\nÝ kiến: " + sign.reason;
+                    p_y += 30;
+                }
+                iText.Kernel.Geom.Rectangle signatureRect = new iText.Kernel.Geom.Rectangle(0, 0, 180, p_y);
+                Canvas signLayoutCanvas = new Canvas(canvas, signatureRect);
+                Paragraph paragraph = new Paragraph(text).SetFont(font).SetMargin(0).SetMultipliedLeading(1.2f).SetFontSize(10);
+                Div div = new Div();
+                div.SetHeight(signatureRect.GetHeight());
+                div.SetWidth(signatureRect.GetWidth());
+
+                div.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.TOP);
+                div.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
+                div.Add(paragraph);
+                signLayoutCanvas.Add(div);
+
+                iText.Kernel.Geom.Rectangle dataRect = new iText.Kernel.Geom.Rectangle(0, p_y, (float)sign.image_size_width, rect.GetHeight() - p_y);
+                Canvas dataLayoutCanvas = new Canvas(canvas, dataRect);
+                iText.Layout.Element.Image image = new iText.Layout.Element.Image(da);
+                image.SetAutoScale(true);
+                Div dataDiv = new Div();
+                dataDiv.SetHeight(dataRect.GetHeight());
+                dataDiv.SetWidth(dataRect.GetWidth());
+                dataDiv.SetVerticalAlignment(iText.Layout.Properties.VerticalAlignment.MIDDLE);
+                dataDiv.SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
+                dataDiv.Add(image);
+                dataLayoutCanvas.Add(dataDiv);
+
+
+
+
+                var field = timeStamp1.ToString() + (stt++) + "-GMP1-" + sign_old.document_id;
+
+                signer.SetFieldName(field);
+                // Creating the signature
+                string KEYSTORE = _configuration["Source:Path_Private"] + "\\pfx\\" + user_id + ".pfx";
+                char[] PASSWORD = "!PMP_it123456".ToCharArray();
+
+
+                Pkcs12Store pk12 = new Pkcs12Store(new FileStream(KEYSTORE,
+                FileMode.Open, FileAccess.Read), PASSWORD);
+                string alias = null;
+                foreach (object a in pk12.Aliases)
+                {
+                    alias = ((string)a);
+                    if (pk12.IsKeyEntry(alias))
+                    {
+                        break;
+                    }
+                }
+                ICipherParameters pk = pk12.GetKey(alias).Key;
+                X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
+                X509Certificate[] chain = new X509Certificate[ce.Length];
+                for (int k = 0; k < ce.Length; ++k)
+                {
+                    chain[k] = ce[k].Certificate;
+                }
+                IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256);
+
+                signer.SignDetached(pks, chain, null, null, null, 0,
+                        PdfSignerNoObjectStream.CryptoStandard.CMS);
+
+
+
+
+
+
+                ///Save DB
+                /// Cap nhat user_sign
+                sign_old.date = DateTime.Now;
+                sign_old.status = 2;
+                sign_old.position_x = sign.position_x;
+                sign_old.position_y = sign.position_y;
+                sign_old.position_image_x = sign.position_image_x;
+                sign_old.position_image_y = sign.position_image_y;
+                sign_old.image_size_width = sign.image_size_width;
+                sign_old.image_size_height = sign.image_size_height;
+                sign_old.url = sign.url;
+                sign_old.user_sign = sign.user_sign;
+                sign_old.reason = sign.reason;
+                sign_old.page = sign.page;
+                _context.Update(sign_old);
+
+                _context.SaveChanges();
+
+
+                dest.Close();
+
+
             }
-            ICipherParameters pk = pk12.GetKey(alias).Key;
-            X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
-            X509Certificate[] chain = new X509Certificate[ce.Length];
-            for (int k = 0; k < ce.Length; ++k)
-            {
-                chain[k] = ce[k].Certificate;
-            }
-            IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256);
-
-            signer.SignDetached(pks, chain, null, null, null, 0,
-                    PdfSignerNoObjectStream.CryptoStandard.CMS);
-
-            dest.Close();
-            ///Save DB
-            /// Cap nhat user_sign
-            sign_old.date = DateTime.Now;
-            sign_old.status = 2;
-            sign_old.position_x = sign.position_x;
-            sign_old.position_y = sign.position_y;
-            sign_old.position_image_x = sign.position_image_x;
-            sign_old.position_image_y = sign.position_image_y;
-            sign_old.image_size_width = sign.image_size_width;
-            sign_old.image_size_height = sign.image_size_height;
-            sign_old.url = sign.url;
-            sign_old.user_sign = sign.user_sign;
-            sign_old.reason = sign.reason;
-            sign_old.page = sign.page;
-            _context.Update(sign_old);
-
-            _context.SaveChanges();
-
-
             /// Add document file
-            var item = new DocumentFileModel
+            item = new DocumentFileModel
             {
                 ext = ".pdf",
-                url = "/private/documents_gmp/" + sign_old.document_id + "/" + timeStamp + "(" + user.FullName + " Signed).pdf",
+                url = url_save,
                 name = timeStamp + "(" + user.FullName + " Signed).pdf",
                 mimeType = "application/pdf",
                 created_at = DateTime.Now,
-                document_id = sign_old.document_id
+                document_id = document_id
             };
 
             _context.Add(item);
             _context.SaveChanges();
 
-            var DocumentModel_old = await _context.DocumentModel.FindAsync(sign_old.document_id);
+
+            var DocumentModel_old = await _context.DocumentModel.FindAsync(document_id);
             ///UPDATE NEXT SIGN
             DocumentModel_old.time_signature_previous = DateTime.Now;
+
 
             if (DocumentModel_old.is_sign_parellel == true)
             {
@@ -2141,7 +2185,7 @@ namespace it.Areas.Admin.Controllers
             }
             else
             {
-                var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == sign_old.document_id).Include(d => d.user).FirstOrDefault();
+                var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == DocumentModel_old.id).Include(d => d.user).FirstOrDefault();
                 string? user_signature_id = null;
                 if (user_signature != null)
                 {
@@ -2211,14 +2255,14 @@ namespace it.Areas.Admin.Controllers
             //create event
             DocumentEventModel DocumentEventModel = new DocumentEventModel
             {
-                document_id = sign_old.document_id,
+                document_id = DocumentModel_old.id,
                 event_content = "<b>" + user.FullName + "</b> ký vào hồ sơ",
                 created_at = DateTime.Now,
             };
             _context.Add(DocumentEventModel);
             //Create unread
             var DocumentModel = _context.DocumentModel
-              .Where(d => d.id == sign_old.document_id)
+              .Where(d => d.id == DocumentModel_old.id)
               .Include(d => d.users_signature)
               .Include(d => d.users_receive)
               .FirstOrDefault();
