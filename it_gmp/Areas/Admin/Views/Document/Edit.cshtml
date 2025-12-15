@@ -135,6 +135,17 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="col-md-12 mt-2 receive_users_obtain">
+                                            <b class="col-form-label">Người nhận thông báo hiện hành:</b>
+                                            <div class="pt-1">
+                                                @Html.DropDownList("users_obtain[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                                                                {
+                                                    multiple = "true",
+                                                                                                data_placeholder = "Người nhận thông báo hiện hành",
+                                                                                                @class = "chosen form-control form-control-sm"
+                                                                                                })
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="form-group row">
                                         <b class="col-12 col-form-label">Ghi chú:</b>
@@ -253,7 +264,7 @@
                                                 </div>
                                             </div>
                                             <div class="form-group row">
-                                                <b class="col-12 col-form-label">Hồ sơ liên kêt:</b>
+                                                <b class="col-12 col-form-label">Hồ sơ liên kết(Ấn bản cũ):</b>
                                                 <div class="col-12 pt-1">
                                                     @Html.DropDownList("documents_related[]", (IEnumerable<SelectListItem>)ViewData["documents"], new
                                                         {
@@ -402,6 +413,12 @@
         }
         if (data.users_receive) {
             data.users_receive = data.users_receive.map(function (item) {
+                // item chính là phần tử đang lặp
+                return item['user_id']; // giá trị trả về sẽ thay thế cho giá trị ban đầu của phần tử
+            });
+        }
+        if (data.users_obtain) {
+            data.users_obtain = data.users_obtain.map(function (item) {
                 // item chính là phần tử đang lặp
                 return item['user_id']; // giá trị trả về sẽ thay thế cho giá trị ban đầu của phần tử
             });

@@ -1,55 +1,60 @@
 ﻿@{
-	ViewData["Title"] = "Receive";
-	Layout = "~/Views/Shared/_Admin.cshtml";
+    ViewData["Title"] = "Receive";
+    Layout = "~/Views/Shared/_Admin.cshtml";
 }
 <div class="row clearfix">
 
-	<div class="page-title-box col-12">
-		<div class="float-left">
-			<ol class="breadcrumb">
-				<li class="breadcrumb-item"><a href="javascript:void(0);">Hệ thống</a></li>
-				<li class="breadcrumb-item"><a href="javascript:void(0);">Hồ sơ</a></li>
-				<li class="breadcrumb-item active">Đã ký tên</li>
-			</ol>
-		</div>
-	</div>
-	<div class="col-12">
-		<section class="card card-fluid">
-			<div class="card-body">
-				<div class="table-responsive-md">
-					<div class="custom-control custom-switch switch-primary">
-						<input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary"
-							   value="true">
-						<label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
-					</div>
-					<table id="quanlytin" class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Hồ sơ</th>
-								<th>Người ký</th>
-								<th>Trạng thái</th>
-							</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</section>
-	</div>
+    <div class="page-title-box col-12">
+        <div class="float-left">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Hệ thống</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0);">Hồ sơ</a></li>
+                <li class="breadcrumb-item active">Đã ký tên</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-12">
+        <section class="card card-fluid">
+            <div class="card-body">
+                <div class="table-responsive-md">
+                    <div class="d-flex mb-2">
+                        <div class="custom-control custom-switch switch-primary">
+                            <input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary"
+                                   value="true">
+                            <label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="btn btn-sm btn-success read_all" href='/admin/document/read_all?type=signdoc' title='Đọc tất cả?' data-type='confirm'>Đánh dấu đọc tất cả</button>
+                        </div>
+                    </div>
+                    <table id="quanlytin" class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Hồ sơ</th>
+                                <th>Người ký</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <script type="text/javascript">
         var keyword = @Html.Raw(Json.Serialize(ViewData["keyword"]));
         var page = 'signdoc';
         var type = @Html.Raw(Json.Serialize(ViewData["type"]));
         $(document).ready(function () {
-			let filter_cancle = localStorage.getItem('IGNORE_CANCLE');
-			if (filter_cancle == 1) {
-				$(".filter_cancle").attr("checked", true);
-			}
+            let filter_cancle = localStorage.getItem('IGNORE_CANCLE');
+            if (filter_cancle == 1) {
+                $(".filter_cancle").attr("checked", true);
+            }
             let table = $('#quanlytin').DataTable({
                 "stateSave": true,
                 "processing": true,
@@ -204,5 +209,5 @@
                 table.ajax.reload();
             });
         });
-	</script>
+    </script>
 }

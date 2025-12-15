@@ -63,6 +63,17 @@
                                                     })
                                             </div>
                                         </div>
+                                        <div class="col-md-12 mt-2 receive_users_obtain">
+                                            <b class="col-form-label">Người nhận thông báo hiện hành:</b>
+                                            <div class="pt-1">
+                                                @Html.DropDownList("users_obtain[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                                                                {
+                                                    multiple = "true",
+                                                                                                data_placeholder = "Người nhận thông báo hiện hành",
+                                                                                                @class = "chosen form-control form-control-sm"
+                                                                                                })
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="form-group row">
                                         <b class="col-12 col-form-label">Ghi chú:</b>

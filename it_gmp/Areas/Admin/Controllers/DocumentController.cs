@@ -3,7 +3,6 @@ using it.Data;
 using it.Services;
 using iText.IO.Font;
 using iText.IO.Image;
-using iText.Kernel.Colors;
 using iText.Kernel.Events;
 using iText.Kernel.Font;
 using iText.Kernel.Pdf;
@@ -14,6 +13,7 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.Signatures;
+using MessagePack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,9 @@ using NuGet.Packaging.Signing;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
+using Spire.Xls;
 using System.Collections;
+using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -32,7 +34,6 @@ using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
-using System.Reflection.PortableExecutable;
 
 namespace it.Areas.Admin.Controllers
 {
@@ -104,6 +105,19 @@ namespace it.Areas.Admin.Controllers
             string user_id = UserManager.GetUserId(currentUser); // Get user id:
             ViewData["keyword"] = _context.DocumentUserKeywordModel.Where(d => d.user_id == user_id).OrderByDescending(d => d.keyword).ToList();
             ViewData["type"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).OrderByDescending(d => d.created_at).OrderByDescending(d => d.created_at).ToList();
+
+            var user_current = await UserManager.GetUserAsync(currentUser); // Get user id:
+            var is_manager = await UserManager.IsInRoleAsync(user_current, "Manager Esign");
+
+            var type_gmp = new List<int>();
+            if (is_manager)
+            {
+                ViewData["types"] = _context.UserDocumentTypeModel.Include(d => d.document_type).Where(d => d.user_id == user_id && d.document_type.deleted_at == null).Select(d => d.document_type).ToList();
+            }
+            else
+            {
+                ViewData["types"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).ToList();
+            }
             ViewBag.id = id;
             return View();
         }
@@ -179,7 +193,7 @@ namespace it.Areas.Admin.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public async Task<IActionResult> Create(DocumentModel DocumentModel, List<string>? keyword, List<string> users_signature, List<string> users_receive, List<int> documents_related)
+        public async Task<IActionResult> Create(DocumentModel DocumentModel, List<string>? keyword, List<string> users_signature, List<string> users_receive, List<string> users_obtain, List<int> documents_related)
         {
             var files = Request.Form.Files;
             var list_file = new List<IFormFile>();
@@ -320,6 +334,17 @@ namespace it.Areas.Admin.Controllers
                     {
                         DocumentUserReceiveModel DocumentUserReceiveModel = new DocumentUserReceiveModel() { document_id = DocumentModel.id, user_id = key };
                         _context.Add(DocumentUserReceiveModel);
+                    }
+
+                    _context.SaveChanges();
+                }
+                //user obtain
+                if (users_obtain != null && users_obtain.Count > 0)
+                {
+                    foreach (string key in users_obtain)
+                    {
+                        DocumentUserObtainModel DocumentUserObtainModel = new DocumentUserObtainModel() { document_id = DocumentModel.id, user_id = key };
+                        _context.Add(DocumentUserObtainModel);
                     }
 
                     _context.SaveChanges();
@@ -515,7 +540,7 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.files)
                 .Include(d => d.attachments)
                 .Include(d => d.related)
-                //.Include(d => d.users_follow)
+                .Include(d => d.users_obtain)
                 .Include(d => d.users_receive)
                 .Include(d => d.users_signature.OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
@@ -598,7 +623,7 @@ namespace it.Areas.Admin.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, DocumentModel DocumentModel, List<string> users_receive, Dictionary<string, DocumentSignatureModel> dic_users_signature, List<int> documents_related, List<int> delete_attach, List<string>? keyword)
+        public async Task<IActionResult> Edit(int id, DocumentModel DocumentModel, List<string> users_receive, List<string> users_obtain, Dictionary<string, DocumentSignatureModel> dic_users_signature, List<int> documents_related, List<int> delete_attach, List<string>? keyword)
         {
             var files = Request.Form.Files;
             var list_attachment = new List<IFormFile>();
@@ -756,6 +781,22 @@ namespace it.Areas.Admin.Controllers
                     {
                         DocumentUserReceiveModel DocumentUserReceiveModel = new DocumentUserReceiveModel() { document_id = id, user_id = key };
                         _context.Add(DocumentUserReceiveModel);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                //user_obtain
+                /////XÓA và edit lại
+                var users_obtain_old = _context.DocumentUserObtainModel.Where(d => d.document_id == id).ToList();
+                _context.RemoveRange(users_obtain_old);
+                await _context.SaveChangesAsync();
+                if (users_obtain != null && users_obtain.Count > 0)
+                {
+                    foreach (string key in users_obtain)
+                    {
+                        DocumentUserObtainModel DocumentUserObtainModel = new DocumentUserObtainModel() { document_id = id, user_id = key };
+                        _context.Add(DocumentUserObtainModel);
                     }
 
                     await _context.SaveChangesAsync();
@@ -962,28 +1003,28 @@ namespace it.Areas.Admin.Controllers
 
 
 
-                    var user_receive = _context.DocumentUserReceiveModel.Where(u => u.document_id == DocumentModel_old.id).Include(d => d.user).Select(d => d.user.Email).ToList();
-                    user_receive = user_receive.Distinct().ToList();
+                    var user_obtain = _context.DocumentUserObtainModel.Where(u => u.document_id == DocumentModel_old.id).Include(d => d.user).Select(d => d.user.Email).ToList();
+                    user_obtain = user_obtain.Distinct().ToList();
                     ////Only for tranning.
                     var file_current = DocumentModel_old.files.OrderBy(f => f.created_at).LastOrDefault();
-                    if (user_receive.Count() > 0)
+                    if (user_obtain.Count() > 0)
                     {
-                        var mail_string_new = string.Join(",", user_receive.ToArray());
+                        var mail_string_new = string.Join(",", user_obtain.ToArray());
                         string Domain_2 = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
-                        var body_new = _view.Render("Emails/CurrentDocument", new { link_logo = Domain_2 + "/images/clientlogo_astahealthcare.com_f1800.png", title = DocumentModel_old.name_vi, date_effect = DocumentModel_old.date_effect, note = DocumentModel_old.description_vi });
+                        var body_new = _view.Render("Emails/CurrentDocument", new { link_logo = Domain_2 + "/images/clientlogo_astahealthcare.com_f1800.png", title = DocumentModel_old.name_vi, date_effect = DocumentModel_old.date_effect, date_finish = DocumentModel_old.date_finish, note = DocumentModel_old.description_vi, type_id = DocumentModel_old.type_id });
 
                         //string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                         var timeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-                        var pathroot = "wwwroot\\temp";
+                        var pathroot = _configuration["Source:Path_Private"] + "\\tmp";
                         bool exists = System.IO.Directory.Exists(pathroot);
 
                         if (!exists)
                             System.IO.Directory.CreateDirectory(pathroot);
 
-                        string filePath = "/wwwroot/temp/" + timeStamp + ".pdf";
+                        string filePath = "/private/tmp/" + timeStamp + ".pdf";
 
                         // Create a FileStream to write the PDF file
-                        var dest = new PdfWriter("." + filePath);
+                        var dest = new PdfWriter(pathroot + "\\" + timeStamp + ".pdf");
                         var reader = new PdfReader(file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
                         PdfDocument pdfDoc = new PdfDocument(reader, dest);
                         iText.Layout.Document doc = new iText.Layout.Document(pdfDoc);
@@ -1231,6 +1272,80 @@ namespace it.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        public async Task<IActionResult> Read_all(string type)
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var user = await UserManager.GetUserAsync(currentUser);
+            var user_id = user.Id;
+            var customerData = _context.DocumentModel.Where(d => d.deleted_at == null);
+            List<int> documents_unread = _context.DocumentUserUnreadModel.Where(d => d.user_id == user_id).Select(d => d.document_id).Distinct().ToList();
+            customerData = customerData.Where(d => documents_unread.Contains(d.id));
+
+            ////
+            if (type == "receive")
+            {
+                var document_receive = _context.DocumentUserReceiveModel.Where(d => d.user_id == user_id).Select(d => d.document_id).ToList();
+                customerData = customerData.Where(d => document_receive.Contains(d.id));
+            }
+            else if (type == "wait")
+            {
+                var data2 = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id == 2 && d.is_sign_parellel == true).Join(_context.DocumentSignatureModel, d => d.id, ds => ds.document_id, (d, ds) => new
+                {
+                    document = d,
+                    status = ds.status,
+                    user_id = ds.user_id,
+                }).Distinct().Where(d => d.status == 1 && d.user_id == user_id).Select(d => d.document.id).ToList();
+                Console.WriteLine(data2.ToString());
+                customerData = customerData.Where(d => (d.user_next_signature_id == user_id && d.status_id == 2 && d.is_sign_parellel == false) || data2.Contains(d.id));
+            }
+            else if (type == "send")
+            {
+                customerData = customerData.Where(d => d.user_id == user_id);
+            }
+            else if (type == "signdoc")
+            {
+                var document_sign = _context.DocumentSignatureModel.Where(d => d.status == 2 && (d.user_sign == user_id || d.user_id == user_id)).Select(d => d.document_id).ToList();
+                customerData = customerData.Where(d => document_sign.Contains(d.id));
+            }
+            else if (type == "nosign")
+            {
+                var document_sign = _context.DocumentSignatureModel.Where(d => d.status == 3 && (d.user_sign == user_id || d.user_id == user_id)).Select(d => d.document_id).ToList();
+                customerData = customerData.Where(d => document_sign.Contains(d.id));
+            }
+
+            var datalist = customerData.ToList();
+            foreach (var document in datalist)
+            {
+                //Thêm Read và xóa Unread
+                DocumentUserReadModel user_read = _context.DocumentUserReadModel.Where(d => d.user_id == user_id && d.document_id == document.id).FirstOrDefault();
+                DateTime? time_read = null;
+                if (user_read != null)
+                {
+                    time_read = user_read.time_read;
+                    user_read.time_read = DateTime.Now;
+                    _context.Update(user_read);
+                }
+                else
+                {
+                    user_read = new DocumentUserReadModel
+                    {
+                        user_id = user_id,
+                        document_id = document.id,
+                        time_read = DateTime.Now
+                    };
+
+                    _context.Add(user_read);
+                }
+
+                var unread_delete = _context.DocumentUserUnreadModel.Where(d => d.document_id == document.id && d.user_id == user_id).ToList();
+                _context.RemoveRange(unread_delete);
+
+                await _context.SaveChangesAsync();
+            }
+
+            //await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
         [HttpPost]
         public async Task<JsonResult> Table()
         {
@@ -1917,7 +2032,8 @@ namespace it.Areas.Admin.Controllers
         //     * Use safe defaults for sizes/positions and validate page number range.
         //     * Use nullable string alias and guard usage to avoid CS8600/CS8602/CS8629 warnings.
 
-        [HttpPost]
+        [HttpPost]
+
         public async Task<IActionResult> Save(List<DocumentSignatureModel> signs)
         {
             if (signs == null || signs.Count == 0)
@@ -3026,6 +3142,170 @@ namespace it.Areas.Admin.Controllers
             DocumentTypeModel type = _context.DocumentTypeModel.Where(d => d.id == id).Include(d => d.users_receive).FirstOrDefault();
             return Json(new { success = 1, item = type });
         }
+        [HttpPost]
+        public async Task<JsonResult> ExportExcel(int type_id)
+        {
+
+            var customerData = _context.DocumentModel.Where(d => d.deleted_at == null && d.type_id == type_id);
+
+            var datapost = customerData.Include(d => d.user)
+                .Include(d => d.users_signature).ThenInclude(d => d.user).OrderByDescending(d => d.id).ToList();
+            var data = new ArrayList();
+            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            var viewPath = _configuration["Source:Path_Private"] + "\\excel\\template\\document.xlsx";
+            var documentPath = _configuration["Source:Path_Private"] + "\\tmp\\" + timestamp + ".xlsx";
+            Workbook workbook = new Workbook();
+            workbook.LoadFromFile(viewPath);
+            Worksheet sheet = workbook.Worksheets[0];
+
+            ExcelFont fontItalic1 = workbook.CreateFont();
+            fontItalic1.IsItalic = true;
+            fontItalic1.Size = 10;
+            fontItalic1.FontName = "Arial";
+            fontItalic1.IsBold = true;
+            var row_c = 1;
+            var cur_r = 1;
+            DataTable dt = new DataTable();
+            dt.Columns.Add("stt", typeof(int));
+            dt.Columns.Add("name", typeof(string));
+            dt.Columns.Add("date_effect", typeof(string));
+            dt.Columns.Add("date_finish", typeof(string));
+            dt.Columns.Add("nguoiky", typeof(string));
+            dt.Columns.Add("tinhtrang", typeof(string));
+            var start_r = 1;
+            var stt = 1;
+            sheet.InsertRow(2, datapost.Count(), InsertOptionsType.FormatAsAfter);
+            foreach (var record in datapost)
+            {
+                var nRow = sheet.Rows[start_r];
+                CellRange cellNguoiKy = nRow.Columns[4];
+                var users_signature = record.users_signature.OrderBy(u => u.stt).ToList();
+                // Build text + tính vị trí
+                string fullText = "";
+                var segments = new List<(int start, int end, Color color)>();
+
+
+                var count_sign = 0;
+                var count = 0;
+                bool is_sign = false;
+                foreach (var sig in users_signature)
+                {
+                    if (sig.user == null) continue;
+                    if (sig.status == 2)
+                    {
+                        count_sign++;
+                        is_sign = true;
+                    }
+                    count++;
+                    string name = sig.user.FullName.ToUpper();
+                    int start = fullText.Length;
+                    fullText += name;
+                    if (count < users_signature.Count())
+                    {
+                        fullText += "\n";
+                    }
+                    int end = fullText.Length - 1;
+
+                    // Đã ký = xanh, chưa ký = đỏ
+                    Color color = Color.Orange;
+                    if (sig.status == 2) color = Color.Green;
+                    else if (sig.status == 3) color = Color.Red;
+
+                    segments.Add((start, end, color));
+                }
+
+                // Gán text vào ô
+                cellNguoiKy.Text = fullText;
+                cellNguoiKy.IsWrapText = true;
+
+                // Rich text formatting
+                RichText rich = cellNguoiKy.RichText;
+
+                // Tô màu từng đoạn
+                foreach (var seg in segments)
+                {
+                    ExcelFont font = workbook.CreateFont();
+                    font.FontName = "Arial";
+                    font.Size = 10;
+                    font.IsBold = true;
+                    font.Color = seg.color;
+
+                    rich.SetFont(seg.start, seg.end, font);
+                }
+
+                //Console.WriteLine(nguoiky_text);
+                bool is_success = false;
+                if (count_sign == users_signature.Count && count_sign > 0)
+                {
+                    is_success = true;
+                }
+
+                var tinhtrang = "";
+
+                if (record.status_id == (int)DocumentStatus.Draft)
+                {
+                    tinhtrang = "Tạo mới";
+                }
+                else if (record.status_id == (int)DocumentStatus.Cancle)
+                {
+                    tinhtrang = "Đã hủy";
+                }
+                else if (record.status_id == (int)DocumentStatus.Processed)
+                {
+                    tinhtrang = "Đã xử lý";
+                }
+                else if (record.status_id == (int)DocumentStatus.Current)
+                {
+                    tinhtrang = "Hiện hành";
+                }
+                else if (record.status_id == (int)DocumentStatus.Obsoleted)
+                {
+                    tinhtrang = "Hết hiệu lực";
+                }
+                else if (record.status_id == (int)DocumentStatus.Superseded)
+                {
+                    tinhtrang = "Superseded";
+                }
+                else if (record.status_id == (int)DocumentStatus.Success || is_success)
+                {
+                    tinhtrang = "Đã ký xong";
+                }
+                else if (!is_sign)
+                {
+                    tinhtrang = "Trình ký (Chưa ký)";
+                }
+                else
+                {
+                    tinhtrang = "Đang trình ký";
+                }
+                DataRow dr1 = dt.NewRow();
+                nRow.Columns[0].NumberValue = stt++;
+                nRow.Columns[1].Value = record.name_vi;
+                if (record.date_effect != null)
+                    nRow.Columns[2].DateTimeValue = record.date_effect.Value;
+                if (record.date_finish != null)
+                    nRow.Columns[3].DateTimeValue = record.date_finish.Value;
+                //nRow.Columns[4].Value = nguoiky_text;
+                nRow.Columns[5].Value = tinhtrang;
+
+                //dt.Rows.Add(dr1);
+                start_r++;
+
+            }
+            //sheet.InsertDataTable(dt, false, 3, 1);
+            //sheet.DeleteRow(2);
+            //AutoFit column width and row height
+            //sheet.AllocatedRange.AutoFitColumns();
+
+            //sheet.AllocatedRange.AutoFitRows();
+
+            workbook.SaveToFile(documentPath, ExcelVersion.Version2013);
+
+
+            string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
+            var jsonData = new { url = Domain + "/private/tmp/" + timestamp + ".xlsx" };
+            return Json(jsonData);
+        }
         private int checkPermission(string permission, int? document_id, bool is_admin = false, bool is_manager = false)
         {
             if (permission == "edit")
@@ -3664,19 +3944,29 @@ namespace it.Areas.Admin.Controllers
             iText.Kernel.Geom.Rectangle pageSize = docEvent.GetPage().GetPageSize();
 
             Canvas canvas = new Canvas(docEvent.GetPage(), pageSize);
+            var pdfDocument = canvas.GetPdfDocument();
 
             // Create a paragraph with the text you want to add
-            iText.Layout.Element.Paragraph paragraph = new iText.Layout.Element.Paragraph("ONLY FOR TRAINING");
+            //iText.Layout.Element.Paragraph paragraph = new iText.Layout.Element.Paragraph("ONLY FOR TRAINING");
 
             // Apply a blur effect to the text
-            paragraph.SetStrokeColor(ColorConstants.GRAY);
-            paragraph.SetOpacity(0.2f);
-            paragraph.SetRotationAngle(-45);
-            paragraph.SetFontSize(30);
-            paragraph.SetWidth(UnitValue.CreatePercentValue(100));
-            paragraph.SetFixedPosition(pageSize.GetWidth() / 2, pageSize.GetHeight() / 2, pageSize.GetWidth() - doc.GetLeftMargin() - doc.GetRightMargin());
+            iText.Layout.Element.Paragraph paragraph = new iText.Layout.Element.Paragraph("ONLY FOR TRAINING")
+     .SetFontSize(45)
+     .SetFontColor(new iText.Kernel.Colors.DeviceRgb(0, 102, 204))  // màu xanh giống hình 2
+     .SetOpacity(0.20f);                        // watermark mờ
 
-            canvas.Add(paragraph);
+
+            // đặt text vào đúng tâm trang + xoay 45 độ
+            canvas.ShowTextAligned(
+             paragraph,
+             pageSize.GetWidth() / 2,       // X giữa trang
+             pageSize.GetHeight() / 2,      // Y giữa trang
+             pdfDocument.GetNumberOfPages(),                             // pageNumber
+             TextAlignment.CENTER,          // căn giữa ngang
+             VerticalAlignment.MIDDLE,      // căn giữa dọc
+             (float)Math.PI / 4             // 45 độ = PI/4 radian
+         );
+            //canvas.Add(paragraph);
             canvas.Close();
         }
     }

@@ -7,17 +7,23 @@
         <tr>
             <td>
                 <div>
-                    <p style="text-align:center;margin-bottom:30px">
-                        <img style="border:0;height:auto;line-height:100%;outline:none;text-decoration:none;width:400px;" src="@Model.link_logo" />
-                    </p>
                     <div style="box-sizing:border-box;margin:0;">
                         <p style="text-align:left">Kính gửi anh / chị,</p>
                         <p style="text-align:left">QA xin thông báo hồ sơ đã phê duyệt:</p>
 
-                        <p style="text-align:left"> - <b>@Model.title</b> (Ngày hiệu lực dự kiến: <b>@Model.date_effect.ToString("dd/MM/yyyy")</b>)</p>
+                        <p style="text-align:left"><b>@Model.title</b></p>
+                        <p style="text-align:left"> - Ngày phê duyệt: @Model.date_finish.ToString("dd/MM/yyyy")</p>
+                        <p style="text-align:left"> - Ngày hiệu lực: @Model.date_effect.ToString("dd/MM/yyyy")</p>
 
-                        <p style="text-align:left">Nội dung lên ấn bản:</p>
-                        <p style="text-align:left">@Model.note</p>
+                        <p style="text-align:left"><b>Nội dung mô tả thay đổi:</b></p>
+                        <p style="text-align:left;white-space:pre-line">@Model.note</p>
+                        @if (@Model.type_id == 82)
+                        {
+                            <p style="text-align:left">Nhờ các Anh/Chị phụ trách đào tạo của các bộ phận hoàn thiện hồ sơ đào tạo đầy đủ cho SOP liên quan đến bộ phận.<b>(Theo file đính kèm)</b></p>
+                            <p style="text-align:left">Nhờ các Anh/Chị Trưởng bộ phận thông báo, cho nhân viên áp dụng SOP này từ ngày có hiệu lực.</p>
+
+                        }
+
                         <p style="text-align:left">Trân trọng,</p>
                         <p style="text-align:left">E-signature System</p>
                         <br>

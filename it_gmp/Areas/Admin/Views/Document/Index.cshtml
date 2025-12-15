@@ -17,10 +17,16 @@
         <section class="card card-fluid">
             <div class="card-body">
                 <div class="table-responsive-md">
-                    <div class="custom-control custom-switch switch-primary">
-                        <input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary"
-                               value="true">
-                        <label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
+
+                    <div class="d-flex mb-2">
+                        <div class="custom-control custom-switch switch-primary">
+                            <input type="checkbox" class="custom-control-input filter_cancle" id="customSwitchPrimary"
+                                   value="true">
+                            <label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="btn btn-sm btn-success read_all" href='/admin/document/read_all?type=send_sign' title='Đọc tất cả?' data-type='confirm'>Đánh dấu đọc tất cả</button>
+                        </div>
                     </div>
                     <table id="quanlytin" class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                         <thead>

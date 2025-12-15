@@ -26,6 +26,7 @@ namespace it.Areas.Admin.Models
         public virtual List<DocumentRelatedModel>? related { get; set; }
 
         public virtual List<DocumentUserReceiveModel>? users_receive { get; set; }
+        public virtual List<DocumentUserObtainModel>? users_obtain { get; set; }
         public virtual List<DocumentSignatureModel>? users_signature { get; set; }
         public virtual List<DocumentCommentModel>? comments { get; set; }
         public virtual List<DocumentEventModel>? events { get; set; }

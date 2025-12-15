@@ -36,6 +36,7 @@ namespace it.Data
         public DbSet<DocumentRelatedModel> DocumentRelatedModel { get; set; }
         public DbSet<DocumentSignatureModel> DocumentSignatureModel { get; set; }
         public DbSet<DocumentUserReceiveModel> DocumentUserReceiveModel { get; set; }
+        public DbSet<DocumentUserObtainModel> DocumentUserObtainModel { get; set; }
         public DbSet<DocumentCommentModel> DocumentCommentModel { get; set; }
         public DbSet<DocumentCommentFileModel> DocumentCommentFileModel { get; set; }
         public DbSet<DocumentUserReadModel> DocumentUserReadModel { get; set; }
