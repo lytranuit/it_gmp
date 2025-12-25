@@ -24,6 +24,7 @@
                                    value="true">
                             <label class="custom-control-label" for="customSwitchPrimary">Bỏ qua hồ sơ hủy</label>
                         </div>
+
                         <div class="ml-auto d-flex">
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
@@ -58,7 +59,101 @@
         </section>
     </div>
 </div>
+<!-- Template popover -->
+<div id="tplDropdown" style="display:none;">
+    <div class="dropdown-menu p-3 shadow" style="min-width:700px">
 
+        <form class="formtimkiem">
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Mã hồ sơ</b></div>
+                <div class="col-md-8">
+                    <input class="form-control form-control-sm code" />
+                </div>
+            </div>
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Tiêu đề</b></div>
+                <div class="col-md-8">
+                    <input class="form-control form-control-sm name_vi" />
+                </div>
+            </div>
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Độ ưu tiên</b></div>
+                <div class="col-md-8">
+                    <select class='form-control form-control-sm search_priority'>
+                        <option value='0' selected></option>
+                        <option value='1'>Thấp</option>
+                        <option value='2'>Trung bình</option>
+                        <option value='3'>Cao</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Trạng thái</b></div>
+                <div class="col-md-8">
+                    <select class='form-control form-control-sm search_status'>
+                        <option value='0' selected></option>
+                        <option value='1'>Tạo mới</option>
+                        <option value='2'>Trình ký</option>
+                        <option value='3'>Hủy</option>
+                        <option value='4'>Đã ký xong</option>
+                        <option value='6'>Hiện hành</option>
+                        <option value='8'>Obsoleted</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Loại hồ sơ</b></div>
+                <div class="col-md-8">
+                    <select class='form-control form-control-sm search_type_option'>
+                    </select>
+                </div>
+            </div>
+
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Người tạo</b></div>
+                <div class="col-md-8">
+                    <input class="form-control form-control-sm nguoitao" />
+                </div>
+            </div>
+
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Ngày tạo</b></div>
+                <div class="col-md-4">
+                    <input class='form-control form-control-sm from_ngaytao' placeholder="Từ ngày" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <input class='form-control form-control-sm to_ngaytao' placeholder="Đến ngày" type="date" />
+                </div>
+            </div>
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Ngày hoàn thành</b></div>
+                <div class="col-md-4">
+                    <input class='form-control form-control-sm from_ngayhoanthanh' placeholder="Từ ngày" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <input class='form-control form-control-sm to_ngayhoanthanh' placeholder="Đến ngày" type="date" />
+                </div>
+            </div>
+            <div class="boloc row mb-2 align-items-center">
+                <div class="col-md-4">Lọc theo: <b>Chưa đọc</b></div>
+                <div class="col-md-8">
+                    <div class="custom-control custom-switch switch-primary">
+                        <input type="checkbox" class="custom-control-input chuadoc" id="customSwitchchuadoc"
+                               value="true">
+                        <label class="custom-control-label" for="customSwitchchuadoc"></label>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="text-center mt-3">
+            <button class="btn btn-sm btn-secondary reset"><i class='fas fa-sync-alt mr-2'></i>Cài lại</button>
+            <button class="btn btn-sm btn-success timkiem ml-3"><i class='fas fa-filter mr-2'></i>Tìm kiếm</button>
+        </div>
+    </div>
+
+</div>
 <div class="modal fade modal-reason" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -90,6 +185,9 @@
         var type = @Html.Raw(Json.Serialize(ViewData["type"]));
 
         $(document).ready(function () {
+            ////
+
+
             let filter_cancle = localStorage.getItem('IGNORE_CANCLE');
             if (filter_cancle == 1) {
                 $(".filter_cancle").attr("checked", true);
@@ -109,18 +207,32 @@
                         //let search_type = localStorage.getItem('SEARCH_TYPE') || "code";
                         //let search_status = localStorage.getItem('SEARCH_STATUS') || "0";
                         //let search_priority = localStorage.getItem('SEARCH_PRIORITY') || "0";
-                        let search_type = $(".search_type").val();
-                        let search_status = $(".search_status").val();
-                        let search_priority = $(".search_priority").val();
-                        let search_type_option = $(".search_type_option").val();
-                        let search_date = $(".search_date").val();
-                        let filter_cancle = $(".filter_cancle").is(":checked");
+                        let search_code = $("#quanlytin_wrapper .code").val();
+                        let search_name_vi = $("#quanlytin_wrapper .name_vi").val();
+                        let search_type = $("#quanlytin_wrapper .search_type").val();
+                        let search_status = $("#quanlytin_wrapper .search_status").val();
+                        let search_priority = $("#quanlytin_wrapper .search_priority").val();
+                        let search_type_option = $("#quanlytin_wrapper .search_type_option").val();
+                        let search_from_ngaytao = $("#quanlytin_wrapper .from_ngaytao").val();
+                        let search_to_ngaytao = $("#quanlytin_wrapper .to_ngaytao").val();
+                        let search_from_ngayhoanthanh = $("#quanlytin_wrapper .from_ngayhoanthanh").val();
+                        let search_to_ngayhoanthanh = $("#quanlytin_wrapper .to_ngayhoanthanh").val();
+                        let filter_cancle = $("#quanlytin_wrapper .filter_cancle").is(":checked");
+
+                        let search_unread = $("#quanlytin_wrapper .chuadoc").is(":checked") ? "unread" : "";
+
+                        data['search_code'] = search_code;
+                        data['search_name_vi'] = search_name_vi;
                         data['search_type'] = search_type;
                         data['search_status'] = search_status;
                         data['search_priority'] = search_priority;
                         data['search_type_option'] = search_type_option;
-                        data['search_date'] = search_date;
+                        data['search_from_ngaytao'] = search_from_ngaytao;
+                        data['search_to_ngaytao'] = search_to_ngaytao;
+                        data['search_from_ngayhoanthanh'] = search_from_ngayhoanthanh;
+                        data['search_to_ngayhoanthanh'] = search_to_ngayhoanthanh;
                         data['filter_cancle'] = filter_cancle;
+                        data['search_unread'] = search_unread;
                     }
                 },
                 "columns": [{
@@ -148,36 +260,41 @@
                 ],
                 initComplete: function () {
                     $("body").trigger("table_load");
-                    $(".dataTables_filter").prepend("Lọc theo: <select style='margin-right: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_type'><option value='code'>Mã hồ sơ</option><option value='name_vi'>Tiêu đề</option><option value='keyword'>Cá nhân</option><option value='priority'>Độ ưu tiên</option><option value='status'>Trạng thái</option><option value='type'>Loại hồ sơ</option><option value='created_by'>Người tạo</option><option value='created_at'>Ngày tạo</option><option value='date_finish'>Ngày hoàn thành</option><option value='unread'>Chưa đọc</option></select>");
-                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_priority d-none'> <option value='1'>Thấp</option><option value='2' selected>Bình thường</option><option value='3'>Cao</option><option value='4'>Khẩn cấp</option></select>");
-                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_status d-none'><option value='1'>Tạo mới</option><option value='2'>Trình ký</option><option value='3'>Hủy</option><option value='4'>Đã ký xong</option><option value='6'>Hiện hành</option><option value='7'>Superseded</option><option value='8'>Obsoleted</option></select>");
-                    $(".dataTables_filter label").append("<input style='margin-left: 0.5em;display: inline-block;width: 500px;' class='form-control form-control-sm search_date d-none' />");
-                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_keyword_option d-none'></select>");
-                    $(".dataTables_filter label").append("<select style='margin-left: 0.5em;display: inline-block;width: auto;' class='form-control form-control-sm search_type_option d-none'></select>");
+                    $(".dataTables_filter label").addClass("d-none");
+                    $(".dataTables_filter label input").addClass("d-none");
+                    $(".dataTables_filter").before("<div style='align-items: center;justify-content: end;display: flex;height: 100%;'><a href='#' id='btnOpen'><i class='fas fa-filter'></i> Tìm kiếm</a></div>");
 
-                    $(".search_date").daterangepicker({
-                        autoApply: true,
-                        maxDate: new Date(),
-                        locale: {
-                            format: 'DD/MM/YYYY'
-                        }
+                    var $btn = $('#btnOpen');
+                    $btn.wrap('<div class="dropdown dropleft d-inline-block" id="dropdownBoloc"></div>');
+                   // Gắn template
+                    var tpl = $('#tplDropdown').html();
+                    $btn.after(tpl);
+
+                    // Kích hoạt dropdown
+                    $btn.attr('data-toggle', 'dropdown');
+
+                    $('.dropdown-menu').on('click', function (e) {
+                        e.stopPropagation();
                     });
-                    var html_keyword = "";
-                    for (var t of keyword) {
-                        html_keyword += "<option value='" + t.keyword + "'>" + t.keyword + "</option>";
-                    }
-                    $(".search_keyword_option").html(html_keyword);
+                    $(".themboloc").click((e)=>{
+                        var template =$("#tplDropdown .boloc").prop('outerHTML');
+                        $("#dropdownBoloc .formtimkiem").append(template);
+                    })
 
-                    //let search_priority = localStorage.getItem('SEARCH_PRIORITY') || "0";
-                    //$(".search_priority").val(search_priority);
-
-                    //let search_type = localStorage.getItem('SEARCH_TYPE') || "code";
-                    //$(".search_type").val(search_type).trigger("change");
-                    var html_type = "";
+                    var html_type = "<option value='0'></option>";
                     for (var t of type) {
                         html_type += "<option value='" + t.id + "'>" + t.name + "</option>";
                     }
-                    $(".search_type_option").html(html_type);
+                    $("#quanlytin_wrapper .search_type_option").html(html_type);
+
+
+                    $(".reset").click(function () {
+                        $('#dropdownBoloc .formtimkiem')[0].reset();
+                        table.ajax.reload();
+                    });
+                     $(".timkiem").click(function () {
+                        table.ajax.reload();
+                    });
                 },
             });
 
@@ -185,71 +302,12 @@
                 let id = $(this).data("id");
                 $("#cancle_reason [name='id']").val(id);
             });
-            $(document).on("change", ".search_type", function () {
-                let search_type = $(this).val();
-                localStorage.setItem('SEARCH_TYPE', search_type);
-                $(".dataTables_filter label").removeClass("d-none");
-                $(".dataTables_filter label input").addClass("d-none");
-                $(".search_keyword_option").addClass("d-none");
-                $(".search_status").addClass("d-none");
-                $(".search_priority").addClass("d-none");
-                $(".search_type_option").addClass("d-none");
-                $(".search_date").addClass("d-none");
-                $(".search_amount_type").addClass("d-none");
-                $(".search_branch").addClass("d-none");
-                if (search_type == "status") {
-                    $(".search_status").removeClass("d-none");
-                } else if (search_type == "priority") {
-                    $(".search_priority").removeClass("d-none");
-                } else if (search_type == "keyword") {
-                    $(".search_keyword_option").removeClass("d-none");
-                } else if (search_type == "amount") {
-                    $(".search_amount_type").removeClass("d-none");
-                } else if (search_type == "unread") {
-                    $(".dataTables_filter label").addClass("d-none");
-                } else if (search_type == "type") {
-                    $(".search_type_option").removeClass("d-none");
-                } else if (search_type == "branch_id") {
-                    $(".search_branch").removeClass("d-none");
-                } else if (search_type == "date_finish" || search_type == 'created_at') {
-                    $(".search_date").removeClass("d-none");
-                } else {
-                    $(".dataTables_filter label input").not(".search_date").removeClass("d-none");
-                }
-                table.ajax.reload();
-            });
-            $(document).on("change", ".search_status", function () {
-                let search_status = $(this).val();
-                localStorage.setItem('SEARCH_STATUS', search_status);
-                table.ajax.reload();
-            });
-            $(document).on("change", ".search_priority", function () {
-                let search_priority = $(this).val();
-                localStorage.setItem('SEARCH_PRIORITY', search_priority);
-                table.ajax.reload();
-            });
-            $(document).on("change", ".search_type_option", function () {
-                let search = $(this).val();
-                localStorage.setItem('SEARCH_TYPE_OPTION', search);
-                table.ajax.reload();
-            });
-
-            $(document).on("change", ".search_date", function () {
-                let search = $(this).val();
-                localStorage.setItem('SEARCH_DATE', search);
-                table.ajax.reload();
-            });
 
             $(document).on("click", ".filter_cancle", function () {
                 let search = +$(this).is(":checked");
                 localStorage.setItem('IGNORE_CANCLE', search);
                 table.ajax.reload();
             })
-            $(document).on("change", ".search_keyword_option", function () {
-                let search = $(this).val();
-                localStorage.setItem('SEARCH_KEYWORD_OPTION', search);
-                table.ajax.reload();
-            });
 
             $(document).on("click", ".xuat-excel", async function () {
                 let id = $(this).data("id");

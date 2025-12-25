@@ -193,7 +193,7 @@ namespace it.Areas.Admin.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public async Task<IActionResult> Create(DocumentModel DocumentModel, List<string>? keyword, List<string> users_signature, List<string> users_receive, List<string> users_obtain, List<int> documents_related)
+        public async Task<IActionResult> Create(DocumentModel DocumentModel, List<string>? keyword, List<string>? list_keyword, List<string>? list_keyword_dinhkem, List<string> users_signature, List<string> users_receive, List<string> users_obtain, List<int> documents_related)
         {
             var files = Request.Form.Files;
             var list_file = new List<IFormFile>();
@@ -361,7 +361,7 @@ namespace it.Areas.Admin.Controllers
                     _context.SaveChanges();
                 }
 
-                //CREATE KEYWORD
+                //CREATE USER KEYWORD
                 if (keyword != null && keyword.Count > 0)
                 {
                     foreach (string key in keyword)
@@ -373,6 +373,28 @@ namespace it.Areas.Admin.Controllers
                     _context.SaveChanges();
                 }
 
+                //CREATE KEYWORD
+                if (list_keyword != null && list_keyword.Count > 0)
+                {
+                    foreach (string key in list_keyword)
+                    {
+                        DocumentKeywordModel DocumentKeywordModel = new DocumentKeywordModel() { document_id = DocumentModel.id, keyword = key };
+                        _context.Add(DocumentKeywordModel);
+                    }
+
+                    _context.SaveChanges();
+                }
+                //CREATE KEYWORD Dinhkem
+                if (list_keyword_dinhkem != null && list_keyword_dinhkem.Count > 0)
+                {
+                    foreach (string key in list_keyword_dinhkem)
+                    {
+                        DocumentKeywordDinhkemModel DocumentKeywordDinhkemModel = new DocumentKeywordDinhkemModel() { document_id = DocumentModel.id, keyword = key };
+                        _context.Add(DocumentKeywordDinhkemModel);
+                    }
+
+                    _context.SaveChanges();
+                }
                 ///UPDATE USER SIGN NEXT
                 if (DocumentModel.is_sign_parellel == true)
                 {
@@ -545,6 +567,8 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature.OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
                 .Include(d => d.users_signature)
+                .Include(d => d.keywords)
+                .Include(d => d.keywords_dinhkem)
                 .FirstAsync();
 
             //return Ok(DocumentModel.users_signature);
@@ -595,6 +619,8 @@ namespace it.Areas.Admin.Controllers
             DocumentModel.users_signature = DocumentModel.users_signature.OrderBy(u => u.stt).ToList();
             var keyword = _context.DocumentUserKeywordModel.Where(d => d.user_id == user_id && d.document_id == id).Select(d => d.keyword).ToList();
             ViewData["keyword"] = keyword;
+            ViewData["list_keyword"] = DocumentModel.keywords.Select(d => d.keyword).ToList();
+            ViewData["list_keyword_dinhkem"] = DocumentModel.list_keywords_dinhkem;
             ViewData["type"] = _context.DocumentTypeModel.Where(d => d.id == DocumentModel.type_id).FirstOrDefault();
             var is_manager_document = false;
             if (is_manager)
@@ -610,6 +636,32 @@ namespace it.Areas.Admin.Controllers
                 is_manager_document = true;
             }
             ViewData["is_manager_document"] = is_manager_document;
+
+            var dinhkemKeywords = DocumentModel.keywords_dinhkem
+                 .Where(k => k.keyword != null)
+                 .Select(k => k.keyword!)
+                 .Distinct().ToList();
+
+            var keywordCount = dinhkemKeywords.Count;
+            var document_dinhkem = new List<DocumentModel>();
+            if (keywordCount > 0)
+            {
+                document_dinhkem = _context.DocumentModel
+                 .Include(d => d.keywords)
+                 .Where(d =>
+                  d.deleted_at == null &&
+                  d.id != DocumentModel.id &&
+                 (d.status_id == (int)DocumentStatus.Release || d.status_id == (int)DocumentStatus.Success || d.status_id == (int)DocumentStatus.Current) &&
+                     d.keywords
+                         .Where(k => dinhkemKeywords.Contains(k.keyword!))
+                         .Select(k => k.keyword)
+                         .Distinct()
+                         .Count() == keywordCount
+                 )
+                 .ToList();
+            }
+
+            ViewData["document_dinhkem"] = document_dinhkem;
             //types
             //ViewData["users"] = _context.DocumentTypeModel.Where(a => a.deleted_at == null).Select(a => new SelectListItem()
             //{
@@ -623,7 +675,7 @@ namespace it.Areas.Admin.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, DocumentModel DocumentModel, List<string> users_receive, List<string> users_obtain, Dictionary<string, DocumentSignatureModel> dic_users_signature, List<int> documents_related, List<int> delete_attach, List<string>? keyword)
+        public async Task<IActionResult> Edit(int id, DocumentModel DocumentModel, List<string> users_receive, List<string> users_obtain, Dictionary<string, DocumentSignatureModel> dic_users_signature, List<int> documents_related, List<int> delete_attach, List<string>? keyword, List<string>? list_keyword, List<string>? list_keyword_dinhkem)
         {
             var files = Request.Form.Files;
             var list_attachment = new List<IFormFile>();
@@ -651,7 +703,7 @@ namespace it.Areas.Admin.Controllers
             }
             if (ModelState.IsValid)
             {
-                var DocumentModel_old = _context.DocumentModel.Where(d => d.id == id).Include(d => d.files).Include(d => d.attachments).FirstOrDefault();
+                var DocumentModel_old = _context.DocumentModel.Where(d => d.id == id).Include(d => d.files).Include(d => d.attachments).Include(d => d.keywords_dinhkem).FirstOrDefault();
                 if (DocumentModel_old == null)
                     return NotFound();
                 DocumentModel_old.updated_at = DateTime.Now;
@@ -863,6 +915,7 @@ namespace it.Areas.Admin.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
+
                 if (keyword != null)
                 {
                     var users_keyword_old = _context.DocumentUserKeywordModel.Where(d => d.document_id == id && d.user_id == user_id).Select(a => a.keyword).ToList();
@@ -890,6 +943,65 @@ namespace it.Areas.Admin.Controllers
                 {
                     var users_keyword_old = _context.DocumentUserKeywordModel.Where(d => d.document_id == id && d.user_id == user_id).ToList();
                     _context.RemoveRange(users_keyword_old);
+                    _context.SaveChanges();
+                }
+
+                if (list_keyword != null)
+                {
+                    var keyword_old = _context.DocumentKeywordModel.Where(d => d.document_id == id).Select(a => a.keyword).ToList();
+                    var list_delete1 = keyword_old.Except(list_keyword);
+                    var list_add1 = list_keyword.Except(keyword_old);
+                    if (list_add1 != null)
+                    {
+                        foreach (string key in list_add1)
+                        {
+                            DocumentKeywordModel DocumentKeywordModel = new DocumentKeywordModel() { document_id = id, keyword = key };
+                            _context.Add(DocumentKeywordModel);
+                        }
+                    }
+                    if (list_delete1 != null)
+                    {
+                        foreach (string key in list_delete1)
+                        {
+                            var DocumentKeywordModel = _context.DocumentKeywordModel.Where(d => d.document_id == id && d.keyword == key).First();
+                            _context.Remove(DocumentKeywordModel);
+                        }
+                    }
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    var keyword_old = _context.DocumentKeywordModel.Where(d => d.document_id == id).ToList();
+                    _context.RemoveRange(keyword_old);
+                    _context.SaveChanges();
+                }
+                if (list_keyword_dinhkem != null)
+                {
+                    var keyword_old = _context.DocumentKeywordDinhkemModel.Where(d => d.document_id == id).Select(a => a.keyword).ToList();
+                    var list_delete1 = keyword_old.Except(list_keyword_dinhkem);
+                    var list_add1 = list_keyword_dinhkem.Except(keyword_old);
+                    if (list_add1 != null)
+                    {
+                        foreach (string key in list_add1)
+                        {
+                            DocumentKeywordDinhkemModel DocumentKeywordDinhkemModel = new DocumentKeywordDinhkemModel() { document_id = id, keyword = key };
+                            _context.Add(DocumentKeywordDinhkemModel);
+                        }
+                    }
+                    if (list_delete1 != null)
+                    {
+                        foreach (string key in list_delete1)
+                        {
+                            var DocumentKeywordDinhkemModel = _context.DocumentKeywordDinhkemModel.Where(d => d.document_id == id && d.keyword == key).First();
+                            _context.Remove(DocumentKeywordDinhkemModel);
+                        }
+                    }
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    var keyword_old = _context.DocumentKeywordModel.Where(d => d.document_id == id).ToList();
+                    _context.RemoveRange(keyword_old);
                     _context.SaveChanges();
                 }
                 ///UPDATE USER SIGN NEXT
@@ -1020,21 +1132,78 @@ namespace it.Areas.Admin.Controllers
 
                         if (!exists)
                             System.IO.Directory.CreateDirectory(pathroot);
+                        string newName = DocumentModel_old.name_vi + "-" + timeStamp;
 
-                        string filePath = "/private/tmp/" + timeStamp + ".pdf";
+                        newName = newName.Replace("+", "_");
+                        newName = newName.Replace("%", "_");
+                        string filePath = "/private/tmp/" + newName + ".pdf";
 
                         // Create a FileStream to write the PDF file
-                        var dest = new PdfWriter(pathroot + "\\" + timeStamp + ".pdf");
+                        var dest = new PdfWriter(pathroot + "\\" + newName + ".pdf");
                         var reader = new PdfReader(file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
                         PdfDocument pdfDoc = new PdfDocument(reader, dest);
                         iText.Layout.Document doc = new iText.Layout.Document(pdfDoc);
                         pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc));
                         doc.Close();
 
+                        var attachments = new List<string>();
+                        ////// Lấy Tất cả document đính kèm
+                        var dinhkemKeywords = DocumentModel_old.keywords_dinhkem
+                             .Where(k => k.keyword != null)
+                             .Select(k => k.keyword!)
+                             .Distinct().ToList();
+
+                        var keywordCount = dinhkemKeywords.Count;
+                        var document_dinhkem = new List<DocumentModel>();
+                        if (keywordCount > 0)
+                        {
+                            document_dinhkem = _context.DocumentModel
+                             .Include(d => d.keywords)
+                             .Include(d => d.files)
+                             .Where(d =>
+                              d.deleted_at == null &&
+                              d.id != DocumentModel_old.id &&
+                             (d.status_id == (int)DocumentStatus.Success || d.status_id == (int)DocumentStatus.Current) &&
+                                 d.keywords
+                                     .Where(k => dinhkemKeywords.Contains(k.keyword!))
+                                     .Select(k => k.keyword)
+                                     .Distinct()
+                                     .Count() == keywordCount
+                             )
+                             .ToList();
+                        }
+                        // lấy file_current cho từng document
+                        foreach (var doc1 in document_dinhkem)
+                        {
+                            /////Hiện hành các hồ sơ liên quan
+                            doc1.status_id = (int)DocumentStatus.Current;
+                            ///Đính kèm
+                            var file_current1 = doc1.files
+                               .OrderBy(f => f.created_at).LastOrDefault();
+
+                            string newName1 = doc1.name_vi + "-" + timeStamp;
+
+                            newName1 = newName1.Replace("+", "_");
+                            newName1 = newName1.Replace("%", "_");
+                            string filePath1 = "/private/tmp/" + newName1 + ".pdf";
+
+                            // Create a FileStream to write the PDF file
+                            var dest1 = new PdfWriter(pathroot + "\\" + newName1 + ".pdf");
+                            var reader1 = new PdfReader(file_current1.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
+                            PdfDocument pdfDoc1 = new PdfDocument(reader1, dest1);
+                            iText.Layout.Document doc12 = new iText.Layout.Document(pdfDoc1);
+                            pdfDoc1.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc12));
+                            doc12.Close();
+
+                            attachments.Add(filePath1);
+                        }
+
+                        _context.UpdateRange(document_dinhkem);
+                        await _context.SaveChangesAsync();
+
                         /////Attachment thêm vào mail
                         var attachments_file = DocumentModel_old.attachments.Select(f => f.url).ToList();
 
-                        var attachments = new List<string>();
                         attachments.Add(filePath);
                         attachments.AddRange(attachments_file);
                         var email_new = new EmailModel
@@ -1224,17 +1393,17 @@ namespace it.Areas.Admin.Controllers
             _context.SaveChanges();
             return Json(new { success = 1 });
         }
-        public async Task<JsonResult> processedDocument(int id)
-        {
-            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-            string user_id = UserManager.GetUserId(currentUser); // Get user id:
-            var user = await UserManager.GetUserAsync(currentUser);
-            var DocumentModel_old = await _context.DocumentModel.FindAsync(id);
-            DocumentModel_old.status_id = (int)DocumentStatus.Processed;
-            _context.Update(DocumentModel_old);
-            _context.SaveChanges();
-            return Json(new { success = 1 });
-        }
+        //public async Task<JsonResult> processedDocument(int id)
+        //{
+        //    System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        //    string user_id = UserManager.GetUserId(currentUser); // Get user id:
+        //    var user = await UserManager.GetUserAsync(currentUser);
+        //    var DocumentModel_old = await _context.DocumentModel.FindAsync(id);
+        //    DocumentModel_old.status_id = (int)DocumentStatus.Processed;
+        //    _context.Update(DocumentModel_old);
+        //    _context.SaveChanges();
+        //    return Json(new { success = 1 });
+        //}
 
 
 
@@ -1353,17 +1522,25 @@ namespace it.Areas.Admin.Controllers
             var draw = Request.Form["draw"].FirstOrDefault();
             var start = Request.Form["start"].FirstOrDefault();
             var length = Request.Form["length"].FirstOrDefault();
-            var search_type = Request.Form["search_type"].FirstOrDefault();
+
+            //var search_type = Request.Form["search_type"].FirstOrDefault();
+            var search_code = Request.Form["search_code"].FirstOrDefault();
+            var search_name_vi = Request.Form["search_name_vi"].FirstOrDefault();
+            var search_nguoitao = Request.Form["search_nguoitao"].FirstOrDefault();
             var search_priority = Int32.Parse(Request.Form["search_priority"].FirstOrDefault("0"));
-            var search_amount_type = Int32.Parse(Request.Form["search_amount_type"].FirstOrDefault("0"));
             var search_status = Int32.Parse(Request.Form["search_status"].FirstOrDefault("0"));
-            var search_branch = Int32.Parse(Request.Form["search_branch"].FirstOrDefault("0"));
             var search_type_option = Int32.Parse(Request.Form["search_type_option"].FirstOrDefault("0"));
-            var search_keyword_option = Request.Form["search_keyword_option"].FirstOrDefault("");
-            var filter_type = Int32.Parse(Request.Form["filter_type"].FirstOrDefault("0"));
+            var search_unread = Request.Form["search_unread"].FirstOrDefault();
+            //var search_keyword_option = Request.Form["search_keyword_option"].FirstOrDefault("");
+
             var filter_cancle = Boolean.Parse(Request.Form["filter_cancle"].FirstOrDefault("false"));
-            var search_date_range = Request.Form["search_date"].FirstOrDefault();
-            var searchValue = Request.Form["search[value]"].FirstOrDefault();
+
+            var search_from_ngaytao = Request.Form["search_from_ngaytao"].FirstOrDefault();
+            var search_to_ngaytao = Request.Form["search_to_ngaytao"].FirstOrDefault();
+
+            var search_from_ngayhoanthanh = Request.Form["search_from_ngayhoanthanh"].FirstOrDefault();
+            var search_to_ngayhoanthanh = Request.Form["search_to_ngayhoanthanh"].FirstOrDefault();
+
             int pageSize = length != null ? Convert.ToInt32(length) : 0;
             int skip = start != null ? Convert.ToInt32(start) : 0;
             var customerData = (from tempcustomer in _context.DocumentModel select tempcustomer);
@@ -1414,85 +1591,82 @@ namespace it.Areas.Admin.Controllers
                 var document_sign = _context.DocumentSignatureModel.Where(d => d.status == 2 && (d.user_sign == user_id || d.user_id == user_id)).Select(d => d.document_id).ToList();
                 customerData = customerData.Where(d => document_sign.Contains(d.id));
             }
-            else if (type == "types" && filter_type > 0)
-            {
-                customerData = customerData.Where(d => d.type_id == filter_type);
-            }
             customerData = customerData.Where(m => m.deleted_at == null);
             int recordsTotal = customerData.Count();
 
-            if (filter_cancle == true && search_type != "status")
+            if (filter_cancle == true)
             {
                 customerData = customerData.Where(m => m.status_id != 3);
             }
 
             ////
-            if (search_type == null && !string.IsNullOrEmpty(searchValue)) /// Bnhf thường
-			{
-                customerData = customerData.Where(m => m.code.Contains(searchValue) || m.name_vi.Contains(searchValue));
-            }
-            else if (search_type == null && string.IsNullOrEmpty(searchValue))
+            if (search_status != 0)
             {
-
-            }
-            else if (search_type == "status" && search_status != 0)
-            {
-
                 customerData = customerData.Where(m => m.status_id == search_status);
             }
-            else if (search_type == "priority" && search_priority != 0)
+
+            if (search_priority != 0)
             {
                 customerData = customerData.Where(m => m.priority == search_priority);
             }
-            else if (search_type == "type" && search_type_option != 0)
+
+            if (search_type_option != 0)
             {
                 customerData = customerData.Where(m => m.type_id == search_type_option);
             }
-            else if (search_type == "keyword" && search_keyword_option != "")
+            if (!string.IsNullOrEmpty(search_code))
             {
-                var document_list = _context.DocumentUserKeywordModel.Where(d => d.keyword == search_keyword_option && d.user_id == user_id).Select(d => d.document_id).ToList();
-                customerData = customerData.Where(m => document_list.Contains(m.id));
+                customerData = customerData.Where(m => m.code.Contains(search_code));
             }
-            else if (search_type == "code" && !string.IsNullOrEmpty(searchValue))
+            if (!string.IsNullOrEmpty(search_name_vi))
             {
-                customerData = customerData.Where(m => m.code.Contains(searchValue));
+                customerData = customerData.Where(m => m.name_vi.Contains(search_name_vi));
             }
-            else if (search_type == "name_vi" && !string.IsNullOrEmpty(searchValue))
+            if (!string.IsNullOrEmpty(search_nguoitao))
             {
-                customerData = customerData.Where(m => m.name_vi.Contains(searchValue));
-            }
-            else if (search_type == "created_by" && !string.IsNullOrEmpty(searchValue))
-            {
-                var user_list = _context.UserModel.Where(d => d.FullName.Contains(searchValue)).Select(d => d.Id).ToList();
+                var user_list = _context.UserModel.Where(d => d.FullName.Contains(search_nguoitao)).Select(d => d.Id).ToList();
                 customerData = customerData.Where(m => user_list.Contains(m.user_id));
             }
-            else if (search_type == "created_at" && !string.IsNullOrEmpty(search_date_range))
+            if (!string.IsNullOrEmpty(search_from_ngaytao))
             {
-                var explode = search_date_range.Split(" - ");
-                if (explode.Length > 1)
-                {
-                    DateTime start_date = DateTime.ParseExact(explode[0].ToString(), "dd/MM/yyyy",
-                                       System.Globalization.CultureInfo.InvariantCulture);
-                    DateTime end_date = DateTime.ParseExact(explode[1].ToString(), "dd/MM/yyyy",
-                                       System.Globalization.CultureInfo.InvariantCulture);
 
-                    customerData = customerData.Where(m => m.created_at != null && m.created_at.Value.Date >= start_date.Date && m.created_at.Value.Date <= end_date.Date);
-                }
+                DateTime date = DateTime.ParseExact(search_from_ngaytao, "yyyy-MM-dd",
+                                   System.Globalization.CultureInfo.InvariantCulture);
+
+                customerData = customerData.Where(m => m.created_at != null && m.created_at.Value.Date >= date.Date);
+
             }
-            else if (search_type == "date_finish" && !string.IsNullOrEmpty(search_date_range))
+            if (!string.IsNullOrEmpty(search_to_ngaytao))
             {
-                var explode = search_date_range.Split(" - ");
-                if (explode.Length > 1)
-                {
-                    DateTime start_date = DateTime.ParseExact(explode[0].ToString(), "dd/MM/yyyy",
-                                       System.Globalization.CultureInfo.InvariantCulture);
-                    DateTime end_date = DateTime.ParseExact(explode[1].ToString(), "dd/MM/yyyy",
-                                       System.Globalization.CultureInfo.InvariantCulture);
 
-                    customerData = customerData.Where(m => m.date_finish != null && m.date_finish.Value.Date >= start_date.Date && m.date_finish.Value.Date <= end_date.Date);
-                }
+                DateTime date = DateTime.ParseExact(search_to_ngaytao, "yyyy-MM-dd",
+                                   System.Globalization.CultureInfo.InvariantCulture);
+
+                customerData = customerData.Where(m => m.created_at != null && m.created_at.Value.Date <= date.Date);
+
             }
-            else if (search_type == "unread")
+
+            if (!string.IsNullOrEmpty(search_from_ngayhoanthanh))
+            {
+
+                DateTime date = DateTime.ParseExact(search_from_ngayhoanthanh, "yyyy-MM-dd",
+                                   System.Globalization.CultureInfo.InvariantCulture);
+
+                customerData = customerData.Where(m => m.date_finish != null && m.date_finish.Value.Date >= date.Date);
+
+            }
+            if (!string.IsNullOrEmpty(search_to_ngayhoanthanh))
+            {
+
+                DateTime date = DateTime.ParseExact(search_to_ngayhoanthanh, "yyyy-MM-dd",
+                                   System.Globalization.CultureInfo.InvariantCulture);
+
+                customerData = customerData.Where(m => m.date_finish != null && m.date_finish.Value.Date <= date.Date);
+
+            }
+
+
+            if (search_unread == "unread")
             {
                 customerData = customerData.Where(d => documents_unread.Contains(d.id));
             }
@@ -1559,10 +1733,6 @@ namespace it.Areas.Admin.Controllers
                 {
                     html_status = "<button class='btn btn-danger btn-sm text-white'>Đã hủy</button>";
                 }
-                else if (status_id == (int)DocumentStatus.Processed)
-                {
-                    html_status = "<button class='btn btn-secondary btn-sm text-white'>Đã xử lý</button>";
-                }
                 else if (status_id == (int)DocumentStatus.Current)
                 {
                     html_status = "<button class='btn btn-secondary btn-sm text-white'>Hiện hành</button>";
@@ -1570,10 +1740,6 @@ namespace it.Areas.Admin.Controllers
                 else if (status_id == (int)DocumentStatus.Obsoleted)
                 {
                     html_status = "<button class='btn btn-danger btn-sm text-white'>Hết hiệu lực</button>";
-                }
-                else if (status_id == (int)DocumentStatus.Superseded)
-                {
-                    html_status = "<button class='btn btn-danger btn-sm text-white'>Superseded</button>";
                 }
                 else if (status_id == (int)DocumentStatus.Success || is_success)
                 {
@@ -1630,7 +1796,7 @@ namespace it.Areas.Admin.Controllers
                 var date_create = record.created_at != null ? record.created_at.Value.ToString("HH:mm dd/MM/yyyy") : "";
                 var type_name = record.type != null ? record.type.name : "";
                 var type_color = record.type != null ? record.type.color : "";
-                var keyword = _context.DocumentUserKeywordModel.Where(d => d.document_id == record.id && d.user_id == user_id).Select(d => d.keyword).ToList();
+                var keyword = _context.DocumentKeywordModel.Where(d => d.document_id == record.id).Select(d => d.keyword).ToList();
                 var html_keyword = "";
                 if (keyword.Count > 0)
                 {
@@ -1666,7 +1832,7 @@ namespace it.Areas.Admin.Controllers
                         + "</i>"
                         + "</a>";
                 }
-                if (users_follow.Contains(user_id) && (record.status_id != (int)DocumentStatus.Cancle && record.status_id != (int)DocumentStatus.Obsoleted && record.status_id != (int)DocumentStatus.Superseded))
+                if (users_follow.Contains(user_id) && (record.status_id != (int)DocumentStatus.Cancle && record.status_id != (int)DocumentStatus.Obsoleted))
                 {
                     action += "<a href='/admin/" + _type + "/edit/" + record.id + "'class='mr-2' title='Sửa hồ sơ?'>"
                         + "<i class='fas fa-cog text-info font-16'>"
@@ -1785,6 +1951,8 @@ namespace it.Areas.Admin.Controllers
                 .Include(d => d.users_signature.OrderBy(u => u.stt))
                 .ThenInclude(u => u.user)
                 .Include(d => d.users_signature)
+                .Include(d => d.keywords)
+                .Include(d => d.keywords_dinhkem)
                 .FirstOrDefault();
             //return Ok(DocumentModel);
             foreach (var comment in DocumentModel.comments)
@@ -1823,10 +1991,35 @@ namespace it.Areas.Admin.Controllers
                 }
 
             }
+            var dinhkemKeywords = DocumentModel.keywords_dinhkem
+                 .Where(k => k.keyword != null)
+                 .Select(k => k.keyword!)
+                 .Distinct().ToList();
+
+            var keywordCount = dinhkemKeywords.Count;
+            var document_dinhkem = new List<DocumentModel>();
+            if (keywordCount > 0)
+            {
+                document_dinhkem = _context.DocumentModel
+                 .Include(d => d.keywords)
+                 .Where(d =>
+                  d.deleted_at == null &&
+                  d.id != DocumentModel.id &&
+                 (d.status_id == (int)DocumentStatus.Release || d.status_id == (int)DocumentStatus.Success || d.status_id == (int)DocumentStatus.Current) &&
+                     d.keywords
+                         .Where(k => dinhkemKeywords.Contains(k.keyword!))
+                         .Select(k => k.keyword)
+                         .Distinct()
+                         .Count() == keywordCount
+                 )
+                 .ToList();
+            }
+
             var keyword = _context.DocumentUserKeywordModel.Where(d => d.user_id == current_user_id && d.document_id == id).Select(d => d.keyword).ToList();
             ViewBag.keyword = keyword;
             ViewBag.is_sign = is_sign;
             ViewBag.document_related = document_related;
+            ViewBag.document_dinhkem = document_dinhkem;
             ViewBag.no_edit = checkPermission("edit", id, is_admin, is_manager);
             ViewBag.no_suggestsign = checkPermission("suggestsign", id);
             ViewData["users"] = UserManager.Users.Where(u => u.deleted_at == null).Select(a => new SelectListItem()
@@ -1846,7 +2039,8 @@ namespace it.Areas.Admin.Controllers
             }
             if (checkPermission("sign", id) != 0)
             {
-                return RedirectToAction(nameof(Details), new { id = id });
+                return Ok("Bạn không có quyền ký tên hoặc hồ sơ đã hết hạn ký!");
+                //return RedirectToAction(nameof(Details), new { id = id });
             }
             var DocumentModel = await _context.DocumentModel
                 .Where(d => d.id == id)
@@ -1871,10 +2065,6 @@ namespace it.Areas.Admin.Controllers
             {
                 return NotFound();
             }
-            //if (checkPermission("sign", id) != 0)
-            //{
-            //	return RedirectToAction(nameof(Details), new { id = id });
-            //}
             var DocumentModel = await _context.DocumentModel
                 .Where(d => d.id == id)
                 .Include(d => d.users_signature)
@@ -3250,10 +3440,7 @@ namespace it.Areas.Admin.Controllers
                 {
                     tinhtrang = "Đã hủy";
                 }
-                else if (record.status_id == (int)DocumentStatus.Processed)
-                {
-                    tinhtrang = "Đã xử lý";
-                }
+
                 else if (record.status_id == (int)DocumentStatus.Current)
                 {
                     tinhtrang = "Hiện hành";
@@ -3261,10 +3448,6 @@ namespace it.Areas.Admin.Controllers
                 else if (record.status_id == (int)DocumentStatus.Obsoleted)
                 {
                     tinhtrang = "Hết hiệu lực";
-                }
-                else if (record.status_id == (int)DocumentStatus.Superseded)
-                {
-                    tinhtrang = "Superseded";
                 }
                 else if (record.status_id == (int)DocumentStatus.Success || is_success)
                 {
@@ -3442,6 +3625,10 @@ namespace it.Areas.Admin.Controllers
                         .Where(d => d.id == document_id)
                         .FirstOrDefault();
                 if (DocumentModel == null)
+                {
+                    return 1;
+                }
+                if (DocumentModel.date_effect != null && DocumentModel.date_effect.Value.Date < DateTime.Now.Date) //// Không cho phép ký hồ sơ quá ngày hiệu lực
                 {
                     return 1;
                 }

@@ -1,0 +1,48 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = null;
+}
+<center>
+    <table>
+        <tbody>
+            <tr>
+                <td width="600">
+                    <div>
+
+                        @* <p style="text-align:center;margin-bottom:30px">
+                            <img style="border:0;height:auto;line-height:100%;outline:none;text-decoration:none;width:400px;" src="@Model.link_logo" />
+                        </p> *@
+                        <div style="box-sizing:border-box;margin:0;padding:0 40px">
+                            <h2 style="text-align:left">Xin chào,</h2>
+                            <p style="text-align:left">Hệ thống chữ ký điện tử ASTA có @Model.count hồ sơ chưa hoàn thành khí sắp đến hạn hiệu lực </p>
+                            <table style="width:100%">
+                                <thead style="background:#f1f5fa;">
+                                    <tr>
+                                        <td style="padding:10px;">Mã</td>
+                                        <td style="padding:10px;">Tên</td>
+                                        <td style="padding:10px;">Ngày hiệu lực</td>
+                                        <td style="padding:10px;">Link</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.data)
+                                    {
+                                        <tr>
+                                            <td style="padding:10px;">@item.code</td>
+                                            <td style="padding:10px;">@item.name_vi</td>
+                                            <td style="padding:10px;">@item.date_effect.ToString("dd/MM/yyyy")</td>
+                                            <td style="padding:10px;"><a href="@(Model.Domain + "/admin/document/details/")@item.id" class="btn btn-sm btn-success text-white">Xem chi tiết</a></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <p style="text-align:left">Trân trọng.</p>
+                            <p style="text-align:left">ASTA</p>
+                            <br>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</center>

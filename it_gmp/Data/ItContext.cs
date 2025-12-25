@@ -41,6 +41,8 @@ namespace it.Data
         public DbSet<DocumentCommentFileModel> DocumentCommentFileModel { get; set; }
         public DbSet<DocumentUserReadModel> DocumentUserReadModel { get; set; }
         public DbSet<DocumentUserKeywordModel> DocumentUserKeywordModel { get; set; }
+        public DbSet<DocumentKeywordModel> DocumentKeywordModel { get; set; }
+        public DbSet<DocumentKeywordDinhkemModel> DocumentKeywordDinhkemModel { get; set; }
         public DbSet<DocumentUserUnreadModel> DocumentUserUnreadModel { get; set; }
         public DbSet<DocumentEventModel> DocumentEventModel { get; set; }
         public DbSet<TokenModel> TokenModel { get; set; }

@@ -39,22 +39,48 @@ namespace it.Controllers
 
         public async Task<JsonResult> cronjob()
         {
-            var emails = _context.EmailModel.Where(d => d.status == 1).Take(10).ToList();
-            foreach (var email in emails)
+            ////Nhắc nhở hồ sơ sắp hết hạn trước 3 ngày hiêu lực
+            var documents = _context.DocumentModel.Where(d => d.status_id == 2 && d.deleted_at == null && d.date_effect != null && d.date_effect.Value.Date == DateTime.Now.AddDays(3).Date);
+
+            var group = documents.GroupBy(d => d.user_id, (x, y) => new
             {
-                var SuccesMail = SendMail(email.email_to, email.subject, email.body, email.data_attachments);
-                if (SuccesMail.success == 1)
+                num_sign = y.Count(),
+                data = y.ToList(),
+                user_sign = x
+            }).ToList();
+            foreach (var item in group)
+            {
+
+                var user = _context.UserModel.Where(d => d.Id == item.user_sign).FirstOrDefault();
+                if (user == null)
+                    continue;
+
+                if (user.deleted_at != null || (user.LockoutEnd != null && user.LockoutEnd >= DateTime.Now))
+                    continue;
+                ///Xóa user nếu user 1 tháng chưa đăng nhập
+                //var last_login = user.last_login != null ? user.last_login : user.created_at;
+                //if (last_login < DateTime.Now.AddMonths(-1))
+                //{
+                //    user.LockoutEnd = DateTime.Now.AddDays(360);
+                //    _context.Update(user);
+                //    _context.SaveChanges();
+                //    continue;
+                //}
+                var mail_string = user.Email;
+                string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
+                var body = _view.Render("Emails/RemindDocumentGMP", new { Domain = Domain, count = item.num_sign, data = item.data });
+                var email = new EmailModel
                 {
-                    email.status = 2;
-                }
-                else
-                {
-                    email.status = 3;
-                    email.error = SuccesMail.ex.ToString();
-                }
-                email.date = DateTime.Now;
-                _context.Update(email);
+                    email_to = mail_string,
+                    subject = "[GMP][Nhắc nhở] Các hồ sơ chưa hoàn thành khi sắp đến hạn hiệu lực",
+                    body = body,
+                    email_type = "remind_document_gmp",
+                    status = 1
+                };
+                _context.Add(email);
+
             }
+
             await _context.SaveChangesAsync();
             return Json(new { success = true });
         }

@@ -16,14 +16,16 @@ namespace it.Controllers
     public class ApiController : Controller
     {
         protected readonly ItContext _context;
+        private readonly QLSXContext _QLSXContext;
 
         private readonly LoginMailPyme _LoginMailPyme;
 
         private readonly IConfiguration _configuration;
         private SignInManager<UserModel> _signInManager;
-        public ApiController(ItContext context, LoginMailPyme LoginMailPyme, SignInManager<UserModel> signInManager, IConfiguration configuration)
+        public ApiController(ItContext context, QLSXContext QLSXcontext, LoginMailPyme LoginMailPyme, SignInManager<UserModel> signInManager, IConfiguration configuration)
         {
             _context = context;
+            _QLSXContext = QLSXcontext;
             _LoginMailPyme = LoginMailPyme;
             _signInManager = signInManager;
             _configuration = configuration;
@@ -144,5 +146,7 @@ namespace it.Controllers
             }
             return Json(responseJson);
         }
+
+       
     }
 }

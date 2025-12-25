@@ -104,18 +104,14 @@
                                                         </select>
                                                     }
                                                     @if (Model.status_id == (int)DocumentStatus.Cancle
-                                                    || Model.status_id == (int)DocumentStatus.Success
-                                                    || Model.status_id == (int)DocumentStatus.Processed
-                                                    || Model.status_id == (int)DocumentStatus.Current
-                                                    || Model.status_id == (int)DocumentStatus.Superseded
-                                                    || Model.status_id == (int)DocumentStatus.Obsoleted)
+                                                                                                        || Model.status_id == (int)DocumentStatus.Success
+                                                                                                        || Model.status_id == (int)DocumentStatus.Current
+                                                                                                        || Model.status_id == (int)DocumentStatus.Obsoleted)
                                                     {
                                                         <select name="status_id" disabled class="form-control form-control-sm">
                                                             <option value="3">Đã hủy</option>
                                                             <option value="4">Đã ký xong</option>
-                                                            <option value="5">Đã xử lý</option>
                                                             <option value="6">Hiện hành</option>
-                                                            <option value="7">Superseded</option>
                                                             <option value="8">Obsoleted</option>
                                                         </select>
                                                     }
@@ -123,27 +119,34 @@
                                             </div>
                                         </div>
                                         <div class="col-md-9 mt-2">
-                                            <b class="col-form-label">Người nhận:</b>
+                                            <div class="d-flex"><b class="col-form-label mr-auto">Người nhận:</b><a href="#" class="btn btn-sm btn-success" data-toggle='modal' data-animation='bounce' data-target='#modalKhuvuc' id="chon_nguoinhan">Chọn bộ phận</a></div>
                                             <div class="pt-1">
-                                                <div class="">
-                                                    @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                        {
-                                                            multiple = "true",
-                                                            data_placeholder = "Người nhận",
-                                                            @class = "chosen form-control form-control-sm"
-                                                        })
-                                                </div>
+                                                @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
+                                                {
+                                                    id = "users_receive",
+                                                    multiple = "true",
+                                                    data_placeholder = "Người nhận",
+                                                    @class = "chosen form-control form-control-sm"
+                                                })
                                             </div>
                                         </div>
-                                        <div class="col-md-12 mt-2 receive_users_obtain">
-                                            <b class="col-form-label">Người nhận thông báo hiện hành:</b>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Đính kèm hồ sơ có từ khóa:</b>
+                                            <div class="pt-1">
+                                                <input id="list_keyword_dinhkem" class="tagit" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9 mt-2 receive_users_obtain">
+                                            <div class="d-flex"><b class="col-form-label mr-auto">Người nhận thông báo hiện hành:</b><a href="#" class="btn btn-sm btn-success" data-toggle='modal' data-animation='bounce' data-target='#modalKhuvuc' id="chon_nguoithongbao">Chọn bộ phận</a></div>
+
                                             <div class="pt-1">
                                                 @Html.DropDownList("users_obtain[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                                                                {
+                                                {
+                                                    id = "users_obtain",
                                                     multiple = "true",
-                                                                                                data_placeholder = "Người nhận thông báo hiện hành",
-                                                                                                @class = "chosen form-control form-control-sm"
-                                                                                                })
+                                                    data_placeholder = "Người nhận thông báo hiện hành",
+                                                    @class = "chosen form-control form-control-sm"
+                                                })
                                             </div>
                                         </div>
                                     </div>
@@ -161,7 +164,8 @@
                                 <div class="card-header">
                                     <b>File trình ký</b>
                                     <div class="float-right">
-                                        <a href="/admin/document/suggestsign/@Model.id" class="btn btn-sm btn-success text-white">Gợi ý vị trí ký</a>
+                                        <a href="/admin/document/details/@Model.id" class="btn btn-sm btn-success text-white">Xem chi tiết</a>
+                                        <a href="/admin/document/suggestsign/@Model.id" class="btn btn-sm btn-success text-white ml-2">Gợi ý vị trí ký</a>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -206,17 +210,17 @@
                                                     </div>
                                                 </div>
                                                 @if (Model.status_id == (int)DocumentStatus.Draft
-                                                || Model.status_id == (int)DocumentStatus.Release
-                                                || Model.status_id == (int)DocumentStatus.Success)
+                                                                                                || Model.status_id == (int)DocumentStatus.Release
+                                                                                                || Model.status_id == (int)DocumentStatus.Success)
                                                 {
                                                     <div class="col-12">
                                                         @Html.DropDownList("signature", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                            {
-                                                                data_placeholder = "Người Xét duyệt",
-                                                                @class = "chosen form-control form-control-sm"
-                                                            })
-                                                    </div>
-                                                }
+                                                        {
+                                                            data_placeholder = "Người Xét duyệt",
+                                                                                                        @class = "chosen form-control form-control-sm"
+                                                                                                        })
+                                                </div>
+                                                                                                }
                                                 <div class="col-12">
                                                     <div class="custom-control custom-switch switch-success mt-2">
                                                         <input type="checkbox" id="is_sign_parellel" class="custom-control-input" name="is_sign_parellel" value="true">
@@ -228,6 +232,39 @@
 
                                     </div>
                                 </div>
+                                <div class="col-12 pt-2 pt-md-0">
+                                    <div class="card no-shadow border">
+                                        <div class="card-header">
+                                            <b>Hồ sơ liên quan</b>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12 pb-2">
+                                                    @foreach (var item in ViewBag.document_dinhkem)
+                                                    {
+                                                        @if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Release)
+                                                        {
+                                                            <div class="mb-2"><a class='document_related bg-warning text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+                                                        }
+                                                        else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Success)
+                                                        {
+                                                            <div class="mb-2"><a class='document_related bg-success text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+
+                                                        }
+                                                        else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Current)
+                                                        {
+                                                            <div class="mb-2"><a class='document_related bg-secondary text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+
+                                                        }
+
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                                 <div class="col-12 pt-2">
                                     <div class="card border">
                                         <div class="card-header">
@@ -256,33 +293,44 @@
                                             <b>Tùy chỉnh</b>
                                         </div>
                                         <div class="card-body">
-
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Mã hồ sơ:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="mahoso" type="text" id="mahoso" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Ấn bản</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="anban" type="number" id="anban" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
                                             <div class="row">
                                                 <b class="col-12 col-form-label">Vị trí lưu trữ:</b>
                                                 <div class="col-12 pt-1">
                                                     <input name="location" type="text" id="location" class="form-control form-control-sm" placeholder="\\data\Share\Asta Doc\...">
                                                 </div>
                                             </div>
-                                            <div class="form-group row">
+                                            <div class="row">
                                                 <b class="col-12 col-form-label">Hồ sơ liên kết(Ấn bản cũ):</b>
                                                 <div class="col-12 pt-1">
                                                     @Html.DropDownList("documents_related[]", (IEnumerable<SelectListItem>)ViewData["documents"], new
-                                                        {
-                                                            multiple = "true",
-                                                            data_placeholder = "Hồ sơ liên kết",
-                                                            @class = "chosen form-control form-control-sm"
-                                                        })
+                                                    {
+                                                        multiple = "true",
+                                                                                                        data_placeholder = "Hồ sơ liên kết",
+                                                                                                        @class = "chosen form-control form-control-sm"
+                                                                                                        })
                                                 </div>
                                             </div>
-                                            <div class="form-group row">
+                                            <div class="row">
                                                 <b class="col-12 col-form-label">Từ khóa:</b>
                                                 <div class="col-12 pt-1">
-                                                    <input class="form-control form-control-sm" type='text' name="keyword" placeholder="Giúp tìm kiếm nhanh" autocomplete="off" />
+                                                    <input id="list_keyword" class="tagit" />
                                                 </div>
                                             </div>
 
                                             <div class="row">
-                                                <b class="col-12 col-form-label">Tags:</b>
+                                                <b class="col-12 col-form-label">Tags (Dành cho mỗi cá nhân):</b>
                                                 <div class="col-12 pt-1">
                                                     <input id="keyword" class="tagit" />
                                                 </div>
@@ -397,6 +445,9 @@
         var page = 'edit_document'
         var data = @Html.Raw(Json.Serialize(Model));
         var keyword = @Html.Raw(Json.Serialize(@ViewData["keyword"]));
+        var list_keyword = @Html.Raw(Json.Serialize(@ViewData["list_keyword"]));
+        var list_keyword_dinhkem = @Html.Raw(Json.Serialize(@ViewData["list_keyword_dinhkem"]));
+        var document_dinhkem = @Html.Raw(Json.Serialize(@ViewData["document_dinhkem"]));
         var is_admin = @ViewData["is_admin"];
         if (!is_admin) {
             if (data.status_id == 6) {
@@ -538,6 +589,13 @@
             return arr.join("");
         }
         $(document).ready(async function () {
+            $("#chon_nguoinhan").click(()=>{
+                $("#modalKhuvuc").data("select","users_receive")
+            });
+             $("#chon_nguoithongbao").click(()=>{
+                $("#modalKhuvuc").data("select","users_obtain")
+            });
+            /////
             $("#keyword").tagit({
                 showAutocompleteOnFocus: true,
                 afterTagAdded: function (event, ui) {
@@ -552,6 +610,41 @@
             if (keyword) {
                 for (let item of keyword) {
                     $("#keyword").tagit("createTag", item);
+                }
+            }
+
+            ////
+            $("#list_keyword").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='list_keyword[]' value='" + value + "' class='list_keyword' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".list_keyword[value='" + value + "']").remove();
+                },
+            });
+            if (list_keyword) {
+                for (let item of list_keyword) {
+                    $("#list_keyword").tagit("createTag", item);
+                }
+            }
+              ////
+            $("#list_keyword_dinhkem").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='list_keyword_dinhkem[]' value='" + value + "' class='list_keyword_dinhkem' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".list_keyword_dinhkem[value='" + value + "']").remove();
+                },
+            });
+            if (list_keyword_dinhkem) {
+                for (let item of list_keyword_dinhkem) {
+                    $("#list_keyword_dinhkem").tagit("createTag", item);
                 }
             }
             fillForm($("#form"), data);
@@ -678,17 +771,33 @@
 
             $(".hien_hanh").click(function (e) {
                 e.preventDefault();
-                let text = "Hiện hành hồ sơ này?";
-                if (confirm(text) == true) {
-                    // $("[name='date_effect']").prop("required", true);
-                    if (!$("[name='date_effect']").val()) {
-                        alert("Yêu cầu nhập ngày hiệu lực!");
+                let text = "Hiện hành hồ sơ này và các hồ sơ liên quan?";
+                if(confirm(text) == false){
+                        return false;
+                }
+                // $("[name='date_effect']").prop("required", true);
+                if (!$("[name='date_effect']").val()) {
+                    alert("Yêu cầu nhập ngày hiệu lực!");
+                    return false;
+                }
+                if(document_dinhkem.filter(item=>item.status_id == 2).length > 0){
+                    alert("Hồ sơ liên quan đang ở trạng thái 'Trình ký'. Vui lòng xử lý các hồ sơ này trước khi chuyển hồ sơ hiện hành!");
+                    return false;
+                }
+                if(document_dinhkem.length > 0){
+                    let confirm_text = "Hồ sơ liên quan: \n";
+                    for(let item of document_dinhkem){
+                        confirm_text += "- " + item.code + " " + item.name_vi + "\n";
+                    }
+                    confirm_text += "Sẽ được chuyển sang hiện hành cùng hồ sơ này. Tiếp tục?";
+                    if(confirm(confirm_text) == false){
                         return false;
                     }
-                    $("#form").append("<input name='status_id' value='6' type='hidden'/>");
-                    $(".cap_nhat").trigger("click");
-
                 }
+                $("#form").append("<input name='status_id' value='6' type='hidden'/>");
+                $(".cap_nhat").trigger("click");
+
+                
             });
             $(".obsoleted").click(function (e) {
                 e.preventDefault();

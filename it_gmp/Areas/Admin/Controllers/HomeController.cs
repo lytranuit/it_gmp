@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Tls;
 using Spire.Xls;
 using System.Collections;
 using System.Security.Cryptography;
@@ -24,9 +25,11 @@ namespace it.Areas.Admin.Controllers
         private readonly LoginMailPyme _LoginMailPyme;
 
         private readonly ViewRender _view;
+        private readonly QLSXContext _QLSXContext;
 
-        public HomeController(ItContext context, UserManager<UserModel> UserMgr, ViewRender view, LoginMailPyme LoginMailPyme) : base(context)
+        public HomeController(ItContext context, QLSXContext QLSXcontext, UserManager<UserModel> UserMgr, ViewRender view, LoginMailPyme LoginMailPyme) : base(context)
         {
+            _QLSXContext = QLSXcontext;
             _view = view;
             UserManager = UserMgr;
             _LoginMailPyme = LoginMailPyme;
@@ -1246,6 +1249,20 @@ namespace it.Areas.Admin.Controllers
                 .OrderBy(d => d.stt).ToList();
             }
             return Json(DocumentTypeGroupModel);
+        }
+        public async Task<JsonResult> list_khuvuc()
+        {
+            var khuvucs = _QLSXContext.TBL_DANHMUCKHUVUC.ToList();
+            foreach (var khuvuc in khuvucs)
+            {
+                if (khuvuc.list_email_SOP == null)
+                {
+                    khuvuc.list_email_SOP_id = new List<string>();
+                    continue;
+                }
+                khuvuc.list_email_SOP_id = _context.UserModel.Where(d => d.deleted_at == null && khuvuc.list_email_SOP.Contains(d.Email)).Select(d => d.Id).ToList();
+            }
+            return Json(khuvucs);
         }
         public async Task<IActionResult> software()
         {

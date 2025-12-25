@@ -27,17 +27,17 @@
                                 @if (Model.status_id == 3)
                                 {
                                     <div class="" style="
-                                    color: red;
-                                    text-align: center;
-                                    font-size: 21px;
-                                    position: absolute;
-                                    height: 100%;
-                                    z-index: 1000;
-                                    background: #00000059;
-                                    width: 100%;
-                                    top: 0;
-                                    left: 0;
-                                                ">
+                                                    color: red;
+                                                    text-align: center;
+                                                    font-size: 21px;
+                                                    position: absolute;
+                                                    height: 100%;
+                                                    z-index: 1000;
+                                                    background: #00000059;
+                                                    width: 100%;
+                                                    top: 0;
+                                                    left: 0;
+                                                                ">
                                         Đã hủy
                                     </div>
                                 }
@@ -83,24 +83,19 @@
                                         <div class="mb-3">
                                             <span class="h6">File trình ký</span>
                                         </div>
-										<div id='pdf-viewer' class="">
-											@if (Model.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Obsoleted)
-											{
-												<embed src="/admin/document/viewObsoletedEsign/@file_esign.id" style="width:100%;height:70vh;"
-													   type="application/pdf">
-											}
-											else if (Model.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Superseded)
-											{
-												<embed src="/admin/document/viewSupersededEsign/@file_esign.id" style="width:100%;height:70vh;"
-													   type="application/pdf">
-											}
-											else
-											{
+                                        <div id='pdf-viewer' class="">
+                                            @if (Model.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Obsoleted)
+                                            {
+                                                <embed src="/admin/document/viewObsoletedEsign/@file_esign.id" style="width:100%;height:70vh;"
+                                                       type="application/pdf">
+                                            }
+                                            else
+                                            {
                                                 <embed src="@file" style="width:100%;height:70vh;"
-													   type="application/pdf">
-											}
+                                                       type="application/pdf">
+                                            }
 
-										</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -150,14 +145,46 @@
                             <div class="col-12 pt-2 pt-md-0">
                                 <div class="card no-shadow border">
                                     <div class="card-header">
-                                        <b>Hồ sơ liên kết</b>
+                                        <b>Ấn bản cũ</b>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-12 pb-2">
                                                 @foreach (var item in ViewBag.document_related)
                                                 {
-                                                    <div><a class='document_related' href="/admin/document/details/@item.id">@item.code-@item.name_vi</a></div>
+                                                    <div class="mb-2"><a class='document_related' href="/admin/document/details/@item.id">@item.code-@item.name_vi</a></div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-12 pt-2 pt-md-0">
+                                <div class="card no-shadow border">
+                                    <div class="card-header">
+                                        <b>Hồ sơ liên quan</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12 pb-2">
+                                                @foreach (var item in ViewBag.document_dinhkem)
+                                                {
+                                                    @if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Release)
+                                                    {
+                                                        <div class="mb-2"><a class='document_related bg-warning text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+                                                    }
+                                                    else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Success)
+                                                    {
+                                                        <div class="mb-2"><a class='document_related bg-success text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+
+                                                    }
+                                                    else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Current)
+                                                    {
+                                                        <div class="mb-2"><a class='document_related bg-secondary text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+
+                                                    }
+
                                                 }
                                             </div>
                                         </div>
@@ -188,23 +215,6 @@
                                                 }
                                             </div>
                                         </div>
-                                        @*<div class="row pt-2">
-                                        <b class="col-md-6">
-                                        Ngày rà soát
-                                        </b>
-                                        <div class="col-md-6 text-right">
-                                        @if (Model.date_review != null)
-                                        {
-                                        @Model.date_review.ToString("dd/MM/yyyy")
-                                        }
-                                        else
-                                        {
-                                        <span>
-                                        Chưa xác định
-                                        </span>
-                                        }
-                                        </div>
-                                        </div>*@
                                         <div class="row pt-2">
                                             <b class="col-md-6">
                                                 Ngày hết hạn
@@ -245,10 +255,13 @@
                                         </div>
                                         <div class="row pt-2">
                                             <b class="col-md-6">
-                                                Từ khóa tìm kiếm
+                                                Từ khóa
                                             </b>
-                                            <div class="col-md-6 text-right">
-                                                @Model.keyword
+                                            <div class="col-md-12 my-1" id="span_keyword">
+                                                @foreach (var item in @Model.keywords)
+                                                {
+                                                    <div class="keyword" title="@item.keyword">@item.keyword</div>
+                                                }
                                             </div>
                                         </div>
                                         <div class="row pt-2">
@@ -264,11 +277,11 @@
                                             </div>
                                             <div class="col-md-12 my-1 d-none" id="select">
                                                 @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                    {
-                                                        multiple = "true",
-                                                        data_placeholder = "Người nhận",
-                                                        @class = "form-control form-control-sm"
-                                                    })
+                                                {
+                                                    multiple = "true",
+                                                                                                data_placeholder = "Người nhận",
+                                                                                                @class = "form-control form-control-sm"
+                                                                                                })
                                                 <div class="text-center mt-1">
                                                     <div class='btn btn-sm btn-success save_recieve' style="cursor:pointer;">Lưu lại</div>
                                                 </div>

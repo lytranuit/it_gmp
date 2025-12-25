@@ -53,25 +53,33 @@
                                         </div>
 
                                         <div class="col-md-12 mt-2 receive">
-                                            <b class="col-form-label">Người nhận:</b>
+                                            <div class="d-flex"><b class="col-form-label mr-auto">Người nhận:</b><a href="#" class="btn btn-sm btn-success" data-toggle='modal' data-animation='bounce' data-target='#modalKhuvuc' id="chon_nguoinhan">Chọn bộ phận</a></div>
                                             <div class="pt-1">
                                                 @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                    {
-                                                        multiple = "true",
-                                                        data_placeholder = "Người nhận",
-                                                        @class = "chosen form-control form-control-sm"
-                                                    })
+                                                {
+                                                    id = "users_receive",
+                                                    multiple = "true",
+                                                    data_placeholder = "Người nhận",
+                                                    @class = "chosen form-control form-control-sm"
+                                                })
                                             </div>
                                         </div>
-                                        <div class="col-md-12 mt-2 receive_users_obtain">
-                                            <b class="col-form-label">Người nhận thông báo hiện hành:</b>
+                                        <div class="col-md-3 mt-2">
+                                            <b class="col-form-label">Đính kèm hồ sơ có từ khóa:</b>
+                                            <div class="pt-1">
+                                                <input id="list_keyword_dinhkem" class="tagit" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9 mt-2 receive_users_obtain">
+                                            <div class="d-flex"><b class="col-form-label mr-auto">Người nhận thông báo hiện hành:</b><a href="#" class="btn btn-sm btn-success" data-toggle='modal' data-animation='bounce' data-target='#modalKhuvuc' id="chon_nguoithongbao">Chọn bộ phận</a></div>
                                             <div class="pt-1">
                                                 @Html.DropDownList("users_obtain[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                                                                {
+                                                {
+                                                    id = "users_obtain",
                                                     multiple = "true",
-                                                                                                data_placeholder = "Người nhận thông báo hiện hành",
-                                                                                                @class = "chosen form-control form-control-sm"
-                                                                                                })
+                                                    data_placeholder = "Người nhận thông báo hiện hành",
+                                                    @class = "chosen form-control form-control-sm"
+                                                })
                                             </div>
                                         </div>
                                     </div>
@@ -125,11 +133,11 @@
                                                 </div>
                                                 <div class="col-12">
                                                     @Html.DropDownList("signature", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                        {
-                                                            data_rel = "1",
-                                                            data_placeholder = "Người Xét duyệt",
-                                                            @class = "chosen form-control form-control-sm"
-                                                        })
+                                                                                                        {
+                                                        data_rel = "1",
+                                                                                                        data_placeholder = "Người Xét duyệt",
+                                                                                                        @class = "chosen form-control form-control-sm"
+                                                                                                        })
                                                 </div>
                                                 <div class="col-12">
                                                     <div class="custom-control custom-switch switch-success mt-2">
@@ -170,7 +178,18 @@
                                             <strong>Tùy chỉnh</strong>
                                         </div>
                                         <div class="card-body">
-
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Mã hồ sơ:</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="mahoso" type="text" id="mahoso" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <b class="col-12 col-form-label">Ấn bản</b>
+                                                <div class="col-12 pt-1">
+                                                    <input name="anban" type="number" id="anban" class="form-control form-control-sm">
+                                                </div>
+                                            </div>
                                             <div class="row">
                                                 <b class="col-12 col-form-label">Vị trí lưu trữ:</b>
                                                 <div class="col-12 pt-1">
@@ -181,21 +200,22 @@
                                                 <b class="col-12 col-form-label">Hồ sơ liên kết(Ấn bản cũ):</b>
                                                 <div class="col-12 pt-1">
                                                     @Html.DropDownList("documents_related[]", (IEnumerable<SelectListItem>)ViewData["documents"], new
-                                                        {
-                                                            multiple = "true",
-                                                            data_placeholder = "Hồ sơ liên kết",
-                                                            @class = "chosen form-control form-control-sm"
-                                                        })
+                                                                                                        {
+                                                        multiple = "true",
+                                                                                                        data_placeholder = "Hồ sơ liên kết",
+                                                                                                        @class = "chosen form-control form-control-sm"
+                                                                                                        })
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <b class="col-12 col-form-label">Từ khóa:</b>
                                                 <div class="col-12 pt-1">
-                                                    <input class="form-control form-control-sm" type='text' name="keyword" placeholder="Giúp tìm kiếm nhanh" autocomplete="off" />
+                                                    <input id="list_keyword" class="tagit" />
                                                 </div>
                                             </div>
+
                                             <div class="row">
-                                                <b class="col-12 col-form-label">Tags:</b>
+                                                <b class="col-12 col-form-label">Tags (Dành cho mỗi cá nhân):</b>
                                                 <div class="col-12 pt-1">
                                                     <input id="keyword" class="tagit" />
                                                 </div>
@@ -259,6 +279,14 @@
         }
         var default_receive = [];
         $(document).ready(function () {
+
+            $("#chon_nguoinhan").click(()=>{
+                $("#modalKhuvuc").data("select","users_receive")
+            });
+             $("#chon_nguoithongbao").click(()=>{
+                $("#modalKhuvuc").data("select","users_obtain")
+            });
+
             $("#keyword").tagit({
                 showAutocompleteOnFocus: true,
                 afterTagAdded: function (event, ui) {
@@ -270,6 +298,31 @@
                 afterTagRemoved: function (event, ui) {
                     var value = ui.tagLabel;
                     $(".keyword[value='" + value + "']").remove();
+                },
+            });
+            ////
+            $("#list_keyword").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='list_keyword[]' value='" + value + "' class='list_keyword' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".list_keyword[value='" + value + "']").remove();
+                },
+            });
+
+            ////
+            $("#list_keyword_dinhkem").tagit({
+                showAutocompleteOnFocus: true,
+                afterTagAdded: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $("#form").append("<input name='list_keyword_dinhkem[]' value='" + value + "' class='list_keyword_dinhkem' type='hidden'>");
+                },
+                afterTagRemoved: function (event, ui) {
+                    var value = ui.tagLabel;
+                    $(".list_keyword_dinhkem[value='" + value + "']").remove();
                 },
             });
             $(".create-btn").click(function (e) {
@@ -293,7 +346,7 @@
                 }
                 $("#form").submit();
             })
-            $("[name='date_effect']").val(moment().format("YYYY-MM-DD"));
+            // $("[name='date_effect']").val(moment().format("YYYY-MM-DD"));
             document.getElementById("date_expire").min = moment().format("YYYY-MM-DD");
             $("[name='signature']").change(async function () {
                 let $this = $(this);
@@ -350,6 +403,7 @@
                                 else
                                     users_receive = default_receive;
                                 $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
+                                $("[name='users_obtain[]']").val(users_receive).trigger('chosen:updated');
                             }
                         }
                     });
@@ -378,6 +432,11 @@
                 }
                 $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
                 default_receive = users_receive;
+                var users_obtain = [];
+                for (var item of related_doc.users_obtain) {
+                    users_obtain.push(item.user_id);
+                }
+                $("[name='users_obtain[]']").val(users_obtain).trigger('chosen:updated');
             }
             if (type_id > 0) {
                 $("[name='type_id']").val(type_id).trigger("change").trigger("chosen:updated");

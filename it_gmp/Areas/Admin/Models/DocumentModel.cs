@@ -30,7 +30,27 @@ namespace it.Areas.Admin.Models
         public virtual List<DocumentSignatureModel>? users_signature { get; set; }
         public virtual List<DocumentCommentModel>? comments { get; set; }
         public virtual List<DocumentEventModel>? events { get; set; }
+        public virtual List<DocumentKeywordModel>? keywords { get; set; }
+        public virtual List<DocumentKeywordDinhkemModel>? keywords_dinhkem { get; set; }
 
+        [NotMapped]
+
+        public virtual List<string>? list_keywords_dinhkem
+        {
+            get
+            {
+                return keywords_dinhkem != null ? keywords_dinhkem.Select(d => d.keyword).ToList() : new List<string>(); 
+            }
+        }
+        [NotMapped]
+
+        public virtual List<string>? list_keywords
+        {
+            get
+            {
+                return keywords != null ? keywords.Select(d => d.keyword).ToList() : new List<string>();
+            }
+        }
 
 
 
@@ -80,6 +100,8 @@ namespace it.Areas.Admin.Models
         public DateTime? time_signature_previous { get; set; }
 
 
+        public string? mahoso { get; set; }
+        public int? anban { get; set; } = 1;
 
         public DateTime? created_at { get; set; }
 
@@ -100,12 +122,12 @@ namespace it.Areas.Admin.Models
         Cancle = 3,
         [Display(Name = "Đã ký xong")]
         Success = 4,
-        [Display(Name = "Đã xử lý")]
-        Processed = 5,
+        //[Display(Name = "Đã xử lý")]
+        //Processed = 5,
         [Display(Name = "Hiện hành")]
         Current = 6,
-        [Display(Name = "Superseded")]
-        Superseded = 7,
+        //[Display(Name = "Superseded")]
+        //Superseded = 7,
         [Display(Name = "Obsoleted")]
         Obsoleted = 8,
     }

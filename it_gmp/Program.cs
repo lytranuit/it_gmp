@@ -13,11 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'IdentityContextConnection' not found.");
 var EsignConnectionString = builder.Configuration.GetConnectionString("EsignConnection") ?? throw new InvalidOperationException("Connection string 'EsignConnectionString' not found.");
+var QLSXConnectionString = builder.Configuration.GetConnectionString("QLSXConnection") ?? throw new InvalidOperationException("Connection string 'QLSXConnectionString' not found.");
+
 
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
 builder.Services.AddDbContext<IdentityContext>(options =>
     options.UseSqlServer(EsignConnectionString));
 
+builder.Services.AddDbContext<QLSXContext>(options =>
+  options.UseSqlServer(QLSXConnectionString)
+  );
 builder.Services.AddDefaultIdentity<UserModel>(options => options.SignIn.RequireConfirmedAccount = false).AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<IdentityContext>(); ;
 builder.Services.AddControllersWithViews().AddMicrosoftIdentityUI().AddJsonOptions(x =>
@@ -104,13 +110,13 @@ app.UseAuthorization();
 
 app.UseStaticFiles(new StaticFileOptions
 {
-	FileProvider = new PhysicalFileProvider(builder.Configuration["Source:Path_Private"]),
-	RequestPath = "/private",
+    FileProvider = new PhysicalFileProvider(builder.Configuration["Source:Path_Private"]),
+    RequestPath = "/private",
     ServeUnknownFileTypes = true,
     OnPrepareResponse = ctx =>
-	{
-		var token = builder.Configuration["Key_Access"];
-		var token_query = ctx.Context.Request.Query["token"].ToString();
+    {
+        var token = builder.Configuration["Key_Access"];
+        var token_query = ctx.Context.Request.Query["token"].ToString();
 
         if (!ctx.Context.User.Identity.IsAuthenticated && token_query != token)
         {
