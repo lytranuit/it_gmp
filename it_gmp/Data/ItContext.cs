@@ -31,6 +31,7 @@ namespace it.Data
         public DbSet<DocumentTypeReceiveModel> DocumentTypeReceiveModel { get; set; }
         public DbSet<DocumentModel> DocumentModel { get; set; }
         public DbSet<DocumentFileModel> DocumentFileModel { get; set; }
+        public DbSet<DocumentErrorModel> DocumentErrorModel { get; set; }
 
         public DbSet<DocumentAttachmentModel> DocumentAttachmentModel { get; set; }
         public DbSet<DocumentRelatedModel> DocumentRelatedModel { get; set; }

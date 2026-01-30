@@ -30,11 +30,11 @@
                             {
                                 <a class="btn btn-sm btn-secondary float-right mr-3" style="width:140px" href="/admin/document/signcustom/@Model.id">Ký thêm</a>
                             }
-                            @if ((bool)ViewData["is_manager_document"] == true && Model.status_id == (int)DocumentStatus.Success)
+                            @if (Model.status_id == (int)DocumentStatus.Success)
                             {
                                 <button type="submit" class="btn btn-sm btn-secondary float-right mr-3 hien_hanh" style="width:140px">Hiện hành</button>
                             }
-                            @if ((bool)ViewData["is_manager_document"] == true && Model.status_id == (int)DocumentStatus.Current)
+                            @if (Model.status_id == (int)DocumentStatus.Current)
                             {
                                 <button type="submit" class="btn btn-sm btn-danger float-right mr-3 obsoleted" style="width:140px">Hết hiệu lực</button>
                             }
@@ -151,7 +151,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <b class="col-12 col-form-label">Ghi chú:</b>
+                                        <b class="col-12 col-form-label">Ghi chú/mô tả thay đổi:</b>
                                         <div class="col-12 pt-1">
                                             <textarea class="form-control" name="description_vi" rows="10" maxlength="2000"></textarea>
                                         </div>

@@ -1236,6 +1236,11 @@ namespace it.Areas.Admin.Controllers
                     }
                     catch (Exception ex)
                     {
+                        _context.Add(new DocumentErrorModel
+                        {
+                            document_id = DocumentModel_old.id,
+                            message = ex.Message
+                        });
 
                     }
                 }

@@ -146,9 +146,9 @@ namespace it.Controllers
                 var email = new EmailModel
                 {
                     email_to = mail_string,
-                    subject = "[Nhắc nhở] Các hồ sơ đang cần chữ ký của bạn",
+                    subject = "[GMP][Nhắc nhở] Các hồ sơ đang cần chữ ký của bạn",
                     body = body,
-                    email_type = "remind_document",
+                    email_type = "remind_document_gmp_a",
                     status = 1
                 };
                 _context.Add(email);
