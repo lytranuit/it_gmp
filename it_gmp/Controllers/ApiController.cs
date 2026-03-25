@@ -121,32 +121,6 @@ namespace it.Controllers
 
         }
 
-        [HttpPost]
-        public async Task<JsonResult> CheckLogin(string email, string password)
-        {
-            LoginResponse responseJson = await _LoginMailPyme.login(email, password);
-            if (responseJson.authed == false)
-            {
-                var result = await _signInManager.PasswordSignInAsync(email, password, false, lockoutOnFailure: true);
-                if (result.Succeeded)
-                {
-                    responseJson.authed = true;
-                    var parameter = new Dictionary<string, string>();
-                    parameter.Add("user", "AstaCorp");
-                    parameter.Add("password", "!@#Asta_it@9504");
-                    responseJson.parameter = parameter;
-                }
-            }
-            else
-            {
-                var parameter = new Dictionary<string, string>();
-                parameter.Add("user", "AstaCorp");
-                parameter.Add("password", "!@#Asta_it@9504");
-                responseJson.parameter = parameter;
-            }
-            return Json(responseJson);
-        }
-
        
     }
 }

@@ -7,7 +7,6 @@ namespace it.Areas.Admin.Models
 		public bool authed { get; set; }
 
 		public string? error { get; set; }
-		public Dictionary<string, string>? parameter { get; set; }
 
 		public string? session { get; set; }
 		public string? user { get; set; }

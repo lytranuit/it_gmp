@@ -290,6 +290,10 @@
                 });
                 // console.log(data);
                 // return;
+                if(data1.length==0){
+                    alert("Chưa có chữ ký nào được thêm vào văn bản!");
+                    return;
+                }
                 $(".preloader").fadeIn();
                 $.ajax({
                     url: "/admin/document/save",

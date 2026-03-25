@@ -1,4 +1,5 @@
 ﻿using it.Areas.Admin.Models;
+using System.Text.Json;
 
 namespace it.Services
 {
@@ -29,23 +30,30 @@ namespace it.Services
 
                 var values = new Dictionary<string, string>
                 {
-                    { "user", email },
-                    { "pass", password }
+                    { "email", email },
+                    { "password", password }
                 };
                 var content = new FormUrlEncodedContent(values);
-                var url = "https://mail.astahealthcare.com/login/?login_only=1";
+                var url = "https://esign.astahealthcare.com/api/CheckLogin";
                 var response = await client.PostAsync(url, content);
+
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(json);
                 if (response.IsSuccessStatusCode)
                 {
-                    //var AbsoluteUri = response.RequestMessage.RequestUri.AbsoluteUri;//"https://mail.astahealthcare.com/webmail/"  
-                    //if (AbsoluteUri == "https://mail.astahealthcare.com/webmail/")
-                    //{
-                    return new LoginResponse() { authed = true };
-                    //}
-                    //else
-                    //{
-                    //    return new LoginResponse() { authed = false };
-                    //}
+                    LoginResponse responseJson1 = await response.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (responseJson1.authed == true)
+                    {
+
+                        return new LoginResponse() { authed = true };
+                    }
+                    else
+                    {
+                        return new LoginResponse() { authed = false };
+                    }
                 }
                 else
                 {
