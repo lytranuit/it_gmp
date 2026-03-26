@@ -2961,11 +2961,13 @@ namespace it.Areas.Admin.Controllers
               .FirstOrDefault();
             ////SEND MAIL 
 
-            var user_create = await UserManager.FindByIdAsync(DocumentModel.user_id);
-            var users_signature_signed = _context.DocumentSignatureModel.Where(u => u.document_id == DocumentModel.id && u.status == 2).Include(d => d.user_s).Select(d => d.user_s.Email).ToList();
-            users_signature_signed.Add(user_create.Email);
-            users_signature_signed = users_signature_signed.Distinct().ToList();
-            var mail_string = string.Join(",", users_signature_signed.ToArray());
+            var user_related = DocumentModel.users_receive.Select(d => d.user_id).ToList();
+
+            var users_signature_signed = _context.DocumentSignatureModel.Where(u => u.document_id == DocumentModel.id && u.status == 2).Select(d => d.user_sign).ToList();
+            user_related.AddRange(users_signature_signed);
+            user_related.Add(DocumentModel.user_id);
+            var users_email = _context.UserModel.Where(d => user_related.Contains(d.Id)).Select(d => d.Email).ToList();
+            var mail_string = string.Join(",", users_email.ToArray());
             string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
             var body = _view.Render("Emails/CancleSignature", new { link_logo = Domain + "/images/clientlogo_astahealthcare.com_f1800.png", link = Domain + "/admin/document/details/" + DocumentModel.id, reason = reason });
             var email = new EmailModel
