@@ -279,42 +279,7 @@
             </div><!--end card-body-->
         </div><!--end card-->
     </div>
-    @if (is_admin)
-    {
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title mt-0 mb-3 d-flex align-items-center">
-                        Email
-                        <select class="ml-2 form-control form-control-sm search_status search_status_email" style="width:150px;">
-                            <option value="0">Tất cả trạng thái</option>
-                            <option value="1">Chưa gửi</option>
-                            <option value="2">Đã gửi</option>
-                            <option value="3">Lỗi</option>
-                        </select>
-                    </h4>
-                    <div class="">
-                        <table class="table mb-0" id="table_email">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="border-top-0">Tiêu đề</th>
-                                    <th class="border-top-0 text-center">Đến</th>
-                                    <th class="border-top-0 text-center">Loại</th>
-                                    <th class="border-top-0 text-center">Trạng thái</th>
-                                    <th class="border-top-0 text-center">Lỗi</th>
-                                    <th class="border-top-0 text-center">Ngày gửi</th>
-                                </tr><!--end tr-->
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table> <!--end table-->
-                    </div><!--end /div-->
-                </div><!--end card-body-->
-            </div><!--end card-->
-        </div>
-    }
-</div>
-
+    
 <!-- Chart JS -->
 <script src="lib/chartjs/chart.min.js"></script>
 @section Scripts {

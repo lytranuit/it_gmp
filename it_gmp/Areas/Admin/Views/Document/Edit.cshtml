@@ -28,7 +28,7 @@
 
                             @if ((bool)ViewData["is_manager_document"] == true && (Model.status_id == (int)DocumentStatus.Success || Model.status_id == (int)DocumentStatus.Current))
                             {
-                                <a class="btn btn-sm btn-secondary float-right mr-3" style="width:140px" href="/admin/document/signcustom/@Model.id">Ký thêm</a>
+                                @* <a class="btn btn-sm btn-secondary float-right mr-3" style="width:140px" href="/admin/document/signcustom/@Model.id">Ký thêm</a> *@
                             }
                             @if (Model.status_id == (int)DocumentStatus.Success)
                             {
@@ -80,11 +80,14 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-3 mt-2">
+                                        <div class="col-md-3 mt-2 d-none">
                                             <b class="col-form-label">Loại hồ sơ:<span class="text-danger">*</span></b>
                                             <div class="pt-1">
                                                 @Html.DropDownList("type_id", (IEnumerable<SelectListItem>)ViewData["types"], new { required = true, @class = "form-control form-control-sm chosen" })
                                             </div>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                           
                                         </div>
                                         <div class="col-md-3 mt-2">
                                             <b class="col-form-label">Trạng thái:<span class="text-danger">*</span></b>

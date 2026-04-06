@@ -1225,11 +1225,14 @@ namespace it.Areas.Admin.Controllers
                         var path_files = DocumentModel_old.location;
                         string _userName = _configuration["FileServer:User"];
                         string _password = _configuration["FileServer:Pass"];
-                        using (new NetworkConnection.NetworkConnection(path_files, new NetworkCredential(_userName, _password)))
+                        var root = @"\\data\Share";
+                        using (new NetworkConnection.NetworkConnection(root, new NetworkCredential(_userName, _password)))
                         {
                             if (System.IO.Directory.Exists(path_files))
                             {
                                 string fileToCopy = file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+
+
                                 System.IO.File.Copy(fileToCopy, path_files + "\\" + DocumentModel_old.name_vi + ".pdf", true);
                             }
                         }

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Create";
     Layout = "~/Views/Shared/_Admin.cshtml";
 }
@@ -69,6 +69,17 @@
                                             {
                                                 multiple = "true",
                                                 data_placeholder = "Người quản trị",
+                                                @class = "chosen form-control form-control-sm"
+                                            })
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 mt-2">
+                                    <b class="col-form-label">Người phê duyệt cuối cùng:</b>
+                                    <div class="pt-1">
+                                        @Html.DropDownList("final_approver_id", (IEnumerable<SelectListItem>)ViewData["users"], "-- Chọn người phê duyệt --", new
+                                            {
+                                                data_placeholder = "Người phê duyệt cuối cùng",
                                                 @class = "chosen form-control form-control-sm"
                                             })
                                     </div>

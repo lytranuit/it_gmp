@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace it.Areas.Admin.Models
@@ -25,6 +25,7 @@ namespace it.Areas.Admin.Models
         public virtual TemplateModel? template { get; set; }
         public virtual List<DocumentTypeReceiveModel>? users_receive { get; set; }
         public virtual List<UserDocumentTypeModel>? users_manager { get; set; }
+        public string? final_approver_id { get; set; }
         public DateTime? created_at { get; set; }
 
         public DateTime? updated_at { get; set; }

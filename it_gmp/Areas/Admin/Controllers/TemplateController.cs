@@ -27,7 +27,7 @@ namespace it.Areas.Admin.Controllers
 
 
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         // GET: Admin/Template/Create
         public IActionResult Create()
         {
@@ -43,7 +43,7 @@ namespace it.Areas.Admin.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         public async Task<IActionResult> Create(TemplateModel TemplateModel)
         {
             if (ModelState.IsValid)
@@ -101,7 +101,7 @@ namespace it.Areas.Admin.Controllers
         }
 
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         // GET: Admin/Template/Edit/5
         public IActionResult Edit(int? id)
         {
@@ -129,7 +129,7 @@ namespace it.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         public async Task<IActionResult> Edit(int id, TemplateModel TemplateModel, List<string> users_follow)
         {
 
@@ -204,7 +204,7 @@ namespace it.Areas.Admin.Controllers
         }
 
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         // GET: Admin/Template/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
@@ -233,7 +233,7 @@ namespace it.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager Esign")]
         public async Task<IActionResult> Up(int id)
         {
             if (_context.TemplateModel == null)
@@ -257,6 +257,7 @@ namespace it.Areas.Admin.Controllers
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             var user = await UserManager.GetUserAsync(currentUser);
             var is_admin = await UserManager.IsInRoleAsync(user, "Administrator");
+            var is_manager = await UserManager.IsInRoleAsync(user, "Manager Esign");
             var draw = Request.Form["draw"].FirstOrDefault();
             var start = Request.Form["start"].FirstOrDefault();
             var length = Request.Form["length"].FirstOrDefault();
@@ -279,7 +280,7 @@ namespace it.Areas.Admin.Controllers
                 var file = record.file_url != null ? "<a href='" + record.file_url + "' download class='btn btn-secondary btn-xs'><i class='fas fa-file-excel mr-2'></i>Download</a>" : "";
                 var id = record.id.ToString();
                 var action = "<div class='btn-group'>" + file + "</div>";
-                if (is_admin)
+                if (is_admin || is_manager)
                 {
                     id = "<a href='/admin/" + _type + "/edit/" + record.id + "'><i class='fas fa-pencil-alt mr-2'></i> " + record.id + "</a>";
                     action = "<div class='btn-group'>" + file + "<a href='/admin/" + _type + "/up/" + record.id + "' class='btn btn-primary btn-sm' title='Up?' data-type='confirm'>"

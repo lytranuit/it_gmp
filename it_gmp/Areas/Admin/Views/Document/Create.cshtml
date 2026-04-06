@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Create";
     Layout = "~/Views/Shared/_Admin.cshtml";
 }
@@ -278,6 +278,22 @@
             $("#signature").append(rendered);
         }
         var default_receive = [];
+        var current_final_approver_id = null;
+        // Đảm bảo người phê duyệt cuối cùng luôn nằm cuối danh sách
+        function ensure_final_approver_last() {
+            if (!current_final_approver_id) return;
+            var $finalEl = $("#signature .user_signature[data-id='" + current_final_approver_id + "']");
+
+            $(".close_signature",$finalEl).remove();
+            if ($finalEl.length && $finalEl.next('.icon-warning').length) {
+
+                var $icon = $finalEl.prev('i.icon-warning');
+                // Di chuyển icon + element xuống cuối
+                if ($icon.length) $("#signature").append($icon);
+                $("#signature").append($finalEl);
+
+            }
+        }
         $(document).ready(function () {
 
             $("#chon_nguoinhan").click(()=>{
@@ -369,6 +385,7 @@
                     }
                 }
                 add_signature(user);
+                ensure_final_approver_last();
                 $(".signature").draggable();
                 $(this).val('');
                 // $("option[value='" + value + "']", $this).prop("disabled", true);
@@ -376,6 +393,7 @@
             }).val(user_id).trigger("change").val('').trigger('chosen:updated');
             $("[name='type_id']").change(function () {
                 var val = $(this).val();
+                // console.log(val);
                 if (val > 0) {
                     $.ajax({
                         url: "/admin/document/gettype",
@@ -385,16 +403,6 @@
                         type: "POST",
                         success: function (res) {
                             if (res.success) {
-                                //var is_self_check = res.item.is_self_check;
-                                //if (is_self_check) {
-                                //    var users_follow = [user_id];
-                                //    $("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
-                                //} else {
-                                //    var users_follow = res.item.users_follow.map(function (item) {
-                                //        return item.user_id;
-                                //    });
-                                //    $("[name='users_follow[]']").val(users_follow).trigger('chosen:updated');
-                                //}
                                 var users_receive = res.item.users_receive.map(function (item) {
                                     return item.user_id;
                                 });
@@ -404,6 +412,15 @@
                                     users_receive = default_receive;
                                 $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
                                 $("[name='users_obtain[]']").val(users_receive).trigger('chosen:updated');
+
+                                // Tự động thêm người phê duyệt cuối cùng vào xét duyệt
+                                if (res.item.final_approver_id) {
+                                    current_final_approver_id = res.item.final_approver_id;
+                                    // console.log(current_final_approver_id);
+                                    $("[name='signature']").val(current_final_approver_id).trigger("change").val('').trigger('chosen:updated');
+                                } else {
+                                    current_final_approver_id = null;
+                                }
                             }
                         }
                     });

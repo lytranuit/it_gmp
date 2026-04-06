@@ -80,7 +80,7 @@
                 }
             </ul>
         </li>
-        @if (is_admin)
+        @if (is_admin || is_manager)
         {
             <li>
                 <a href="/admin/history">
@@ -99,7 +99,7 @@
         <li>
             <a href="/admin/document/merge">
                 <i class="fas fa-file-pdf"></i>
-                <span>Cắt nối file PDF</span>
+                <span>Nối file PDF</span>
             </a>
         </li>
 

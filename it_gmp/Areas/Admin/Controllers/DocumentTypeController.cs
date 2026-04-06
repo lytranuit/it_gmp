@@ -1,4 +1,4 @@
-﻿using it.Areas.Admin.Models;
+using it.Areas.Admin.Models;
 using it.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -77,6 +77,7 @@ namespace it.Areas.Admin.Controllers
 
                     _context.SaveChanges();
                 }
+
                 /// Audittrail
                 System.Security.Claims.ClaimsPrincipal currentUser = this.User;
                 var user = await UserManager.GetUserAsync(currentUser);
@@ -145,6 +146,7 @@ namespace it.Areas.Admin.Controllers
                 documentTypeModel_old.symbol = documentTypeModel.symbol;
                 documentTypeModel_old.stt = documentTypeModel.stt;
                 documentTypeModel_old.group_id = documentTypeModel.group_id;
+                documentTypeModel_old.final_approver_id = documentTypeModel.final_approver_id;
 
                 _context.Update(documentTypeModel_old);
                 _context.SaveChanges();
@@ -178,6 +180,7 @@ namespace it.Areas.Admin.Controllers
 
                     _context.SaveChanges();
                 }
+
                 /// Audittrail
                 System.Security.Claims.ClaimsPrincipal currentUser = this.User;
                 var user = await UserManager.GetUserAsync(currentUser);
