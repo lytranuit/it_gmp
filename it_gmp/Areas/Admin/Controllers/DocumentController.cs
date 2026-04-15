@@ -252,6 +252,7 @@ namespace it.Areas.Admin.Controllers
 
                 newName = newName.Replace("+", "_");
                 newName = newName.Replace("%", "_");
+                newName = CleanFileName(newName);
                 string filePath = pathroot + newName;
                 string url = "/private/documents_gmp/" + DocumentModel.id + "/" + newName;
                 DocumentFileModel DocumentFileModel = new DocumentFileModel
@@ -281,6 +282,8 @@ namespace it.Areas.Admin.Controllers
 
                     newName = newName.Replace("+", "_");
                     newName = newName.Replace("%", "_");
+
+                    newName = CleanFileName(newName);
                     filePath = pathroot + newName;
                     url = "/private/documents_gmp/" + DocumentModel.id + "/" + newName;
                     DocumentAttachmentModel DocumentAttachmentModel = new DocumentAttachmentModel
@@ -795,6 +798,7 @@ namespace it.Areas.Admin.Controllers
 
                     newName = newName.Replace("+", "_");
                     newName = newName.Replace("%", "_");
+                    newName = CleanFileName(newName);
                     string filePath = pathroot + newName;
                     string url = "/" + pathroot.Replace("\\", "/") + newName;
                     DocumentAttachmentModel DocumentAttachmentModel = new DocumentAttachmentModel
@@ -1132,19 +1136,29 @@ namespace it.Areas.Admin.Controllers
 
                         if (!exists)
                             System.IO.Directory.CreateDirectory(pathroot);
-                        string newName = DocumentModel_old.name_vi + "-" + timeStamp;
+                        string filePath = file_current.url;
 
-                        newName = newName.Replace("+", "_");
-                        newName = newName.Replace("%", "_");
-                        string filePath = "/private/tmp/" + newName + ".pdf";
 
-                        // Create a FileStream to write the PDF file
-                        var dest = new PdfWriter(pathroot + "\\" + newName + ".pdf");
-                        var reader = new PdfReader(file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
-                        PdfDocument pdfDoc = new PdfDocument(reader, dest);
-                        iText.Layout.Document doc = new iText.Layout.Document(pdfDoc);
-                        pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc));
-                        doc.Close();
+                        if (DocumentModel_old.type_id == 82) ///Chỉ áp dụng cho SOP
+                        {
+                          
+                           
+                            string newName = DocumentModel_old.name_vi + "-" + timeStamp;
+
+                            newName = newName.Replace("+", "_");
+                            newName = newName.Replace("%", "_");
+                            newName = CleanFileName(newName);
+                            // Create a FileStream to write the PDF file
+                            var dest = new PdfWriter(pathroot + "\\" + newName + ".pdf");
+                            var reader = new PdfReader(file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
+                            PdfDocument pdfDoc = new PdfDocument(reader, dest);
+                            iText.Layout.Document doc = new iText.Layout.Document(pdfDoc);
+                            pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc));
+                            doc.Close();
+
+                            filePath = "/private/tmp/" + newName + ".pdf";
+                        }
+
 
                         var attachments = new List<string>();
                         ////// Lấy Tất cả document đính kèm
@@ -1180,22 +1194,30 @@ namespace it.Areas.Admin.Controllers
                             ///Đính kèm
                             var file_current1 = doc1.files
                                .OrderBy(f => f.created_at).LastOrDefault();
+                            var filePath1 = file_current1.url;
+                            if (DocumentModel_old.type_id == 82) ///Chỉ áp dụng cho SOP
+                            {
 
-                            string newName1 = doc1.name_vi + "-" + timeStamp;
+                                string newName1 = doc1.name_vi + "-" + timeStamp;
 
-                            newName1 = newName1.Replace("+", "_");
-                            newName1 = newName1.Replace("%", "_");
-                            string filePath1 = "/private/tmp/" + newName1 + ".pdf";
+                                newName1 = newName1.Replace("+", "_");
+                                newName1 = newName1.Replace("%", "_");
 
-                            // Create a FileStream to write the PDF file
-                            var dest1 = new PdfWriter(pathroot + "\\" + newName1 + ".pdf");
-                            var reader1 = new PdfReader(file_current1.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
-                            PdfDocument pdfDoc1 = new PdfDocument(reader1, dest1);
-                            iText.Layout.Document doc12 = new iText.Layout.Document(pdfDoc1);
-                            pdfDoc1.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc12));
-                            doc12.Close();
+                                newName1 = CleanFileName(newName1);
+                                filePath1 = "/private/tmp/" + newName1 + ".pdf";
 
+                                // Create a FileStream to write the PDF file
+                                var dest1 = new PdfWriter(pathroot + "\\" + newName1 + ".pdf");
+                                var reader1 = new PdfReader(file_current1.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\"));
+                                PdfDocument pdfDoc1 = new PdfDocument(reader1, dest1);
+                                iText.Layout.Document doc12 = new iText.Layout.Document(pdfDoc1);
+                                pdfDoc1.AddEventHandler(PdfDocumentEvent.END_PAGE, new ForTranningEventHandler(doc12));
+                                doc12.Close();
+                            }
                             attachments.Add(filePath1);
+
+                            ////Copy qua thư viện
+                            CopyData(doc1);
                         }
 
                         _context.UpdateRange(document_dinhkem);
@@ -1219,33 +1241,7 @@ namespace it.Areas.Admin.Controllers
                     }
 
                     /////Copy qua thư viện
-                    try
-                    {
-
-                        var path_files = DocumentModel_old.location;
-                        string _userName = _configuration["FileServer:User"];
-                        string _password = _configuration["FileServer:Pass"];
-                        var root = @"\\data\Share";
-                        using (new NetworkConnection.NetworkConnection(root, new NetworkCredential(_userName, _password)))
-                        {
-                            if (System.IO.Directory.Exists(path_files))
-                            {
-                                string fileToCopy = file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
-
-
-                                System.IO.File.Copy(fileToCopy, path_files + "\\" + DocumentModel_old.name_vi + ".pdf", true);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _context.Add(new DocumentErrorModel
-                        {
-                            document_id = DocumentModel_old.id,
-                            message = ex.Message
-                        });
-
-                    }
+                    CopyData(DocumentModel_old);
                 }
                 /////create event
                 DocumentEventModel DocumentEventModel = new DocumentEventModel
@@ -1292,6 +1288,48 @@ namespace it.Areas.Admin.Controllers
             }
             return Ok();
         }
+
+        private void CopyData(DocumentModel DocumentModel_old)
+        {
+            try
+            {
+                var file_current = DocumentModel_old.files.OrderBy(f => f.created_at).LastOrDefault();
+
+                var path_files = DocumentModel_old.location;
+                string _userName = _configuration["FileServer:User"];
+                string _password = _configuration["FileServer:Pass"];
+                var root = @"\\data\Share";
+                using (new NetworkConnection.NetworkConnection(root, new NetworkCredential(_userName, _password)))
+                {
+                    if (System.IO.Directory.Exists(path_files))
+                    {
+                        string fileToCopy = file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+
+                        var name = DocumentModel_old.name_vi + ".pdf";
+                        name = CleanFileName(name);
+                        System.IO.File.Copy(fileToCopy, path_files + "\\" + name, true);
+                    }
+                    else
+                    {
+                        _context.Add(new DocumentErrorModel
+                        {
+                            document_id = DocumentModel_old.id,
+                            message = "Đường dẫn không tồn tại  ------- " + path_files
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Add(new DocumentErrorModel
+                {
+                    document_id = DocumentModel_old.id,
+                    message = ex.Message
+                });
+
+            }
+        }
+
         [HttpPost]
         public async Task<JsonResult> saverecieve(int id, List<string> users_receive)
         {
@@ -1686,7 +1724,20 @@ namespace it.Areas.Admin.Controllers
                 .ThenInclude(u => u.user)
                 .Include(d => d.user);
             int recordsFiltered = customerData.Count();
-            var datapost = customerData.OrderByDescending(d => d.id).Skip(skip).Take(pageSize).ToList();
+            var datapost = new List<DocumentModel>();
+            if (type == "signdoc")
+            {
+                datapost = customerData.OrderByDescending(d => d.users_signature
+                    .Where(u => u.user_sign == user_id)
+                    .Select(u => u.date)
+                    .FirstOrDefault()
+                )
+                .ThenByDescending(d => d.id).Skip(skip).Take(pageSize).ToList();
+            }
+            else
+            {
+                datapost = customerData.OrderByDescending(d => d.id).Skip(skip).Take(pageSize).ToList();
+            }
             var data = new ArrayList();
             System.Globalization.CultureInfo cul = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");   // try with "en-US"
             foreach (var record in datapost)
@@ -3188,6 +3239,7 @@ namespace it.Areas.Admin.Controllers
 
                     newName = newName.Replace("+", "_");
                     newName = newName.Replace("%", "_");
+                    newName = CleanFileName(newName);
                     var dir = _configuration["Source:Path_Private"] + "\\documents_gmp\\" + DocumentCommentModel.document_id;
                     var filePath = dir + "\\" + newName;
                     string url = "/private/documents_gmp/" + DocumentCommentModel.document_id + "/" + newName;
@@ -4016,6 +4068,17 @@ namespace it.Areas.Admin.Controllers
             var myfile = System.IO.File.ReadAllBytes(filePath);
             return new FileContentResult(myfile, "application/pdf");
 
+        }
+
+        public static string CleanFileName(string fileName)
+        {
+            fileName = fileName.Replace("\\", "-");
+            fileName = fileName.Replace("/", "-");
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                fileName = fileName.Replace(c, '-');
+            }
+            return fileName;
         }
     }
     // Tạo lớp PdfPageEventHelper để tạo footer tùy chỉnh

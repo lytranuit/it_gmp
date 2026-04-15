@@ -15,6 +15,7 @@ using Spire.Xls;
 using System.Collections;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
 
 namespace it.Areas.Admin.Controllers
 {
@@ -1262,7 +1263,11 @@ namespace it.Areas.Admin.Controllers
                 }
                 khuvuc.list_email_SOP_id = _context.UserModel.Where(d => d.deleted_at == null && khuvuc.list_email_SOP.Contains(d.Email)).Select(d => d.Id).ToList();
             }
-            return Json(khuvucs);
+            return Json(khuvucs, new System.Text.Json.JsonSerializerOptions()
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            });
         }
         public async Task<IActionResult> software()
         {
