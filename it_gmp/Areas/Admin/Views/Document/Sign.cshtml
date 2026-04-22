@@ -299,9 +299,11 @@
                     url: "/admin/document/save",
                     type: "POST",
                     data: {signs:data1 }, success: function (data) {
-                        alert(data.message);
+
                         if (data.failed != 1) {
                             history.back();
+                        }else{
+                            alert(data.message);
                         }
                     }
                 })

@@ -1,4 +1,4 @@
-﻿
+
 using CertificateManager;
 using CertificateManager.Models;
 using Fernandezja.ColorHashSharp;
@@ -1220,40 +1220,33 @@ namespace it.Areas.Admin.Controllers
         {
             var DocumentTypeGroupModel = new List<DocumentTypeGroupModel>();
 
-            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-            var user = await UserManager.GetUserAsync(currentUser);
-            var is_admin = await UserManager.IsInRoleAsync(user, "Administrator");
-            var is_manager = await UserManager.IsInRoleAsync(user, "Manager Esign");
-            if (is_admin)
-            {
-                DocumentTypeGroupModel = _context.DocumentTypeGroupModel.Where(d => d.deleted_at == null)
-                .Include(d => d.types.Where(d => d.deleted_at == null).OrderBy(d => d.stt))
-                .ThenInclude(d => d.template)
-                .OrderByDescending(d => d.created_at)
-                .OrderBy(d => d.stt).ToList();
-            }
-            else if (is_manager)
-            {
-                var type_gmp = _context.UserDocumentTypeModel.Where(d => d.user_id == user.Id).Select(d => d.document_type_id).ToList();
-                DocumentTypeGroupModel = _context.DocumentTypeGroupModel.Where(d => d.deleted_at == null)
-                .Include(d => d.types.Where(d => d.deleted_at == null && (d.is_manager_create == false || (d.is_manager_create == true && type_gmp.Contains(d.id)))).OrderBy(d => d.stt))
-                .ThenInclude(d => d.template)
-                .OrderByDescending(d => d.created_at)
-                .OrderBy(d => d.stt).ToList();
-            }
-            else
-            {
-                DocumentTypeGroupModel = _context.DocumentTypeGroupModel.Where(d => d.deleted_at == null)
-                .Include(d => d.types.Where(d => d.deleted_at == null && d.is_manager_create == false).OrderBy(d => d.stt))
-                .ThenInclude(d => d.template)
-                .OrderByDescending(d => d.created_at)
-                .OrderBy(d => d.stt).ToList();
-            }
+            // System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            // var user = await UserManager.GetUserAsync(currentUser);
+            // var is_admin = await UserManager.IsInRoleAsync(user, "Administrator");
+            // var is_manager = await UserManager.IsInRoleAsync(user, "Manager Esign");
+
+            DocumentTypeGroupModel = _context.DocumentTypeGroupModel.Where(d => d.deleted_at == null)
+            .Include(d => d.types.Where(d => d.deleted_at == null).OrderBy(d => d.stt))
+            .ThenInclude(d => d.template)
+            .OrderByDescending(d => d.created_at)
+            .OrderBy(d => d.stt).ToList();
             return Json(DocumentTypeGroupModel);
         }
         public async Task<JsonResult> list_khuvuc()
         {
             var khuvucs = _QLSXContext.TBL_DANHMUCKHUVUC.ToList();
+            var allEmails = khuvucs.Where(k => k.list_email_SOP != null).SelectMany(k => k.list_email_SOP).Distinct().ToList();
+
+            ILookup<string, string> emailToIdMap = null;
+            if (allEmails.Any())
+            {
+                emailToIdMap = _context.UserModel
+                    .Where(d => d.deleted_at == null && allEmails.Contains(d.Email))
+                    .Select(d => new { d.Email, d.Id })
+                    .ToList()
+                    .ToLookup(d => d.Email, d => d.Id);
+            }
+
             foreach (var khuvuc in khuvucs)
             {
                 if (khuvuc.list_email_SOP == null)
@@ -1261,7 +1254,10 @@ namespace it.Areas.Admin.Controllers
                     khuvuc.list_email_SOP_id = new List<string>();
                     continue;
                 }
-                khuvuc.list_email_SOP_id = _context.UserModel.Where(d => d.deleted_at == null && khuvuc.list_email_SOP.Contains(d.Email)).Select(d => d.Id).ToList();
+
+                khuvuc.list_email_SOP_id = emailToIdMap != null
+                    ? khuvuc.list_email_SOP.SelectMany(email => emailToIdMap[email]).Distinct().ToList()
+                    : new List<string>();
             }
             return Json(khuvucs, new System.Text.Json.JsonSerializerOptions()
             {

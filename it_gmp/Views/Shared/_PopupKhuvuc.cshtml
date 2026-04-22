@@ -1,4 +1,4 @@
-﻿@* <script src="~/lib/vue/vue.js"></script> *@
+@* <script src="~/lib/vue/vue.js"></script> *@
 <div id="popup-khuvuc">
     <div id="modalKhuvuc" class="modal" tabindex="-1" role="dialog" data-backdrop="static">
         <div class="modal-dialog modal-lg" role="document">
@@ -40,15 +40,22 @@
         },
         mounted() {
             var that = this;
-            $.ajax({
-                url: "/admin/home/list_khuvuc",
-                success: function (data) {
-                    that.groups = data;
-                }
-            })
-
+            $('#modalKhuvuc').on('show.bs.modal', function (e) {
+                that.loadData();
+            });
         },
         methods: {
+            loadData() {
+                var that = this;
+                if (that.groups.length === 0) {
+                    $.ajax({
+                        url: "/admin/home/list_khuvuc",
+                        success: function (data) {
+                            that.groups = data;
+                        }
+                    });
+                }
+            },
             select(data) {
                 // console.log(data);
                 $("#modalKhuvuc").modal("hide");

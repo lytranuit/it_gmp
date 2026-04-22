@@ -1,4 +1,4 @@
-﻿<script src="~/lib/vue/vue.js"></script>
+<script src="~/lib/vue/vue.js"></script>
 <div id="popup-add">
     <div id="myModal2" class="modal" tabindex="-1" role="dialog" data-backdrop="static">
         <div class="modal-dialog modal-lg" role="document">
@@ -64,15 +64,22 @@
         },
         mounted() {
             var that = this;
-            $.ajax({
-                url: "/admin/home/gettypegroups",
-                success: function (data) {
-                    that.groups = data;
-                }
-            })
-
+            $('#myModal2').on('show.bs.modal', function (e) {
+                that.loadData();
+            });
         },
         methods: {
+            loadData() {
+                var that = this;
+                if (that.groups.length === 0) {
+                    $.ajax({
+                        url: "/admin/home/gettypegroups",
+                        success: function (data) {
+                            that.groups = data;
+                        }
+                    });
+                }
+            },
             change() {
                 var val = this.selected;
                 var search = this.search.toLowerCase();

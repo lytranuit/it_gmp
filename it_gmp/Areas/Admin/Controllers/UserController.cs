@@ -37,13 +37,13 @@ namespace it.Areas.Admin.Controllers
         // GET: UserController/Create
         public ActionResult Create()
         {
-
-            ViewData["groups"] = RoleManager.Roles.Select(a => new SelectListItem()
+            var role_avaliable = _configuration.GetSection("Roles").Get<string[]>().ToList();
+            ViewData["groups"] = RoleManager.Roles.Where(d => role_avaliable.Contains(d.Name)).Select(a => new SelectListItem()
             {
                 Value = a.Name,
                 Text = a.Name
             }).ToList();
-            ViewData["types"] = _context.DocumentTypeModel.Select(a => new SelectListItem()
+            ViewData["types"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).Select(a => new SelectListItem()
             {
                 Value = a.id.ToString(),
                 Text = a.name
@@ -146,13 +146,14 @@ namespace it.Areas.Admin.Controllers
         // GET: UserController/Edit/5
         public async Task<IActionResult> Edit(string id)
         {
-            ViewData["groups"] = RoleManager.Roles.Select(a => new SelectListItem()
+            var role_avaliable = _configuration.GetSection("Roles").Get<string[]>().ToList();
+            ViewData["groups"] = RoleManager.Roles.Where(d => role_avaliable.Contains(d.Name)).Select(a => new SelectListItem()
             {
                 Value = a.Id,
                 Text = a.Name
             }).OrderBy(d => d.Text).ToList();
 
-            ViewData["types"] = _context.DocumentTypeModel.Select(a => new SelectListItem()
+            ViewData["types"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).Select(a => new SelectListItem()
             {
                 Value = a.id.ToString(),
                 Text = a.name
@@ -199,7 +200,11 @@ namespace it.Areas.Admin.Controllers
             _context.Update(User_old);
             _context.SaveChanges();
 
-            var UserRoleModel_old = _context.UserRoleModel.Where(d => d.UserId == id).Select(d => d.RoleId).ToList();
+            var role_avaliable = _configuration.GetSection("Roles").Get<string[]>().ToList();
+            var roles_old = RoleManager.Roles.Where(d => role_avaliable.Contains(d.Name)).Select(a => a.Id).ToList();
+
+
+            var UserRoleModel_old = _context.UserRoleModel.Where(d => d.UserId == User.Id && roles_old.Contains(d.RoleId)).Select(d => d.RoleId).ToList();
             IEnumerable<string> list_delete = UserRoleModel_old.Except(groups);
             IEnumerable<string> list_add = groups.Except(UserRoleModel_old);
             if (list_add != null)

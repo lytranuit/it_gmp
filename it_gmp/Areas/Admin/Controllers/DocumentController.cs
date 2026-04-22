@@ -98,6 +98,16 @@ namespace it.Areas.Admin.Controllers
             ViewData["type"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).OrderByDescending(d => d.created_at).OrderByDescending(d => d.created_at).ToList();
             return View();
         }
+
+        public async Task<IActionResult> nosign()
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            string user_id = UserManager.GetUserId(currentUser); // Get user id:
+            ViewData["keyword"] = _context.DocumentUserKeywordModel.Where(d => d.user_id == user_id && d.keyword != null).GroupBy(d => d.keyword).Select(d => d.Key).Distinct().OrderBy(d => d).ToList();
+            ViewData["type"] = _context.DocumentTypeModel.Where(d => d.deleted_at == null).OrderByDescending(d => d.created_at).OrderByDescending(d => d.created_at).ToList();
+
+            return View();
+        }
         // GET: Admin/Document/signdoc
         public async Task<IActionResult> manager(int id)
         {
@@ -1141,8 +1151,8 @@ namespace it.Areas.Admin.Controllers
 
                         if (DocumentModel_old.type_id == 82) ///Chỉ áp dụng cho SOP
                         {
-                          
-                           
+
+
                             string newName = DocumentModel_old.name_vi + "-" + timeStamp;
 
                             newName = newName.Replace("+", "_");
@@ -1637,6 +1647,12 @@ namespace it.Areas.Admin.Controllers
                 var document_sign = _context.DocumentSignatureModel.Where(d => d.status == 2 && (d.user_sign == user_id || d.user_id == user_id)).Select(d => d.document_id).ToList();
                 customerData = customerData.Where(d => document_sign.Contains(d.id));
             }
+            else if (type == "nosign")
+            {
+                var document_sign = _context.DocumentSignatureModel.Where(d => d.status == 3 && (d.user_sign == user_id || d.user_id == user_id)).Select(d => d.document_id).ToList();
+                customerData = customerData.Where(d => document_sign.Contains(d.id));
+            }
+
             customerData = customerData.Where(m => m.deleted_at == null);
             int recordsTotal = customerData.Count();
 
