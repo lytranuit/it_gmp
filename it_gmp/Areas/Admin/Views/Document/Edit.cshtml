@@ -87,7 +87,6 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3 mt-2">
-                                           
                                         </div>
                                         <div class="col-md-3 mt-2">
                                             <b class="col-form-label">Trạng thái:<span class="text-danger">*</span></b>
@@ -127,10 +126,10 @@
                                                 @Html.DropDownList("users_receive[]", (IEnumerable<SelectListItem>)ViewData["users"], new
                                                 {
                                                     id = "users_receive",
-                                                    multiple = "true",
-                                                    data_placeholder = "Người nhận",
-                                                    @class = "chosen form-control form-control-sm"
-                                                })
+                                                                                                multiple = "true",
+                                                                                                data_placeholder = "Người nhận",
+                                                                                                @class = "chosen form-control form-control-sm"
+                                                                                                })
                                             </div>
                                         </div>
                                         <div class="col-md-3 mt-2">
@@ -144,19 +143,19 @@
 
                                             <div class="pt-1">
                                                 @Html.DropDownList("users_obtain[]", (IEnumerable<SelectListItem>)ViewData["users"], new
-                                                {
+                                                                                                {
                                                     id = "users_obtain",
-                                                    multiple = "true",
-                                                    data_placeholder = "Người nhận thông báo hiện hành",
-                                                    @class = "chosen form-control form-control-sm"
-                                                })
+                                                                                                multiple = "true",
+                                                                                                data_placeholder = "Người nhận thông báo hiện hành",
+                                                                                                @class = "chosen form-control form-control-sm"
+                                                                                                })
                                             </div>
                                         </div>
                                     </div>
                                     <div class="form-group row">
                                         <b class="col-12 col-form-label">Ghi chú/mô tả thay đổi:</b>
                                         <div class="col-12 pt-1">
-                                            <textarea class="form-control" name="description_vi" rows="10" maxlength="2000"></textarea>
+                                            <textarea class="form-control" name="description_vi" rows="10"></textarea>
                                         </div>
                                     </div>
 
@@ -800,7 +799,7 @@
                 $("#form").append("<input name='status_id' value='6' type='hidden'/>");
                 $(".cap_nhat").trigger("click");
 
-                
+
             });
             $(".obsoleted").click(function (e) {
                 e.preventDefault();
