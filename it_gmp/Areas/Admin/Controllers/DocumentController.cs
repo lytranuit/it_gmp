@@ -1054,6 +1054,42 @@ namespace it.Areas.Admin.Controllers
                         {
                             DocumentModel_old.status_id = 4; // Ko ai ký nữa thì hoàn thành
                             DocumentModel_old.date_finish = DateTime.Now;
+                            //Find accesscontrol
+
+                            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel_old.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+                            if (find != null)
+                            {
+                                if (find.type == "accesscontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_accesscontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                                else if (find.type == "nascontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_nascontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                            }
                         }
                     }
                     _context.Update(DocumentModel_old);
@@ -1077,6 +1113,42 @@ namespace it.Areas.Admin.Controllers
                         {
                             DocumentModel_old.status_id = 4; // Ko ai ký nữa thì hoàn thành
                             DocumentModel_old.date_finish = DateTime.Now;
+                            //Find accesscontrol
+
+                            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel_old.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+                            if (find != null)
+                            {
+                                if (find.type == "accesscontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_accesscontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                                else if (find.type == "nascontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_nascontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                            }
                         }
                     }
                     if ((DocumentModel_old.user_next_signature_id != user_signature_id) && DocumentModel_old.status_id == 2)
@@ -2324,6 +2396,12 @@ namespace it.Areas.Admin.Controllers
             {
                 return RedirectToAction(nameof(Details), new { id = document_id });
             }
+            var pathroot = _configuration["Source:Path_Private"] + "\\documents_gmp\\" + document_id + "\\";
+
+            bool exists = System.IO.Directory.Exists(pathroot);
+
+            if (!exists)
+                System.IO.Directory.CreateDirectory(pathroot);
 
             var timeStampGlobal = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             var url_save = "";
@@ -2614,6 +2692,43 @@ namespace it.Areas.Admin.Controllers
                         {
                             DocumentModel_old.status_id = 4; // complete
                             DocumentModel_old.date_finish = DateTime.Now;
+                            //Find accesscontrol
+
+                            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel_old.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+                            if (find != null)
+                            {
+                                if (find.type == "accesscontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_accesscontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                                else if (find.type == "nascontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_nascontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                            }
+
                             var user_create = await UserManager.FindByIdAsync(DocumentModel_old.user_id);
                             var user_receive = _context.DocumentUserReceiveModel.Where(u => u.document_id == DocumentModel_old.id).Include(d => d.user).Select(d => d.user.Email).ToList();
                             if (user_create != null) user_receive.Add(user_create.Email);
@@ -2652,6 +2767,42 @@ namespace it.Areas.Admin.Controllers
                         {
                             DocumentModel_old.status_id = 4;
                             DocumentModel_old.date_finish = DateTime.Now;
+                            //Find accesscontrol
+
+                            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel_old.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+                            if (find != null)
+                            {
+                                if (find.type == "accesscontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_accesscontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                                else if (find.type == "nascontrol")
+                                {
+                                    var new_queue = new QueueModel()
+                                    {
+                                        status_id = 1,
+                                        created_at = DateTime.Now,
+                                        created_by = user_id,
+                                        type = "esign_nascontrol_success",
+                                        valueQ = new QueueValue()
+                                        {
+                                            esign_id = DocumentModel_old.id
+                                        }
+                                    };
+                                    _context.Add(new_queue);
+                                }
+                            }
                         }
                     }
                     if (DocumentModel_old.user_next_signature_id != user_signature_id)
@@ -2663,6 +2814,43 @@ namespace it.Areas.Admin.Controllers
                             {
                                 DocumentModel_old.status_id = 4;
                                 DocumentModel_old.date_finish = DateTime.Now;
+                                //Find accesscontrol
+
+                                var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel_old.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+                                if (find != null)
+                                {
+                                    if (find.type == "accesscontrol")
+                                    {
+                                        var new_queue = new QueueModel()
+                                        {
+                                            status_id = 1,
+                                            created_at = DateTime.Now,
+                                            created_by = user_id,
+                                            type = "esign_accesscontrol_success",
+                                            valueQ = new QueueValue()
+                                            {
+                                                esign_id = DocumentModel_old.id
+                                            }
+                                        };
+                                        _context.Add(new_queue);
+                                    }
+                                    else if (find.type == "nascontrol")
+                                    {
+                                        var new_queue = new QueueModel()
+                                        {
+                                            status_id = 1,
+                                            created_at = DateTime.Now,
+                                            created_by = user_id,
+                                            type = "esign_nascontrol_success",
+                                            valueQ = new QueueValue()
+                                            {
+                                                esign_id = DocumentModel_old.id
+                                            }
+                                        };
+                                        _context.Add(new_queue);
+                                    }
+                                }
+
                             }
 
                             var user_create = await UserManager.FindByIdAsync(DocumentModel_old.user_id);
@@ -3053,6 +3241,43 @@ namespace it.Areas.Admin.Controllers
 
             DocumentModel.status_id = 3;
             _context.Update(DocumentModel);
+            //Find accesscontrol
+            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+            if (find != null)
+            {
+                if (find.type == "accesscontrol")
+                {
+                    var new_queue = new QueueModel()
+                    {
+                        status_id = 1,
+                        created_at = DateTime.Now,
+                        created_by = user_id,
+                        type = "esign_accesscontrol_failed",
+                        valueQ = new QueueValue()
+                        {
+                            esign_id = DocumentModel.id
+                        }
+                    };
+                    _context.Add(new_queue);
+                }
+                else if (find.type == "nascontrol")
+                {
+                    var new_queue = new QueueModel()
+                    {
+                        status_id = 1,
+                        created_at = DateTime.Now,
+                        created_by = user_id,
+                        type = "esign_nascontrol_failed",
+                        valueQ = new QueueValue()
+                        {
+                            esign_id = DocumentModel.id
+                        }
+                    };
+                    _context.Add(new_queue);
+                }
+            }
+
+
             _context.SaveChanges();
             ///UPDATE NEXT SIGN
             //var user_signature = _context.DocumentSignatureModel.OrderBy(u => u.stt).Where(u => u.status == 1 && u.document_id == DocumentSignatureModel.document_id).Include(d => d.user).Include(d => d.representative).FirstOrDefault();
@@ -3159,6 +3384,42 @@ namespace it.Areas.Admin.Controllers
             DocumentModel.date_finish = DateTime.Now;
             DocumentModel.reason = reason;
             _context.DocumentModel.Update(DocumentModel);
+            //Find accesscontrol
+            var find = _context.RelatedEsignModel.Where(d => d.esign_id == DocumentModel.id).OrderByDescending(d => d.created_at).FirstOrDefault();
+            if (find != null)
+            {
+                if (find.type == "accesscontrol")
+                {
+                    var new_queue = new QueueModel()
+                    {
+                        status_id = 1,
+                        created_at = DateTime.Now,
+                        created_by = user_id,
+                        type = "esign_accesscontrol_failed",
+                        valueQ = new QueueValue()
+                        {
+                            esign_id = DocumentModel.id
+                        }
+                    };
+                    _context.Add(new_queue);
+                }
+                else if (find.type == "nascontrol")
+                {
+                    var new_queue = new QueueModel()
+                    {
+                        status_id = 1,
+                        created_at = DateTime.Now,
+                        created_by = user_id,
+                        type = "esign_nascontrol_failed",
+                        valueQ = new QueueValue()
+                        {
+                            esign_id = DocumentModel.id
+                        }
+                    };
+                    _context.Add(new_queue);
+                }
+            }
+
             _context.SaveChanges();
 
 

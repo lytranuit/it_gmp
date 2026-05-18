@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Admin.cshtml";
 }
@@ -513,6 +513,21 @@
                 add_signature(user);
             }
             // $("[name='signature']").trigger('chosen:updated');
+
+            // Load final_approver_id từ document type
+            if (data.type_id) {
+                $.ajax({
+                    url: "/admin/document/gettype",
+                    data: { id: data.type_id },
+                    type: "POST",
+                    success: function (res) {
+                        if (res.success && res.item.final_approver_id) {
+                            current_final_approver_id = res.item.final_approver_id;
+                            ensure_final_approver_last();
+                        }
+                    }
+                });
+            }
         }
 
         function add_file(item) {
@@ -528,6 +543,22 @@
             var rendered = Mustache.render(template, item);
             $(".no_item_attachment").remove();
             $(".list_attachment").append(rendered);
+        }
+        var current_final_approver_id = null;
+        // Đảm bảo người phê duyệt cuối cùng luôn nằm cuối danh sách
+        function ensure_final_approver_last() {
+            if (!current_final_approver_id) return;
+            var $finalEl = $("#signature .user_signature[data-id='" + current_final_approver_id + "']");
+
+            $(".close_signature", $finalEl).remove();
+            if ($finalEl.length && $finalEl.next('.icon-warning').length) {
+
+                var $icon = $finalEl.prev('i.icon-warning');
+                // Di chuyển icon + element xuống cuối
+                if ($icon.length) $("#signature").append($icon);
+                $("#signature").append($finalEl);
+
+            }
         }
         function add_signature(item) {
             if (item.representative) {
@@ -559,6 +590,7 @@
             user.sign_id = 0;
             user.random = rand(10);
             add_signature(user);
+            ensure_final_approver_last();
             //update stt
             $(".stt").each(function (k, v) {
                 $(this).val(k);
@@ -737,6 +769,14 @@
                                     return item.user_id;
                                 });
                                 $("[name='users_receive[]']").val(users_receive).trigger('chosen:updated');
+
+                                // Tự động thêm người phê duyệt cuối cùng vào xét duyệt
+                                if (res.item.final_approver_id) {
+                                    current_final_approver_id = res.item.final_approver_id;
+                                    $("[name='signature']").val(current_final_approver_id).trigger("change").val('').trigger('chosen:updated');
+                                } else {
+                                    current_final_approver_id = null;
+                                }
                             }
                         }
                     });

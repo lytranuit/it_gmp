@@ -20,10 +20,12 @@ namespace it.Data
 
         public DbSet<AuditTrailsModel> AuditTrailsModel { get; set; }
 
+        public DbSet<RelatedEsignModel> RelatedEsignModel { get; set; }
+        public DbSet<QueueModel> QueueModel { get; set; }
         public DbSet<UserModel> UserModel { get; set; }
         public DbSet<UserRoleModel> UserRoleModel { get; set; }
-		public DbSet<UserDocumentTypeModel> UserDocumentTypeModel { get; set; }
-		public DbSet<TemplateModel> TemplateModel { get; set; }
+        public DbSet<UserDocumentTypeModel> UserDocumentTypeModel { get; set; }
+        public DbSet<TemplateModel> TemplateModel { get; set; }
         //public DbSet<User2Model> User2Model { get; set; }
         public DbSet<EmailModel> EmailModel { get; set; }
         public DbSet<DocumentTypeModel> DocumentTypeModel { get; set; }
