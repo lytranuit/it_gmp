@@ -1,11 +1,9 @@
-﻿using it.Areas.Admin.Models;
+using it.Areas.Admin.Models;
 using it.Data;
 using it.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using System.Diagnostics;
 using System.Net.Mail;
 using System.Net.Mime;
 
@@ -28,8 +26,6 @@ namespace it.Controllers
             _context = context;
             _view = view;
             _configuration = configuration;
-            var listener = _context.GetService<DiagnosticSource>();
-            (listener as DiagnosticListener).SubscribeWithAdapter(new CommandInterceptor());
         }
 
         public IActionResult Index()

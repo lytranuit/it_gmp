@@ -2,10 +2,8 @@ using it.Areas.Admin.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
 using System.Data.Common;
-using Microsoft.Extensions.DiagnosticAdapter;
 namespace it.Data
 {
     public class ItContext : DbContext
@@ -99,6 +97,14 @@ namespace it.Data
                 auditEntry.TableName = entry.Entity.GetType().Name;
                 auditEntry.UserId = user_id;
                 auditEntries.Add(auditEntry);
+
+                // Cache GetDatabaseValues ở cấp entry, tránh gọi lại cho mỗi property (N+1)
+                Microsoft.EntityFrameworkCore.ChangeTracking.PropertyValues dbValues = null;
+                if (entry.State == EntityState.Modified)
+                {
+                    dbValues = entry.GetDatabaseValues();
+                }
+
                 foreach (var property in entry.Properties)
                 {
 
@@ -121,7 +127,7 @@ namespace it.Data
                         case EntityState.Modified:
                             if (property.IsModified)
                             {
-                                var Original = entry.GetDatabaseValues().GetValue<object>(propertyName);
+                                var Original = dbValues?.GetValue<object>(propertyName);
                                 var Current = property.CurrentValue;
                                 if (JsonConvert.SerializeObject(Original) == JsonConvert.SerializeObject(Current))
                                     continue;
@@ -142,25 +148,5 @@ namespace it.Data
             }
         }
     }
-    public class CommandInterceptor
-    {
-        [DiagnosticName("Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting")]
-        public void OnCommandExecuting(DbCommand command, DbCommandMethod executeMethod, Guid commandId, Guid connectionId, bool async, DateTimeOffset startTime)
-        {
-            var secondaryDatabaseName = "OrgData";
-            var schemaName = "dbo";
-            var list_talbe = new List<string>()
-            {
-                "AspNetUsers","AspNetUserRoles","emails","Token"
-            };
-            //var tableName = "AspNetUsers";
-            foreach (var tableName in list_talbe)
-            {
-                command.CommandText = command.CommandText.Replace($" [{tableName}]", $" [{schemaName}].[{tableName}]")
-                                                     .Replace($" [{schemaName}].[{tableName}]", $" [{secondaryDatabaseName}].[{schemaName}].[{tableName}]");
-            }
 
-
-        }
-    }
 }

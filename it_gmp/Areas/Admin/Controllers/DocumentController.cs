@@ -1,4 +1,4 @@
-﻿using it.Areas.Admin.Models;
+using it.Areas.Admin.Models;
 using it.Data;
 using it.Services;
 using iText.IO.Font;
@@ -42,6 +42,7 @@ namespace it.Areas.Admin.Controllers
         private UserManager<UserModel> UserManager;
         private readonly ViewRender _view;
         IConfiguration _configuration;
+        private readonly ILogger<DocumentController> _logger;
 
         private string _type = "Document";
 
@@ -50,12 +51,13 @@ namespace it.Areas.Admin.Controllers
         [TempData]
         public string ErrorMessage { get; set; }
 
-        public DocumentController(ItContext context, UserManager<UserModel> UserMgr, ViewRender view, IConfiguration configuration) : base(context)
+        public DocumentController(ItContext context, UserManager<UserModel> UserMgr, ViewRender view, IConfiguration configuration, ILogger<DocumentController> logger) : base(context)
         {
             ViewData["controller"] = _type;
             UserManager = UserMgr;
             _view = view;
             _configuration = configuration;
+            _logger = logger;
         }
 
         // GET: Admin/Document
@@ -1269,6 +1271,7 @@ namespace it.Areas.Admin.Controllers
                              .ToList();
                         }
                         // lấy file_current cho từng document
+                        var documents_to_copy = new List<DocumentModel>();
                         foreach (var doc1 in document_dinhkem)
                         {
                             /////Hiện hành các hồ sơ liên quan
@@ -1298,8 +1301,8 @@ namespace it.Areas.Admin.Controllers
                             }
                             attachments.Add(filePath1);
 
-                            ////Copy qua thư viện
-                            CopyData(doc1);
+                            ////Thêm vào danh sách copy
+                            documents_to_copy.Add(doc1);
                         }
 
                         _context.UpdateRange(document_dinhkem);
@@ -1320,10 +1323,16 @@ namespace it.Areas.Admin.Controllers
                             data_attachments = attachments
                         };
                         _context.Add(email_new);
-                    }
 
-                    /////Copy qua thư viện
-                    CopyData(DocumentModel_old);
+                        /////Copy qua thư viện - batch (1 kết nối duy nhất)
+                        documents_to_copy.Add(DocumentModel_old);
+                        CopyDataBatch(documents_to_copy);
+                    }
+                    else
+                    {
+                        /////Copy qua thư viện - chỉ document chính
+                        CopyDataBatch(new List<DocumentModel> { DocumentModel_old });
+                    }
                 }
                 /////create event
                 DocumentEventModel DocumentEventModel = new DocumentEventModel
@@ -1371,45 +1380,92 @@ namespace it.Areas.Admin.Controllers
             return Ok();
         }
 
-        private void CopyData(DocumentModel DocumentModel_old)
+        /// <summary>
+        /// Copy nhiều documents qua thư viện. Chỉ mở 1 NetworkConnection cho toàn bộ batch.
+        /// </summary>
+        private void CopyDataBatch(List<DocumentModel> documents)
         {
+            if (documents == null || documents.Count == 0) return;
+
+            string _userName = _configuration["FileServer:User"];
+            string _password = _configuration["FileServer:Pass"];
+            var root = @"\\data\Share";
+
             try
             {
-                var file_current = DocumentModel_old.files.OrderBy(f => f.created_at).LastOrDefault();
-
-                var path_files = DocumentModel_old.location;
-                string _userName = _configuration["FileServer:User"];
-                string _password = _configuration["FileServer:Pass"];
-                var root = @"\\data\Share";
                 using (new NetworkConnection.NetworkConnection(root, new NetworkCredential(_userName, _password)))
                 {
-                    if (System.IO.Directory.Exists(path_files))
+                    foreach (var doc in documents)
                     {
-                        string fileToCopy = file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
-
-                        var name = DocumentModel_old.name_vi + ".pdf";
-                        name = CleanFileName(name);
-                        System.IO.File.Copy(fileToCopy, path_files + "\\" + name, true);
-                    }
-                    else
-                    {
-                        _context.Add(new DocumentErrorModel
-                        {
-                            document_id = DocumentModel_old.id,
-                            message = "Đường dẫn không tồn tại  ------- " + path_files
-                        });
+                        CopyDataInternal(doc);
                     }
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "CopyDataBatch: Không thể kết nối đến {Root}", root);
+                foreach (var doc in documents)
+                {
+                    _context.Add(new DocumentErrorModel
+                    {
+                        document_id = doc.id,
+                        message = "Lỗi kết nối mạng: " + ex.Message
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copy 1 document. Yêu cầu NetworkConnection đã mở sẵn.
+        /// </summary>
+        private void CopyDataInternal(DocumentModel DocumentModel_old)
+        {
+            try
+            {
+                var file_current = DocumentModel_old.files.OrderBy(f => f.created_at).LastOrDefault();
+                if (file_current == null)
+                {
+                    _logger.LogWarning("CopyDataInternal: Document {Id} không có file nào", DocumentModel_old.id);
+                    return;
+                }
+
+                var path_files = DocumentModel_old.location;
+                if (System.IO.Directory.Exists(path_files))
+                {
+                    string fileToCopy = file_current.url.Replace("/private/", _configuration["Source:Path_Private"] + "\\").Replace("/", "\\");
+
+                    var name = DocumentModel_old.name_vi + ".pdf";
+                    name = CleanFileName(name);
+                    System.IO.File.Copy(fileToCopy, path_files + "\\" + name, true);
+                    _logger.LogInformation("CopyDataInternal: Copied document {Id} to {Path}", DocumentModel_old.id, path_files);
+                }
+                else
+                {
+                    _logger.LogWarning("CopyDataInternal: Đường dẫn không tồn tại cho document {Id}: {Path}", DocumentModel_old.id, path_files);
+                    _context.Add(new DocumentErrorModel
+                    {
+                        document_id = DocumentModel_old.id,
+                        message = "Đường dẫn không tồn tại  ------- " + path_files
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CopyDataInternal: Lỗi copy document {Id}", DocumentModel_old.id);
                 _context.Add(new DocumentErrorModel
                 {
                     document_id = DocumentModel_old.id,
                     message = ex.Message
                 });
-
             }
+        }
+
+        /// <summary>
+        /// Giữ lại CopyData cũ cho backward compatibility.
+        /// </summary>
+        private void CopyData(DocumentModel DocumentModel_old)
+        {
+            CopyDataBatch(new List<DocumentModel> { DocumentModel_old });
         }
 
         [HttpPost]

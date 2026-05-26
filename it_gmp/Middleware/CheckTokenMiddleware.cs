@@ -1,8 +1,6 @@
-﻿using it.Areas.Admin.Models;
+using it.Areas.Admin.Models;
 using it.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using System.Diagnostics;
 
 namespace schedule.Middleware
 {
@@ -18,8 +16,6 @@ namespace schedule.Middleware
         }
         public async Task Invoke(HttpContext httpContext, ItContext _context, SignInManager<UserModel> _signInManager)
         {
-            var listener = _context.GetService<DiagnosticSource>();
-            (listener as DiagnosticListener).SubscribeWithAdapter(new CommandInterceptor());
             bool islogin = httpContext.User.Identity.IsAuthenticated;
             string Token = _httpContextAccessor.HttpContext.Request.Cookies["Auth-Token"];
             var path = (string)_httpContextAccessor.HttpContext.Request.Path;
@@ -38,8 +34,6 @@ namespace schedule.Middleware
                     break;
                 }
             }
-            Console.WriteLine("Path: " + path);
-            Console.WriteLine("CheckLogin: " + islogin);
             if (islogin)
             {
                 await _next(httpContext);

@@ -30,6 +30,7 @@ builder.Services.AddControllersWithViews().AddMicrosoftIdentityUI().AddJsonOptio
    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddDbContext<ItContext>(options =>
   options.UseSqlServer(connectionString)
+         .AddInterceptors(new CommandTextInterceptor())
   );
 builder.Services.AddScoped<ViewRender, ViewRender>();
 builder.Services.AddScoped<LoginMailPyme, LoginMailPyme>();

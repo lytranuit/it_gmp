@@ -1,11 +1,9 @@
-﻿using it.Areas.Admin.Models;
+using it.Areas.Admin.Models;
 using it.Data;
 using it.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
-using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -29,8 +27,6 @@ namespace it.Controllers
             _LoginMailPyme = LoginMailPyme;
             _signInManager = signInManager;
             _configuration = configuration;
-            var listener = _context.GetService<DiagnosticSource>();
-            (listener as DiagnosticListener).SubscribeWithAdapter(new CommandInterceptor());
         }
 
         public IActionResult Index()
