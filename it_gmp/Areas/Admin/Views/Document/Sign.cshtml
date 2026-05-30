@@ -7,10 +7,10 @@
     <div class="card no-shadow border">
         <div class="card-body">
             <div class="row mt-3 suggest-sign-layout">
-                <div class="col-12 col-md-9 order-2 order-md-1" style="border: 5px solid #d7d7d7;border-left: 0;">
+                <div class="col-12 col-md-9 order-2 order-md-2" style="border: 5px solid #d7d7d7;border-left: 0;">
                     <div id='pdf-viewer' class=""></div>
                 </div>
-                <div class="col-12 col-md-3 order-1 order-md-2" style="border: 5px solid #d7d7d7;height: auto;display: inline-block;padding:10px">
+                <div class="col-12 col-md-3 order-1 order-md-1" style="border: 5px solid #d7d7d7;height: auto;display: inline-block;padding:10px">
                     <div class="base-title">Chữ ký</div>
                     <span class="base-subtitle">Kéo chữ ký vào văn bản để ký</span>
                     <div id="sign">
@@ -275,7 +275,7 @@
                 var data1 = [];
                 $(".signature").not(".disabled").each(function(){
                     let sign = $(this);
-                    console.log(sign);
+                    @* console.log(sign); *@
                     var sign_x = sign[0].offsetLeft;
                     var sign_y = sign[0].offsetTop;
 
