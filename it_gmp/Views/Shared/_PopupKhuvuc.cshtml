@@ -3,22 +3,30 @@
     <div id="modalKhuvuc" class="modal" tabindex="-1" role="dialog" data-backdrop="static">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-body">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        Chọn bộ phận
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </h5>
+                </div>
+                <div class="modal-body" style="max-height:70vh;overflow:auto">
                     <div class="row">
-                        <div class="col-12 mb-3">
-                            <h5 class="modal-title">
-                                Chọn bộ phận
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </h5>
-                        </div>
+                      
                         <div class="col-12 mt-3">
                             <div v-for="khuvuc in groups" :key="khuvuc.makhuvuc" style="margin-left: 20px;padding: 10px;margin-bottom: 5px;">
-                                <a href="#" v-on:click="select(khuvuc)">{{khuvuc.tenkhuvuc}}</a>
+                                <label style="cursor: pointer; display: block;">
+                                    <input type="checkbox" :value="khuvuc" v-model="selectedKhuvucs" style="margin-right: 5px;">
+                                    {{khuvuc.tenkhuvuc}}
+                                </label>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" v-on:click="confirmSelect()">Chọn</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </div>
@@ -32,6 +40,7 @@
             groups: [],
             selected: "-1",
             search: "",
+            selectedKhuvucs: [],
         },
         computed: {
             //scene() {
@@ -42,6 +51,7 @@
             var that = this;
             $('#modalKhuvuc').on('show.bs.modal', function (e) {
                 that.loadData();
+                that.selectedKhuvucs = [];
             });
         },
         methods: {
@@ -56,26 +66,36 @@
                     });
                 }
             },
-            select(data) {
-                // console.log(data);
-                $("#modalKhuvuc").modal("hide");
-                // console.log($("#modalKhuvuc").data("select"))
-                var id_select = $("#modalKhuvuc").data("select");
-                var values = $("#"+id_select).val() || []; // trả về array
-                var listEmail = data.list_email_SOP_id;
-                if (listEmail && listEmail.length > 0) {
-                    listEmail.forEach(v => {
-                        if (!values.includes(v)) {
-                            values.push(v);
-                        }
-                    });
-                }else{
-                    alert("Không có Email nào!");
+            confirmSelect() {
+                if (this.selectedKhuvucs.length === 0) {
+                    alert("Vui lòng chọn ít nhất một bộ phận!");
                     return;
                 }
 
-                // console.log(values)
-                $("#"+id_select).val(values).trigger('chosen:updated');
+                var id_select = $("#modalKhuvuc").data("select");
+                var values = $("#" + id_select).val() || []; // trả về array
+                
+                var addedAny = false;
+                
+                this.selectedKhuvucs.forEach(data => {
+                    var listEmail = data.list_email_SOP_id;
+                    if (listEmail && listEmail.length > 0) {
+                        addedAny = true;
+                        listEmail.forEach(v => {
+                            if (!values.includes(v)) {
+                                values.push(v);
+                            }
+                        });
+                    }
+                });
+                
+                if (!addedAny) {
+                    alert("Không có Email nào trong các bộ phận đã chọn!");
+                    return;
+                }
+
+                $("#" + id_select).val(values).trigger('chosen:updated');
+                $("#modalKhuvuc").modal("hide");
             }
         },
     });

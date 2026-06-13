@@ -663,6 +663,7 @@ namespace it.Areas.Admin.Controllers
             {
                 document_dinhkem = _context.DocumentModel
                  .Include(d => d.keywords)
+                 .Include(d => d.users_signature)
                  .Where(d =>
                   d.deleted_at == null &&
                   d.id != DocumentModel.id &&
@@ -2205,6 +2206,7 @@ namespace it.Areas.Admin.Controllers
             {
                 document_dinhkem = _context.DocumentModel
                  .Include(d => d.keywords)
+                 .Include(d => d.users_signature)
                  .Where(d =>
                   d.deleted_at == null &&
                   d.id != DocumentModel.id &&
@@ -2225,6 +2227,7 @@ namespace it.Areas.Admin.Controllers
             ViewBag.document_dinhkem = document_dinhkem;
             ViewBag.no_edit = checkPermission("edit", id, is_admin, is_manager);
             ViewBag.no_suggestsign = checkPermission("suggestsign", id);
+            ViewBag.user_id = current_user_id;
             ViewData["users"] = UserManager.Users.Where(u => u.deleted_at == null).Select(a => new SelectListItem()
             {
                 Value = a.Id,

@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Index";
+    Layout = null;
+}
+<center>
+    <table>
+        <tbody>
+            <tr>
+                <td width="600">
+                    <div>
+                        <div style="box-sizing:border-box;margin:0;padding:0 40px">
+                            <h2 style="text-align:left">Xin chào,</h2>
+                            <p style="text-align:left">Hôm nay có @Model.count SOP tới ngày hiệu lực:</p>
+                            <table style="width:100%; border-collapse: collapse;">
+                                <thead style="background:#f1f5fa;">
+                                    <tr>
+                                        <th style="padding:10px; border: 1px solid #ddd; text-align: left;">Mã số</th>
+                                        <th style="padding:10px; border: 1px solid #ddd; text-align: left;">Tên SOP</th>
+                                        <th style="padding:10px; border: 1px solid #ddd; text-align: left;">Vị trí lưu trữ</th>
+                                        <th style="padding:10px; border: 1px solid #ddd; text-align: center;">Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.data)
+                                    {
+                                        <tr>
+                                            <td style="padding:10px; border: 1px solid #ddd;">@item.code</td>
+                                            <td style="padding:10px; border: 1px solid #ddd;">@item.name_vi</td>
+                                            <td style="padding:10px; border: 1px solid #ddd;">@item.location</td>
+                                            <td style="padding:10px; border: 1px solid #ddd; text-align: center;"><a href="@(Model.Domain + "/admin/document/details/")@item.id" style="display:inline-block; padding:5px 10px; background-color:#28a745; color:#fff; text-decoration:none; border-radius:3px;">Xem chi tiết</a></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <br>
+                            <p style="text-align:left">Trân trọng.</p>
+                            <p style="text-align:left">ASTA</p>
+                            <br>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</center>

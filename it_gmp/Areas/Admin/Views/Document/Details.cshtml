@@ -27,17 +27,17 @@
                                 @if (Model.status_id == 3)
                                 {
                                     <div class="" style="
-                                                    color: red;
-                                                    text-align: center;
-                                                    font-size: 21px;
-                                                    position: absolute;
-                                                    height: 100%;
-                                                    z-index: 1000;
-                                                    background: #00000059;
-                                                    width: 100%;
-                                                    top: 0;
-                                                    left: 0;
-                                                                ">
+                                                                color: red;
+                                                                text-align: center;
+                                                                font-size: 21px;
+                                                                position: absolute;
+                                                                height: 100%;
+                                                                z-index: 1000;
+                                                                background: #00000059;
+                                                                width: 100%;
+                                                                top: 0;
+                                                                left: 0;
+                                                                            ">
                                         Đã hủy
                                     </div>
                                 }
@@ -168,13 +168,10 @@
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-12 pb-2">
-                                                @foreach (var item in ViewBag.document_dinhkem)
+                                                @foreach (it.Areas.Admin.Models.DocumentModel item in ViewBag.document_dinhkem)
                                                 {
-                                                    @if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Release)
-                                                    {
-                                                        <div class="mb-2"><a class='document_related bg-warning text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
-                                                    }
-                                                    else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Success)
+                                                    bool isSignedByMe = item.users_signature != null && item.users_signature.Any(s => s.user_id == (string)ViewBag.user_id && s.date != null);
+                                                    if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Success)
                                                     {
                                                         <div class="mb-2"><a class='document_related bg-success text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
 
@@ -184,6 +181,15 @@
                                                         <div class="mb-2"><a class='document_related bg-secondary text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
 
                                                     }
+                                                    else if (isSignedByMe)
+                                                    {
+                                                        <div class="mb-2"><a class='document_related bg-primary text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+                                                    }
+                                                    else if (item.status_id == (int)it.Areas.Admin.Models.DocumentStatus.Release)
+                                                    {
+                                                        <div class="mb-2"><a class='document_related bg-warning text-white' href="/admin/document/details/@item.id" data-status="@item.status_id">@item.code-@item.name_vi</a></div>
+                                                    }
+
 
                                                 }
                                             </div>

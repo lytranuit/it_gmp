@@ -77,6 +77,26 @@ namespace it.Controllers
 
             }
 
+            var eff_documents = _context.DocumentModel.Where(d => d.type_id == 82 && d.deleted_at == null && d.date_effect != null && d.date_effect.Value.Date == DateTime.Now.Date && (d.status_id == (int)DocumentStatus.Success || d.status_id == (int)DocumentStatus.Current)).ToList();
+            if (eff_documents.Count > 0)
+            {
+                string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
+                var body = _view.Render("Emails/EffectDocumentGMP", new { Domain = Domain, count = eff_documents.Count, data = eff_documents });
+
+                var mail_string = "ngoc.ttt@astahealthcare.com,thuy.dtt@astahealthcare.com,tran.dl@astahealthcare.com";
+
+                var email = new EmailModel
+                {
+                    email_to = mail_string,
+                    subject = "[GMP] Danh sách SOP tới ngày hiệu lực hôm nay",
+                    body = body,
+                    email_type = "effect_document_gmp",
+                    status = 1
+                };
+                _context.Add(email);
+
+            }
+
             await _context.SaveChangesAsync();
             return Json(new { success = true });
         }
