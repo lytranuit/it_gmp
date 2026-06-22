@@ -36,14 +36,14 @@ namespace it_gmp.TagHelpers
                 output.TagName = "span";    // Replaces <email> with <a> tag
 
                 output.Attributes.SetAttribute("class", "badge badge-danger float-right mr-2");
-                if (count < 10)
-                {
-                    output.Content.SetContent(count.ToString());
-                }
-                else
-                {
-                    output.Content.SetContent("9+");
-                }
+                // if (count < 10)
+                // {
+                output.Content.SetContent(count.ToString());
+                // }
+                // else
+                // {
+                //     output.Content.SetContent("9+");
+                // }
             }
         }
     }

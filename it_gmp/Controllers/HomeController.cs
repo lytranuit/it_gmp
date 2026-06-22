@@ -36,7 +36,7 @@ namespace it.Controllers
         public async Task<JsonResult> cronjob()
         {
             ////Nhắc nhở hồ sơ sắp hết hạn trước 3 ngày hiêu lực
-            var documents = _context.DocumentModel.Where(d => d.status_id == 2 && d.deleted_at == null && d.date_effect != null && d.date_effect.Value.Date == DateTime.Now.AddDays(3).Date);
+            var documents = _context.DocumentModel.Where(d => d.status_id == 2 && d.deleted_at == null && d.date_effect != null && d.date_effect.Value.Date >= DateTime.Now.Date && d.date_effect.Value.Date <= DateTime.Now.AddDays(3).Date);
 
             var group = documents.GroupBy(d => d.user_id, (x, y) => new
             {
@@ -68,7 +68,7 @@ namespace it.Controllers
                 var email = new EmailModel
                 {
                     email_to = mail_string,
-                    subject = "[GMP][Nhắc nhở] Các hồ sơ chưa hoàn thành khi sắp đến hạn hiệu lực",
+                    subject = "⚠️ [GMP] NHẮC NHỞ: Các hồ sơ chưa hoàn thành khi sắp đến hạn hiệu lực",
                     body = body,
                     email_type = "remind_document_gmp",
                     status = 1
@@ -83,7 +83,7 @@ namespace it.Controllers
                 string Domain = (HttpContext.Request.IsHttps ? "https://" : "http://") + HttpContext.Request.Host.Value;
                 var body = _view.Render("Emails/EffectDocumentGMP", new { Domain = Domain, count = eff_documents.Count, data = eff_documents });
 
-                var mail_string = "ngoc.ttt@astahealthcare.com,thuy.dtt@astahealthcare.com,tran.dl@astahealthcare.com";
+                var mail_string = "ngoc.ttt@astahealthcare.com,thuy.dtt@astahealthcare.com";
 
                 var email = new EmailModel
                 {
@@ -162,7 +162,7 @@ namespace it.Controllers
                 var email = new EmailModel
                 {
                     email_to = mail_string,
-                    subject = "[GMP][Nhắc nhở] Các hồ sơ đang cần chữ ký của bạn",
+                    subject = "⚠️ [GMP][Nhắc nhở] Các hồ sơ đang cần chữ ký của bạn",
                     body = body,
                     email_type = "remind_document_gmp_a",
                     status = 1
