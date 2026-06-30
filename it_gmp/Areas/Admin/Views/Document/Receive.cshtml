@@ -53,11 +53,17 @@
 
         <form class="formtimkiem">
             <div class="boloc row mb-2 align-items-center">
-                <div class="col-md-4">Lọc theo: <b>Mã hồ sơ</b></div>
-                <div class="col-md-8">
-                    <input class="form-control form-control-sm code" />
+                    <div class="col-md-4">Lọc theo: <b>Code</b></div>
+                    <div class="col-md-8">
+                        <input class="form-control form-control-sm code" />
+                    </div>
                 </div>
-            </div>
+                <div class="boloc row mb-2 align-items-center">
+                    <div class="col-md-4">Lọc theo: <b>Mã hồ sơ</b></div>
+                    <div class="col-md-8">
+                        <input class="form-control form-control-sm mahoso" />
+                    </div>
+                </div>
             <div class="boloc row mb-2 align-items-center">
                 <div class="col-md-4">Lọc theo: <b>Tiêu đề</b></div>
                 <div class="col-md-8">
@@ -189,6 +195,7 @@
                         data['type'] = "receive";
 
                         let search_code = $("#quanlytin_wrapper .code").val();
+                        let search_mahoso = $("#quanlytin_wrapper .mahoso").val();
                         let search_name_vi = $("#quanlytin_wrapper .name_vi").val();
                         let search_type = $("#quanlytin_wrapper .search_type").val();
                         let search_status = $("#quanlytin_wrapper .search_status").val();
@@ -198,11 +205,11 @@
                         let search_to_ngaytao = $("#quanlytin_wrapper .to_ngaytao").val();
                         let search_from_ngayhoanthanh = $("#quanlytin_wrapper .from_ngayhoanthanh").val();
                         let search_to_ngayhoanthanh = $("#quanlytin_wrapper .to_ngayhoanthanh").val();
-                        let filter_cancle = $("#quanlytin_wrapper .filter_cancle").is(":checked");
-
+                        let filter_cancle = $(".filter_cancle").is(":checked");
                         let search_unread = $("#quanlytin_wrapper .chuadoc").is(":checked") ? "unread" : "";
 
                         data['search_code'] = search_code;
+                        data['search_mahoso'] = search_mahoso;
                         data['search_name_vi'] = search_name_vi;
                         data['search_type'] = search_type;
                         data['search_status'] = search_status;

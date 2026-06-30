@@ -189,7 +189,13 @@ namespace it.Areas.Admin.Controllers
             if (related_arr.Count > 0)
             {
                 var id = Int32.Parse(related_arr[0]);
-                ViewData["related_doc"] = _context.DocumentModel.Where(d => d.id == id).Include(d => d.users_signature).Include(d => d.users_receive).FirstOrDefault();
+                ViewData["related_doc"] = _context.DocumentModel.Where(d => d.id == id)
+                    .Include(d => d.users_signature).ThenInclude(us => us.user)
+                    .Include(d => d.users_receive)
+                    .Include(d => d.users_obtain)
+                    .Include(d => d.keywords)
+                    .Include(d => d.keywords_dinhkem)
+                    .FirstOrDefault();
             }
             ViewData["type_id"] = null;
             if (type_id > 0)
@@ -1710,6 +1716,7 @@ namespace it.Areas.Admin.Controllers
 
             //var search_type = Request.Form["search_type"].FirstOrDefault();
             var search_code = Request.Form["search_code"].FirstOrDefault();
+            var search_mahoso = Request.Form["search_mahoso"].FirstOrDefault();
             var search_name_vi = Request.Form["search_name_vi"].FirstOrDefault();
             var search_nguoitao = Request.Form["search_nguoitao"].FirstOrDefault();
             var search_priority = Int32.Parse(Request.Form["search_priority"].FirstOrDefault("0"));
@@ -1808,6 +1815,10 @@ namespace it.Areas.Admin.Controllers
             if (!string.IsNullOrEmpty(search_code))
             {
                 customerData = customerData.Where(m => m.code.Contains(search_code));
+            }
+            if (!string.IsNullOrEmpty(search_mahoso))
+            {
+                customerData = customerData.Where(m => m.mahoso.Contains(search_mahoso));
             }
             if (!string.IsNullOrEmpty(search_name_vi))
             {
