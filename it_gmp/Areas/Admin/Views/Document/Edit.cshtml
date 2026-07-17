@@ -748,14 +748,28 @@
             });
 
             // Xử lý khi user xóa text bằng tay (backspace/delete)
-            $('#date_effect_picker').on('input', function() {
+            $('#date_effect_picker').on('blur', function() {
                 if (!$(this).val()) {
                     $('#date_effect').val('');
+                }else{
+                    var picker = $('#date_effect_picker').data('daterangepicker');
+                    $('#date_effect').val(picker.startDate.format('YYYY-MM-DD'));
+                    console.log($(this).val());
+                    console.log(picker.startDate.format('YYYY-MM-DD'));
+
+                    // Cập nhật minDate cho ngày hết hiệu lực
+                    var expirePicker = $('#date_expire_picker').data('daterangepicker');
+                    if (expirePicker) {
+                        expirePicker.minDate = picker.startDate;
+                    }
                 }
             });
-            $('#date_expire_picker').on('input', function() {
+            $('#date_expire_picker').on('blur', function() {
                 if (!$(this).val()) {
                     $('#date_expire').val('');
+                }else{
+                    var picker = $('#date_expire_picker').data('daterangepicker');
+                    $('#date_expire').val(picker.startDate.format('YYYY-MM-DD'));
                 }
             });
 
@@ -897,20 +911,20 @@
                     alert("Chưa chọn người xét duyệt")
                     return false;
                 }
-                if (!$("[name='date_effect']").val()) {
-                    alert("Yêu cầu nhập ngày hiệu lực!");
-                    return false;
-                }
+                // if (!$("[name='date_effect']").val()) {
+                //     alert("Yêu cầu nhập ngày hiệu lực!");
+                //     return false;
+                // }
                 $("#form").submit();
             })
             $(".trinh_ky").click(function (e) {
                 e.preventDefault();
                 let text = "Trình ký hồ sơ này?";
                 if (confirm(text) == true) {
-                    if (!$("[name='date_effect']").val()) {
-                        alert("Yêu cầu nhập ngày hiệu lực!");
-                        return false;
-                    }
+                    // if (!$("[name='date_effect']").val()) {
+                    //     alert("Yêu cầu nhập ngày hiệu lực!");
+                    //     return false;
+                    // }
                     $("[name='status_id']").val(2);
                     $(".cap_nhat").trigger("click");
                 }
