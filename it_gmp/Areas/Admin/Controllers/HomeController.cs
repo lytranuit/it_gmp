@@ -57,6 +57,8 @@ namespace it.Areas.Admin.Controllers
             var document_count = _context.DocumentModel.Where(d => d.deleted_at == null);
             var document_wait_count = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id == 2);
             var document_done_count = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id >= 4);
+            var document_hienhanh_count = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id == 6);
+            var document_obsoleted_count = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id == 8);
             var document_cancle_count = _context.DocumentModel.Where(d => d.deleted_at == null && d.status_id == 3);
             if (is_manager)
             {
@@ -73,12 +75,16 @@ namespace it.Areas.Admin.Controllers
                     document_count = document_count.Where(d => 0 == 1);
                     document_wait_count = document_wait_count.Where(d => 0 == 1);
                     document_done_count = document_done_count.Where(d => 0 == 1);
+                    document_hienhanh_count = document_hienhanh_count.Where(d => 0 == 1);
+                    document_obsoleted_count = document_obsoleted_count.Where(d => 0 == 1);
                     document_cancle_count = document_cancle_count.Where(d => 0 == 1);
                 }
             }
             ViewBag.document_count = document_count.Count();
             ViewBag.document_wait_count = document_wait_count.Count();
             ViewBag.document_done_count = document_done_count.Count();
+            ViewBag.document_hienhanh_count = document_hienhanh_count.Count();
+            ViewBag.document_obsoleted_count = document_obsoleted_count.Count();
             ViewBag.document_cancle_count = document_cancle_count.Count();
             return View();
         }
